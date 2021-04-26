@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  devbox:
+    image: docker.pkg.github.com/kaisalmen/three-wtm/devbox:latest
+    build:
+      dockerfile: dev/Dockerfile
+      context: .
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    volumes:
+      - ./:/home/devbox/workspace/:rw
+    command: ["bash", "-c", ". /home/devbox/.local/bin/env/configureN.sh && npm install && npm run dev"]
+    working_dir: /home/devbox/workspace
+    container_name: devbox

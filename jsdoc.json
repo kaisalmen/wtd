@@ -1,0 +1,31 @@
+{
+  "source": {
+    "include": [
+      "src/loaders/utils/MaterialStore.js",
+      "src/loaders/utils/MaterialUtils.js",
+      "src/loaders/utils/TransportUtils.js",
+      "src/loaders/workerTaskManager/WorkerTaskManager.js",
+      "src/loaders/workerTaskManager/worker/defaultRouting.js"
+    ]
+  },
+  "tags": {
+    "allowUnknownTags": true
+  },
+  "opts": {
+    "destination": "./build/docs"
+  },
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false,
+    "default": {
+      "outputSourceFiles": true
+    },
+    "path": "ink-docstrap",
+    "navType": "vertical",
+    "linenums": true,
+    "dateFormat": "MMMM Do YYYY, h:mm:ss a"
+  }
+}
