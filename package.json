@@ -19,11 +19,12 @@
     "build/three-wtm.commons.js",
     "build/three-wtm.commons.min.js",
     "build/three-wtm.module.js",
-    "build/three-wtm.module.min.js"
+    "build/three-wtm.module.min.js",
+    "src/**/*"
   ],
   "scripts": {
     "test": "echo \\\"Error: no libs specified\\\" && exit 1",
-    "clean": "(rm bundles/*.js || del bundles/*.js)",
+    "clean": "rimraf build",
     "dev": "snowpack dev --verbose",
     "doc": "jsdoc -c jsdoc.json",
     "build": "npm run clean && rollup -c",
@@ -35,10 +36,11 @@
     "three": "^0.128.0"
   },
   "devDependencies": {
+    "rimraf": "^3.0.2",
     "three-stdlib": "^2.0.1",
     "jsdoc": "^3.6.6",
     "snowpack": "^3.3.5",
-    "rollup": "^2.45.2",
+    "rollup": "^2.46.0",
     "@rollup/plugin-babel": "^5.3.0",
     "rollup-plugin-copy": "^3.4.0",
     "@rollup/plugin-node-resolve": "^11.2.1",

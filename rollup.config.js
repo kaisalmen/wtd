@@ -7,13 +7,26 @@ import { name, dependencies, devDependencies } from './package.json';
 // transformation instructions
 const patternWorkerTaskManager = new RegExp('../../src/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
 const patternTransportUtils = new RegExp('../../src/loaders/utils/TransportUtils.js', 'g');
-const packageModule = '../npm/wwobjloader2.module.js';
+const patternMaterialUtils = new RegExp('../../src/loaders/utils/MaterialUtils.js', 'g');
+const patternMaterialStore = new RegExp('../../src/loaders/utils/MaterialStore.js', 'g');
+const packageModule = `../${name}.module.js`;
 
 const copyConfig = {
   targets: [
     { src: 'public/index.html', dest: 'build/public' },
     {
       src: 'public/examples/wtm_transferables.html',
+      dest: 'build/public/examples',
+      transform: (contents, filename) => {
+        let str = contents.toString();
+        str = str.replace(patternWorkerTaskManager, packageModule);
+        str = str.replace(patternMaterialUtils, packageModule);
+        str = str.replace(patternMaterialStore, packageModule);
+        return str.replace(patternTransportUtils, packageModule);
+      }
+    },
+    {
+      src: 'public/examples/webgl_loader_workertaskmanager.html',
       dest: 'build/public/examples',
       transform: (contents, filename) => {
         let str = contents.toString();
@@ -41,26 +54,24 @@ export default [
   {
     input: 'src/index.js',
     output: [
-      /*
-			{
-			  format: 'cjs',
-			  file: `build/${name}.common.js`,
-			  exports: 'auto'
-			},
-			{
-			  format: 'cjs',
-			  file: `build/${name}.common.min.js`,
-			  exports: 'auto',
-			  plugins: [terser()]
-			},
-	  */
       {
-        format: 'es',
-        file: `build/npm/${name}.module.js`,
+        format: 'cjs',
+        file: `build/${name}.common.js`,
+        exports: 'auto'
+      },
+      {
+        format: 'cjs',
+        file: `build/${name}.common.min.js`,
+        exports: 'auto',
+        plugins: [terser()]
       },
       {
         format: 'es',
-        file: `build/npm/${name}.module.min.js`,
+        file: `build/${name}.module.js`,
+      },
+      {
+        format: 'es',
+        file: `build/${name}.module.min.js`,
         plugins: [terser()]
       }
     ],

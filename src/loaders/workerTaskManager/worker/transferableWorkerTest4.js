@@ -12,7 +12,10 @@ const TransferableWorkerTest4 = {
 		let bufferGeometry = new TorusKnotBufferGeometry( 20, 3, config.params.segments, config.params.segments );
 		bufferGeometry.name = config.params.name;
 
-		new GeometryTransport( config.params.name, config.id ).setGeometry( bufferGeometry, 2 ).package( false ).postMessage( context );
+		new GeometryTransport( config.params.name, config.id )
+			.setGeometry( bufferGeometry, 2 )
+			.package( false )
+			.postMessage( context );
 	}
 }
 
