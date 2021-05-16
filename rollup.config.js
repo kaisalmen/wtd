@@ -4,47 +4,64 @@ import resolve from '@rollup/plugin-node-resolve';
 import { terser } from "rollup-plugin-terser";
 import { name, dependencies, devDependencies } from './package.json';
 
-// transformation instructions
-const patternWorkerTaskManager = new RegExp('../../src/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
-const patternTransportUtils = new RegExp('../../src/loaders/utils/TransportUtils.js', 'g');
-const patternMaterialUtils = new RegExp('../../src/loaders/utils/MaterialUtils.js', 'g');
-const patternMaterialStore = new RegExp('../../src/loaders/utils/MaterialStore.js', 'g');
-const packageModule = `../${name}.module.js`;
+// transformation instructions: Required to verify examples work with bundled lib
+const patternWorkerTaskManager = new RegExp('../../dist/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
+const patternTransportUtils = new RegExp('../../dist/loaders/utils/TransportUtils.js', 'g');
+const patternMaterialUtils = new RegExp('../../dist/loaders/utils/MaterialUtils.js', 'g');
+const patternMaterialStore = new RegExp('../../dist/loaders/utils/MaterialStore.js', 'g');
+const patternDefaultRouting = new RegExp('../../dist/loaders/workerTaskManager/worker/defaultRouting.js', 'g');
+
+const packageModule = `../libs/three-wtm/${name}.module.js`;
+const packageModuleWorker = `../../libs/three-wtm/${name}.module.js`;
 
 const copyConfig = {
   targets: [
-    { src: 'public/index.html', dest: 'build/public' },
+    { src: 'public/index.html', dest: 'bundle/verify/public' },
     {
       src: 'public/examples/wtm_transferables.html',
-      dest: 'build/public/examples',
+      dest: 'bundle/verify/public/examples',
       transform: (contents, filename) => {
         let str = contents.toString();
         str = str.replace(patternWorkerTaskManager, packageModule);
-        str = str.replace(patternMaterialUtils, packageModule);
-        str = str.replace(patternMaterialStore, packageModule);
         return str.replace(patternTransportUtils, packageModule);
       }
     },
     {
       src: 'public/examples/webgl_loader_workertaskmanager.html',
-      dest: 'build/public/examples',
+      dest: 'bundle/verify/public/examples',
       transform: (contents, filename) => {
         let str = contents.toString();
         str = str.replace(patternWorkerTaskManager, packageModule);
-        return str.replace(patternTransportUtils, packageModule);
+        str = str.replace(patternTransportUtils, packageModule);
+        str = str.replace(patternMaterialUtils, packageModule);
+        return str.replace(patternMaterialStore, packageModule);
       }
     },
     {
-      src: 'dev/build/snowpack.config.js',
-      dest: 'build'
+      src: 'dev/verify/snowpack.config.js',
+      dest: 'bundle/verify'
     },
     {
       src: 'public/examples/main.css',
-      dest: 'build/public/examples'
+      dest: 'bundle/verify/public/examples'
     },
     {
-      src: 'public/models/obj/female02/*',
-      dest: 'build/public/examples/models/obj/female02'
+      src: 'public/examples/models/*',
+      dest: 'bundle/verify/public/examples/models/'
+    },
+    {
+      src: 'public/examples/worker/*',
+      dest: 'bundle/verify/public/examples/worker/',
+      transform: (contents, filename) => {
+        let str = contents.toString();
+        str = str.replace(patternDefaultRouting, packageModuleWorker);
+        str = str.replace(patternMaterialUtils, packageModuleWorker);
+        return str.replace(patternTransportUtils, packageModuleWorker);
+      }
+    },
+    {
+      src: 'node_modules/three',
+      dest: 'bundle/verify/libs'
     }
   ]
 };
@@ -56,22 +73,22 @@ export default [
     output: [
       {
         format: 'cjs',
-        file: `build/${name}.common.js`,
+        file: `bundle/build/${name}.common.js`,
         exports: 'auto'
       },
       {
         format: 'cjs',
-        file: `build/${name}.common.min.js`,
+        file: `bundle/build/${name}.common.min.js`,
         exports: 'auto',
         plugins: [terser()]
       },
       {
         format: 'es',
-        file: `build/${name}.module.js`,
+        file: `bundle/build/${name}.module.js`,
       },
       {
         format: 'es',
-        file: `build/${name}.module.min.js`,
+        file: `bundle/build/${name}.module.min.js`,
         plugins: [terser()]
       }
     ],

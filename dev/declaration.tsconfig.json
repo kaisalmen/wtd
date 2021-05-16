@@ -1,10 +1,10 @@
 {
   "include": [
-    "src/loaders/utils/TransportUtils.js",
-    "src/loaders/utils/MaterialUtils.js",
-    "src/loaders/utils/MaterialStore.js",
-    "src/loaders/workerTaskManager/WorkerTaskManager.js",
-    "src/loaders/workerTaskManager/worker/defaultRouting.js"
+    "../src/loaders/utils/TransportUtils.js",
+    "../src/loaders/utils/MaterialUtils.js",
+    "../src/loaders/utils/MaterialStore.js",
+    "../src/loaders/workerTaskManager/WorkerTaskManager.js",
+    "../src/loaders/workerTaskManager/worker/defaultRouting.js"
   ],
   "compilerOptions": {
     "target": "ES2020",
@@ -14,7 +14,7 @@
     "sourceMap": false,
     "allowJs": true,
     "declaration": true,
-    "declarationDir": "./build/ts",
+    "declarationDir": "../bundle/ts",
     "emitDeclarationOnly": true,
     "noEmit": false,
     "removeComments": true

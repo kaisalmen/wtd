@@ -1,6 +1,6 @@
 import { TorusKnotBufferGeometry } from 'three';
-import { WorkerTaskManagerDefaultRouting } from './defaultRouting.js';
-import { GeometryTransport } from '../../utils/TransportUtils.js';
+import { WorkerTaskManagerDefaultRouting } from '../../dist/loaders/workerTaskManager/worker/defaultRouting.js';
+import { GeometryTransport } from '../../dist/loaders/utils/TransportUtils.js';
 
 const TransferableWorkerTest4 = {
 

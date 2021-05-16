@@ -11,8 +11,12 @@ services:
         published: 8080
         protocol: tcp
         mode: host
+      - target: 8081
+        published: 8081
+        protocol: tcp
+        mode: host
     volumes:
       - ./:/home/devbox/workspace/:rw
     command: ["bash", "-c", ". /home/devbox/.local/bin/env/configureN.sh && npm install && npm run dev"]
     working_dir: /home/devbox/workspace
-    container_name: devbox
+    container_name: wtmdev

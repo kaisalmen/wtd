@@ -20,19 +20,19 @@
 			'use strict';
 
 			import * as THREE from 'three';
-			import { TrackballControls } from 'three-stdlib';
+			import { TrackballControls } from '../libs/three/examples/jsm/controls/TrackballControls.js';
 
-			import { WorkerTaskManager } from '../../src/loaders/workerTaskManager/WorkerTaskManager.js';
+			import { WorkerTaskManager } from '../../dist/loaders/workerTaskManager/WorkerTaskManager.js';
 			import {
 				DataTransport,
 				GeometryTransport,
 				MeshTransport,
 				MaterialsTransport,
 				ObjectUtils
-			} from '../../src/loaders/utils/TransportUtils.js';
-			import { MaterialUtils } from '../../src/loaders/utils/MaterialUtils.js';
-			import { MaterialStore } from '../../src/loaders/utils/MaterialStore.js';
-			import { OBJLoaderWorker } from '../../src/loaders/workerTaskManager/worker/tmOBJLoader.js';
+			} from '../../dist/loaders/utils/TransportUtils.js';
+			import { MaterialUtils } from '../../dist/loaders/utils/MaterialUtils.js';
+			import { MaterialStore } from '../../dist/loaders/utils/MaterialStore.js';
+			import { OBJLoaderWorker } from './worker/tmOBJLoader.js';
 
 			/**
 			 * The aim of this example is to show two possible ways how to use the {@link WorkerTaskManager}:
@@ -65,7 +65,7 @@
 
 					this.objectsUsed = new Map();
 
-					this.workerTaskManager = new WorkerTaskManager( 4 ).setVerbose( true );
+					this.workerTaskManager = new WorkerTaskManager( 8 ).setVerbose( true );
 					this.tasksToUse = [];
 					this.materialStore = new MaterialStore( true );
 
@@ -151,7 +151,7 @@
 						name: 'InlineWorker',
 						funcInit: InlineWorker.init,
 						funcExec: InlineWorker.execute,
-						dependencies: InlineWorker.buildStandardWorkerDependencies( '../../libs/three/three.min.js' )
+						dependencies: InlineWorker.buildStandardWorkerDependencies( '../../libs/three/build/three.min.js' )
 					};
 					this.tasksToUse.push( taskDescr );
 					this.workerTaskManager.registerTaskType( taskDescr.name, taskDescr.funcInit, taskDescr.funcExec, null, false, taskDescr.dependencies );
@@ -159,10 +159,10 @@
 
 					const taskDescrObj = {
 						name: 'OBJLoaderStandard',
-						filenameObj: '../models/obj/female02/female02_vertex_colors.obj',
+						filenameObj: './models/female02_vertex_colors.obj',
 						funcInit: OBJLoaderWorker.init,
 						funcExec: OBJLoaderWorker.execute,
-						dependencies: OBJLoaderWorker.buildStandardWorkerDependencies( '../../libs/three/three.min.js', '../../libs/loaders/OBJLoader.js' )
+						dependencies: OBJLoaderWorker.buildStandardWorkerDependencies( '../../libs/three/build/three.min.js', '../../libs/three/examples/js/loaders/OBJLoader.js' )
 					};
 					this.tasksToUse.push( taskDescrObj );
 					this.workerTaskManager.registerTaskType( taskDescrObj.name, taskDescrObj.funcInit, taskDescrObj.funcExec, null, false, taskDescrObj.dependencies );

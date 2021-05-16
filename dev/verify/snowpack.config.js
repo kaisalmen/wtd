@@ -6,9 +6,10 @@
 /** @type {import("snowpack").SnowpackUserConfig } */
 module.exports = {
 	mount: {
-		"three-wtm.module.js": "/three-wtm.module.js",
+		"../build": "/libs/three-wtm",
 		"public": "/",
-		"../node_modules/three/build": "/libs/three",
+		"libs/three": "/libs/three",
+		"src": "/dist"
 	},
 	plugins: [
 		/* ... */
@@ -17,7 +18,8 @@ module.exports = {
 		source: "local"
 	},
 	devOptions: {
-		open: "none"
+		open: "none",
+		port: 8081
 	},
 	buildOptions: {
 		/* ... */

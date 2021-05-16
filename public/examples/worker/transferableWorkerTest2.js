@@ -1,4 +1,4 @@
-import { WorkerTaskManagerDefaultRouting } from './defaultRouting.js';
+import { WorkerTaskManagerDefaultRouting } from '../../dist/loaders/workerTaskManager/worker/defaultRouting.js';
 
 const TransferableWorkerTest2 = {
 
@@ -9,7 +9,7 @@ const TransferableWorkerTest2 = {
 	execute: function ( context, id, config ) {
 		const test2 = {
 			cmd: config.params.name,
-			data: new Uint32Array( 256 * 1024 * 1024 )
+			data: new Uint32Array( 32 * 1024 * 1024 )
 		}
 		context.postMessage( test2, [test2.data.buffer] );
 	}

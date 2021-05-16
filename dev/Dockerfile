@@ -23,7 +23,8 @@ RUN mkdir -p /home/${username}/workspace \
 
 RUN bash ./wsltooling/scripts/install/installNodejs.sh \
     && source ./.local/bin/env/configureN.sh \
-    && n 14 \
-    && npm install -g snowpack
+    && n lts \
+    && npm install -g snowpack \
+    && npm install -g rollup
 
 WORKDIR /home/${username}/workspace/

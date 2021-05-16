@@ -6,9 +6,9 @@ import {
 import {
 	MeshTransport,
 	MaterialsTransport
-} from "../../utils/TransportUtils.js";
-import { MaterialUtils } from '../../utils/MaterialUtils.js';
-import { WorkerTaskManagerDefaultRouting } from "./defaultRouting.js";
+} from "../../dist/loaders/utils/TransportUtils.js";
+import { MaterialUtils } from '../../dist/loaders/utils/MaterialUtils.js';
+import { WorkerTaskManagerDefaultRouting } from "../../dist/loaders/workerTaskManager/worker/defaultRouting.js";
 
 const WTMModuleExample = {
 
