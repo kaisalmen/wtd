@@ -16,10 +16,10 @@ const packageModuleWorker = `../../libs/three-wtm/${name}.module.js`;
 
 const copyConfig = {
   targets: [
-    { src: 'public/index.html', dest: 'bundle/verify/public' },
+    { src: 'public/index.html', dest: 'build/verify/public' },
     {
       src: 'public/examples/wtm_transferables.html',
-      dest: 'bundle/verify/public/examples',
+      dest: 'build/verify/public/examples',
       transform: (contents, filename) => {
         let str = contents.toString();
         str = str.replace(patternWorkerTaskManager, packageModule);
@@ -28,7 +28,7 @@ const copyConfig = {
     },
     {
       src: 'public/examples/webgl_loader_workertaskmanager.html',
-      dest: 'bundle/verify/public/examples',
+      dest: 'build/verify/public/examples',
       transform: (contents, filename) => {
         let str = contents.toString();
         str = str.replace(patternWorkerTaskManager, packageModule);
@@ -39,19 +39,19 @@ const copyConfig = {
     },
     {
       src: 'dev/verify/snowpack.config.js',
-      dest: 'bundle/verify'
+      dest: 'build/verify'
     },
     {
       src: 'public/examples/main.css',
-      dest: 'bundle/verify/public/examples'
+      dest: 'build/verify/public/examples'
     },
     {
       src: 'public/examples/models/*',
-      dest: 'bundle/verify/public/examples/models/'
+      dest: 'build/verify/public/examples/models/'
     },
     {
       src: 'public/examples/worker/*',
-      dest: 'bundle/verify/public/examples/worker/',
+      dest: 'build/verify/public/examples/worker/',
       transform: (contents, filename) => {
         let str = contents.toString();
         str = str.replace(patternDefaultRouting, packageModuleWorker);
@@ -61,7 +61,7 @@ const copyConfig = {
     },
     {
       src: 'node_modules/three',
-      dest: 'bundle/verify/libs'
+      dest: 'build/verify/libs'
     }
   ]
 };
@@ -73,22 +73,22 @@ export default [
     output: [
       {
         format: 'cjs',
-        file: `bundle/build/${name}.common.js`,
+        file: `build/${name}.common.js`,
         exports: 'auto'
       },
       {
         format: 'cjs',
-        file: `bundle/build/${name}.common.min.js`,
+        file: `build/${name}.common.min.js`,
         exports: 'auto',
         plugins: [terser()]
       },
       {
         format: 'es',
-        file: `bundle/build/${name}.module.js`,
+        file: `build/${name}.module.js`,
       },
       {
         format: 'es',
-        file: `bundle/build/${name}.module.min.js`,
+        file: `build/${name}.module.min.js`,
         plugins: [terser()]
       }
     ],

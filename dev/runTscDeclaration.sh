@@ -2,7 +2,7 @@
 
 DIR_ME=$(realpath $(dirname ${0}))
 DIR_BASE=$(realpath ${DIR_ME}/..)
-DIR_LOADER_SRC=${DIR_BASE}/bundle/ts
+DIR_LOADER_SRC=${DIR_BASE}/build/ts
 DIR_LOADER_TRG=${DIR_BASE}/src/loaders
 
 rm -fr ${DIR_LOADER_SRC}

@@ -16,15 +16,15 @@
     "package.json",
     "LICENSE",
     "README.md",
-    "build/three-wtm.commons.js",
-    "build/three-wtm.commons.min.js",
+    "build/three-wtm.common.js",
+    "build/three-wtm.common.min.js",
     "build/three-wtm.module.js",
     "build/three-wtm.module.min.js",
     "src/**/*"
   ],
   "scripts": {
     "test": "echo \\\"Error: no libs specified\\\" && exit 1",
-    "clean": "rimraf bundle",
+    "clean": "rimraf build",
     "dev": "snowpack dev --verbose",
     "doc": "jsdoc -c jsdoc.json",
     "build": "npm run clean && rollup -c",
