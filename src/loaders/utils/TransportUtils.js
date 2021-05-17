@@ -312,7 +312,7 @@ class MaterialsTransport extends DataTransport {
 		let clonedMaterial;
 		for ( let material of Object.values( this.main.materials ) ) {
 
-			if ( material instanceof Material ) {
+			if ( typeof material.clone === 'function' ) {
 
 				clonedMaterial = material.clone();
 				clonedMaterials[ clonedMaterial.name ] = this._cleanMaterial( clonedMaterial );

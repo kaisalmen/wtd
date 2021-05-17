@@ -62,7 +62,11 @@ class MaterialUtils {
 		for ( const materialName in materialsObject ) {
 
 			material = materialsObject[ materialName ];
-			if ( material instanceof Material ) materialsJSON[ materialName ] = material.toJSON();
+			if ( typeof material.toJSON === 'function' ) {
+
+				materialsJSON[ materialName ] = material.toJSON();
+
+			}
 
 		}
 		return materialsJSON;
