@@ -1,3 +1,4 @@
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
 	DataTransport,
 	MaterialsTransport,
@@ -9,7 +10,6 @@ import {
 	MaterialUtils
 } from '../../dist/loaders/utils/MaterialUtils.js';
 import { WorkerTaskManagerDefaultRouting } from '../../dist/loaders/workerTaskManager/worker/defaultRouting.js';
-import { OBJLoader } from '../../libs/three/examples/jsm/loaders/OBJLoader.js';
 
 class OBJLoaderWorker {
 
