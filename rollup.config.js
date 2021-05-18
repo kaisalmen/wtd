@@ -14,60 +14,92 @@ const patternDefaultRouting = new RegExp('../../dist/loaders/workerTaskManager/w
 const packageModule = `../libs/three-wtm/${name}.module.js`;
 const packageModuleWorker = `../../libs/three-wtm/${name}.module.js`;
 
+const packageModuleMin = `../libs/three-wtm/${name}.module.min.js`;
+const packageModuleMinWorker = `../../libs/three-wtm/${name}.module.min.js`;
+
 const copyConfig = {
-  targets: [
-    { src: 'public/index.html', dest: 'build/verify/public' },
+  targets: buildCopyConfig(packageModule, packageModuleWorker, false)
+};
+
+const copyConfigMin = {
+  targets: buildCopyConfig(packageModuleMin, packageModuleMinWorker, true)
+};
+
+function buildCopyConfig(moduleReplacer, moduleReplacerWorker, min) {
+  const basedir = min ? 'build/verifymin' : 'build/verify';
+  const examplesDir = basedir + '/public/examples';
+  const snowpackConfig = min ? 'dev/verify/min/snowpack.config.js' : 'dev/verify/snowpack.config.js';
+  const jslib = min ? 'build/three-wtm.module.min.js' : 'build/three-wtm.module.js';
+  return [
+    {
+      src: 'public/index.html',
+      dest: basedir + '/public'
+    },
     {
       src: 'public/examples/wtm_transferables.html',
-      dest: 'build/verify/public/examples',
+      dest: examplesDir,
       transform: (contents, filename) => {
         let str = contents.toString();
-        str = str.replace(patternWorkerTaskManager, packageModule);
-        return str.replace(patternTransportUtils, packageModule);
+        str = str.replace(patternWorkerTaskManager, moduleReplacer);
+        return str.replace(patternTransportUtils, moduleReplacer);
       }
     },
     {
       src: 'public/examples/webgl_loader_workertaskmanager.html',
-      dest: 'build/verify/public/examples',
+      dest: examplesDir,
       transform: (contents, filename) => {
         let str = contents.toString();
-        str = str.replace(patternWorkerTaskManager, packageModule);
-        str = str.replace(patternTransportUtils, packageModule);
-        str = str.replace(patternMaterialUtils, packageModule);
-        return str.replace(patternMaterialStore, packageModule);
+        str = str.replace(patternWorkerTaskManager, moduleReplacer);
+        str = str.replace(patternTransportUtils, moduleReplacer);
+        str = str.replace(patternMaterialUtils, moduleReplacer);
+        return str.replace(patternMaterialStore, moduleReplacer);
       }
     },
     {
-      src: 'dev/verify/snowpack.config.js',
-      dest: 'build/verify'
+      src: snowpackConfig,
+      dest: basedir
     },
     {
       src: 'public/examples/main.css',
-      dest: 'build/verify/public/examples'
+      dest: examplesDir
     },
     {
       src: 'public/examples/models/*',
-      dest: 'build/verify/public/examples/models/'
+      dest: examplesDir + '/models/'
     },
     {
       src: 'public/examples/worker/*',
-      dest: 'build/verify/public/examples/worker/',
+      dest: examplesDir + '/worker/',
       transform: (contents, filename) => {
         let str = contents.toString();
-        str = str.replace(patternDefaultRouting, packageModuleWorker);
-        str = str.replace(patternMaterialUtils, packageModuleWorker);
-        return str.replace(patternTransportUtils, packageModuleWorker);
+        str = str.replace(patternDefaultRouting, moduleReplacerWorker);
+        str = str.replace(patternMaterialUtils, moduleReplacerWorker);
+        return str.replace(patternTransportUtils, moduleReplacerWorker);
       }
     },
     {
       src: 'node_modules/three',
-      dest: 'build/verify/libs'
+      dest: basedir + '/libs'
+    },
+    {
+      src: jslib,
+      dest: basedir + '/libs/three-wtm'
     }
   ]
-};
+}
+
+const terserConfig = {
+  mangle: {
+    keep_classnames: true,
+    keep_fnames: true,
+    module: true
+  },
+  keep_classnames: true,
+  keep_fnames: true,
+  module: true
+}
 
 export default [
-  // everything in one package
   {
     input: 'src/index.js',
     output: [
@@ -80,16 +112,20 @@ export default [
         format: 'cjs',
         file: `build/${name}.common.min.js`,
         exports: 'auto',
-        plugins: [terser()]
+        plugins: [
+            terser(terserConfig)
+        ]
       },
       {
-        format: 'es',
+        format: 'esm',
         file: `build/${name}.module.js`,
       },
       {
-        format: 'es',
+        format: 'esm',
         file: `build/${name}.module.min.js`,
-        plugins: [terser()]
+        plugins: [
+            terser(terserConfig)
+        ]
       }
     ],
     external: [ ...Object.keys(dependencies), ...Object.keys(devDependencies) ],
@@ -97,6 +133,7 @@ export default [
       resolve(),
       babel(),
       copy(copyConfig),
+      copy(copyConfigMin),
     ]
   }
 ];

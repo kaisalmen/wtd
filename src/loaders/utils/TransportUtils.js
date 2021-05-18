@@ -1,5 +1,5 @@
 /**
- * Development repository: https://github.com/kaisalmen/WWOBJLoader
+ * Development repository: https://github.com/kaisalmen/three-wtm
  */
 
 import {
@@ -8,7 +8,6 @@ import {
 	Box3,
 	Sphere,
 	Texture,
-	Material,
 	MaterialLoader
 } from 'three';
 import { MaterialUtils } from './MaterialUtils.js';

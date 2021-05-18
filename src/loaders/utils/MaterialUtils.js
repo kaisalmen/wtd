@@ -1,8 +1,6 @@
 /**
- * Development repository: https://github.com/kaisalmen/WWOBJLoader
+ * Development repository: https://github.com/kaisalmen/three-wtm
  */
-
-import { Material } from 'three';
 
 /**
  * Static functions useful in the context of handling materials.

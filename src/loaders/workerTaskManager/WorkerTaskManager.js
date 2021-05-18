@@ -1,6 +1,6 @@
 /**
- * Development repository: https://github.com/kaisalmen/WWOBJLoader
- * Proposed by Don McCurdy / https://www.donmccurdy.com
+ * Development repository: https://github.com/kaisalmen/three-wtm
+ * Initial idea by Don McCurdy / https://www.donmccurdy.com
  */
 
 import { FileLoader } from 'three';

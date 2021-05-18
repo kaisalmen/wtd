@@ -1,3 +1,7 @@
+/**
+ * Development repository: https://github.com/kaisalmen/three-wtm
+ */
+
 class WorkerTaskManagerDefaultRouting {
 
 	static comRouting ( context, message, object, initFunction, executeFunction ) {

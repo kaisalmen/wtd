@@ -19,7 +19,7 @@ module.exports = {
 	},
 	devOptions: {
 		open: "none",
-		port: 8081
+		port: 8082
 	},
 	buildOptions: {
 		/* ... */
