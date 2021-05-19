@@ -5,6 +5,7 @@ import {
 	GeometryTransport,
 	MeshTransport,
 	ObjectUtils,
+	MinifyHelper
 } from '../../dist/loaders/utils/TransportUtils.js';
 import {
 	MaterialUtils
@@ -14,14 +15,12 @@ import { WorkerTaskManagerDefaultRouting } from '../../dist/loaders/workerTaskMa
 class OBJLoaderWorker {
 
 	static buildStandardWorkerDependencies ( threeJsLocation, objLoaderLocation ) {
+		const minifyMap = MinifyHelper.builder();
 		return [
 			{ url: threeJsLocation },
 			{ code: '\n\n' },
-			{ code: 'const MaterialLoader = THREE.MaterialLoader;\n' },
-			{ code: 'const Material = THREE.Material;\n' },
-			{ code: 'const Texture = THREE.Texture;\n' },
-			{ code: 'const BufferGeometry = THREE.BufferGeometry;\n' },
 			{ code: 'const EventDispatcher = THREE.EventDispatcher;\n' },
+			{ code: minifyMap + '\n\n' },
 			{ code: '\n\n' },
 			{ url: objLoaderLocation },
 			{ code: '\n\nconst OBJLoader = THREE.OBJLoader;\n\n' },

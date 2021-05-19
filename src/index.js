@@ -5,7 +5,8 @@ import {
 	MeshTransport,
 	MaterialsTransport,
 	ObjectUtils,
-	ObjectManipulator
+	ObjectManipulator,
+	MinifyHelper
 } from "./loaders/utils/TransportUtils.js";
 import { MaterialUtils } from "./loaders/utils/MaterialUtils.js";
 import { MaterialStore } from "./loaders/utils/MaterialStore.js";
@@ -23,5 +24,6 @@ export {
 	ObjectManipulator,
 	MaterialUtils,
 	MaterialStore,
-	WorkerTaskManagerDefaultRouting
+	WorkerTaskManagerDefaultRouting,
+	MinifyHelper
 }

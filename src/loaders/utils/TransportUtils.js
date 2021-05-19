@@ -12,6 +12,41 @@ import {
 } from 'three';
 import { MaterialUtils } from './MaterialUtils.js';
 
+class MinifyHelper {
+	static _BufferGeometry () { return BufferGeometry }
+	static _BufferAttribute () { return BufferAttribute }
+	static _Box3 () { return Box3 }
+	static _Sphere () { return Sphere }
+	static _Texture () { return Texture }
+	static _MaterialLoader () { return MaterialLoader }
+
+	static builder () {
+		return "\n\n" +
+			'const BufferGeometry = THREE.BufferGeometry;\n' +
+			'const BufferAttribute = THREE.BufferAttribute;\n' +
+			'const Box3 = THREE.Box3;\n' +
+			'const Sphere = THREE.Sphere;\n' +
+			'const Texture = THREE.Texture;\n' +
+			'const MaterialLoader = THREE.MaterialLoader;\n' +
+			MinifyHelper.retrieveName('BufferGeometry', /_BufferGeometry/) +
+			MinifyHelper.retrieveName('BufferAttribute', /_BufferAttribute/) +
+			MinifyHelper.retrieveName('Box3', /_Box3/) +
+			MinifyHelper.retrieveName('Sphere', /_Sphere/) +
+			MinifyHelper.retrieveName('Texture', /_Texture/) +
+			MinifyHelper.retrieveName('MaterialLoader', /_MaterialLoader/);
+	}
+
+	static retrieveName(name, methodPattern) {
+		let funcStr = MinifyHelper['_' + name].toString();
+		funcStr = funcStr.replace(methodPattern, "").replace(/[\r\n]+/gm, "")
+		funcStr = funcStr.replace(/.*return/, "").replace(/;.*\}/, "");
+		const retrieveNamed = funcStr.trim()
+		return retrieveNamed === name ? "" : "const " + retrieveNamed + " = " + name + ";\n";
+	}
+}
+
+
+
 /**
  * Define a base structure that is used to ship data in between main and workers.
  */
@@ -803,5 +838,6 @@ export {
 	MeshTransport,
 	MaterialsTransport,
 	ObjectUtils,
-	ObjectManipulator
+	ObjectManipulator,
+	MinifyHelper
 }

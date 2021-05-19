@@ -28,7 +28,8 @@
 				GeometryTransport,
 				MeshTransport,
 				MaterialsTransport,
-				ObjectUtils
+				ObjectUtils,
+				MinifyHelper
 			} from '../../dist/loaders/utils/TransportUtils.js';
 			import { MaterialUtils } from '../../dist/loaders/utils/MaterialUtils.js';
 			import { MaterialStore } from '../../dist/loaders/utils/MaterialStore.js';
@@ -130,11 +131,13 @@
 						}
 
 						static buildStandardWorkerDependencies( threeJsLocation ) {
-
+							const minifyMap = MinifyHelper.builder();
 							return [
 								{ url: threeJsLocation },
-								{ code: 'const BufferGeometry = THREE.BufferGeometry;\n' },
+								{ code: '\n\n' },
 								{ code: 'const EventDispatcher = THREE.EventDispatcher;\n' },
+								{ code: minifyMap },
+								{ code: '\n\n' },
 								{ code: ObjectUtils.serializeClass( DataTransport ) },
 								{ code: ObjectUtils.serializeClass( GeometryTransport ) },
 								{ code: ObjectUtils.serializeClass( MaterialUtils ) },
