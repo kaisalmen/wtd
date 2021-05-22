@@ -12,35 +12,42 @@ import {
 } from 'three';
 import { MaterialUtils } from './MaterialUtils.js';
 
-class MinifyHelper {
-	static _BufferGeometry () { return BufferGeometry }
-	static _BufferAttribute () { return BufferAttribute }
-	static _Box3 () { return Box3 }
-	static _Sphere () { return Sphere }
-	static _Texture () { return Texture }
-	static _MaterialLoader () { return MaterialLoader }
+class DeUglify {
 
-	static builder () {
-		return "\n\n" +
-			'const BufferGeometry = THREE.BufferGeometry;\n' +
+	static buildThreeConst () {
+		return 'const BufferGeometry = THREE.BufferGeometry;\n' +
 			'const BufferAttribute = THREE.BufferAttribute;\n' +
 			'const Box3 = THREE.Box3;\n' +
 			'const Sphere = THREE.Sphere;\n' +
 			'const Texture = THREE.Texture;\n' +
-			'const MaterialLoader = THREE.MaterialLoader;\n' +
-			MinifyHelper.retrieveName('BufferGeometry', /_BufferGeometry/) +
-			MinifyHelper.retrieveName('BufferAttribute', /_BufferAttribute/) +
-			MinifyHelper.retrieveName('Box3', /_Box3/) +
-			MinifyHelper.retrieveName('Sphere', /_Sphere/) +
-			MinifyHelper.retrieveName('Texture', /_Texture/) +
-			MinifyHelper.retrieveName('MaterialLoader', /_MaterialLoader/);
+			'const MaterialLoader = THREE.MaterialLoader;\n';
 	}
 
-	static retrieveName(name, methodPattern) {
-		let funcStr = MinifyHelper['_' + name].toString();
-		funcStr = funcStr.replace(methodPattern, "").replace(/[\r\n]+/gm, "")
-		funcStr = funcStr.replace(/.*return/, "").replace(/;.*\}/, "");
+	static buildUglifiedMapping () {
+		function _BufferGeometry() { return BufferGeometry; };
+		function _BufferAttribute () { return BufferAttribute; };
+		function _Box3 () { return Box3; };
+		function _Sphere () { return Sphere; };
+		function _Texture () { return Texture; };
+		function _MaterialLoader () { return MaterialLoader; };
+
+		return DeUglify.buildUglifiedNameAssignment(_BufferGeometry, 'BufferGeometry', /_BufferGeometry/) +
+			DeUglify.buildUglifiedNameAssignment(_BufferAttribute, 'BufferAttribute', /_BufferAttribute/) +
+			DeUglify.buildUglifiedNameAssignment(_Box3, 'Box3', /_Box3/) +
+			DeUglify.buildUglifiedNameAssignment(_Sphere, 'Sphere', /_Sphere/) +
+			DeUglify.buildUglifiedNameAssignment(_Texture, 'Texture', /_Texture/) +
+			DeUglify.buildUglifiedNameAssignment(_MaterialLoader, 'MaterialLoader', /_MaterialLoader/);
+	}
+
+	static buildUglifiedNameAssignment(func, name, methodPattern) {
+		let funcStr = func.toString();
+		// remove the method name and any line breaks (rollup lib creation, non-uglify case
+		funcStr = funcStr.replace(methodPattern, "").replace(/[\r\n]+/gm, "");
+		// remove return and any semi-colons
+		funcStr = funcStr.replace(/.*return/, "").replace(/\}/, "").replace(/;/gm, "");
 		const retrieveNamed = funcStr.trim()
+		// return non-empty string in uglified case (name!=retrieveNamed); e.g. "const BufferGeometry = e";
+		// return empty string in case of non-uglified lib/src
 		return retrieveNamed === name ? "" : "const " + retrieveNamed + " = " + name + ";\n";
 	}
 }
@@ -839,5 +846,5 @@ export {
 	MaterialsTransport,
 	ObjectUtils,
 	ObjectManipulator,
-	MinifyHelper
+	DeUglify
 }

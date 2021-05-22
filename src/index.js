@@ -6,7 +6,7 @@ import {
 	MaterialsTransport,
 	ObjectUtils,
 	ObjectManipulator,
-	MinifyHelper
+	DeUglify
 } from "./loaders/utils/TransportUtils.js";
 import { MaterialUtils } from "./loaders/utils/MaterialUtils.js";
 import { MaterialStore } from "./loaders/utils/MaterialStore.js";
@@ -25,5 +25,5 @@ export {
 	MaterialUtils,
 	MaterialStore,
 	WorkerTaskManagerDefaultRouting,
-	MinifyHelper
+	DeUglify
 }

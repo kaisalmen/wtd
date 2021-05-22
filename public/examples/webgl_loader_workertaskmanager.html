@@ -29,7 +29,7 @@
 				MeshTransport,
 				MaterialsTransport,
 				ObjectUtils,
-				MinifyHelper
+				DeUglify
 			} from '../../dist/loaders/utils/TransportUtils.js';
 			import { MaterialUtils } from '../../dist/loaders/utils/MaterialUtils.js';
 			import { MaterialStore } from '../../dist/loaders/utils/MaterialStore.js';
@@ -131,12 +131,13 @@
 						}
 
 						static buildStandardWorkerDependencies( threeJsLocation ) {
-							const minifyMap = MinifyHelper.builder();
 							return [
 								{ url: threeJsLocation },
 								{ code: '\n\n' },
 								{ code: 'const EventDispatcher = THREE.EventDispatcher;\n' },
-								{ code: minifyMap },
+								{ code: DeUglify.buildThreeConst() },
+								{ code: '\n\n' },
+								{ code: DeUglify.buildUglifiedMapping() },
 								{ code: '\n\n' },
 								{ code: ObjectUtils.serializeClass( DataTransport ) },
 								{ code: ObjectUtils.serializeClass( GeometryTransport ) },
