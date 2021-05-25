@@ -4,32 +4,24 @@ import resolve from '@rollup/plugin-node-resolve';
 import { terser } from "rollup-plugin-terser";
 import { name, dependencies, devDependencies } from './package.json';
 
-// transformation instructions: Required to verify examples work with bundled lib
-const patternWorkerTaskManager = new RegExp('../../dist/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
-const patternTransportUtils = new RegExp('../../dist/loaders/utils/TransportUtils.js', 'g');
-const patternMaterialUtils = new RegExp('../../dist/loaders/utils/MaterialUtils.js', 'g');
-const patternMaterialStore = new RegExp('../../dist/loaders/utils/MaterialStore.js', 'g');
-const patternDefaultRouting = new RegExp('../../dist/loaders/workerTaskManager/worker/defaultRouting.js', 'g');
-
-const packageModule = `../libs/three-wtm/${name}.module.js`;
-const packageModuleWorker = `../../libs/three-wtm/${name}.module.js`;
-
-const packageModuleMin = `../libs/three-wtm/${name}.module.min.js`;
-const packageModuleMinWorker = `../../libs/three-wtm/${name}.module.min.js`;
-
 const copyConfig = {
-  targets: buildCopyConfig(packageModule, packageModuleWorker, false)
+  targets: buildCopyConfig(false).concat(buildCopyConfig(true)),
+  hook: 'closeBundle'
 };
 
-const copyConfigMin = {
-  targets: buildCopyConfig(packageModuleMin, packageModuleMinWorker, true)
-};
-
-function buildCopyConfig(moduleReplacer, moduleReplacerWorker, min) {
+function buildCopyConfig(min) {
   const basedir = min ? 'build/verifymin' : 'build/verify';
   const examplesDir = basedir + '/public/examples';
   const snowpackConfig = min ? 'dev/verify/min/snowpack.config.js' : 'dev/verify/snowpack.config.js';
-  const jslib = min ? 'build/three-wtm.module.min.js' : 'build/three-wtm.module.js';
+  const moduleReplacer = min ? '../libs/three-wtm/three-wtm.module.min.js' : '../libs/three-wtm/three-wtm.module.js';
+  const moduleReplacerWorker = min ? '../../libs/three-wtm/three-wtm.module.min.js' : '../../libs/three-wtm/three-wtm.module.js';
+
+  // transformation instructions: Required to verify examples work with bundled lib
+  const patternWorkerTaskManager = new RegExp('../../dist/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
+  const patternTransportUtils = new RegExp('../../dist/loaders/utils/TransportUtils.js', 'g');
+  const patternMaterialUtils = new RegExp('../../dist/loaders/utils/MaterialUtils.js', 'g');
+  const patternMaterialStore = new RegExp('../../dist/loaders/utils/MaterialStore.js', 'g');
+  const patternDefaultRouting = new RegExp('../../dist/loaders/workerTaskManager/worker/defaultRouting.js', 'g');
   return [
     {
       src: 'public/index.html',
@@ -82,20 +74,14 @@ function buildCopyConfig(moduleReplacer, moduleReplacerWorker, min) {
       dest: basedir + '/libs'
     },
     {
-      src: jslib,
+      src: min ? 'build/three-wtm.module.min.js' : 'build/three-wtm.module.js',
       dest: basedir + '/libs/three-wtm'
     }
   ]
 }
 
 const terserConfig = {
-  mangle: {
-    keep_classnames: true,
-    keep_fnames: true,
-    module: true
-  },
   keep_classnames: true,
-  keep_fnames: true,
   module: true
 }
 
@@ -132,8 +118,7 @@ export default [
     plugins: [
       resolve(),
       babel(),
-      copy(copyConfig),
-      copy(copyConfigMin),
-    ]
+      copy(copyConfig)
+    ],
   }
 ];

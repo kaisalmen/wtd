@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  devbox:
+  wtmdev:
     image: docker.pkg.github.com/kaisalmen/three-wtm/devbox:latest
     build:
       dockerfile: dev/Dockerfile

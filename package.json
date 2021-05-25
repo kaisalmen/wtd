@@ -1,6 +1,6 @@
 {
   "name": "three-wtm",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.3",
   "description": "WorkerTaskManager for three.js",
   "author": "kaisalmen",
   "license": "MIT",
@@ -11,7 +11,8 @@
   "bugs": {
     "url": "https://github.com/kaisalmen/three-wtm/issues"
   },
-  "main": "src/index.js",
+  "main": "three-wtm.common.js",
+  "module": "three-wtm.module.js",
   "files": [
     "package.json",
     "LICENSE",
