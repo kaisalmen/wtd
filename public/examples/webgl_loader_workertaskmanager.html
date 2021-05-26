@@ -137,13 +137,15 @@
 								{ code: 'const EventDispatcher = THREE.EventDispatcher;\n' },
 								{ code: DeUglify.buildThreeConst() },
 								{ code: '\n\n' },
-								{ code: DeUglify.buildUglifiedMapping() },
+								{ code: DeUglify.buildUglifiedThreeMapping() },
 								{ code: '\n\n' },
 								{ code: ObjectUtils.serializeClass( DataTransport ) },
 								{ code: ObjectUtils.serializeClass( GeometryTransport ) },
 								{ code: ObjectUtils.serializeClass( MaterialUtils ) },
 								{ code: ObjectUtils.serializeClass( MaterialsTransport ) },
-								{ code: ObjectUtils.serializeClass( MeshTransport ) }
+								{ code: ObjectUtils.serializeClass( MeshTransport ) },
+								{ code: DeUglify.buildUglifiedThreeWtmMapping() },
+								{ code: '\n\n' }
 							];
 
 						}

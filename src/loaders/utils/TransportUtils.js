@@ -23,23 +23,37 @@ class DeUglify {
 			'const MaterialLoader = THREE.MaterialLoader;\n';
 	}
 
-	static buildUglifiedMapping () {
-		function _BufferGeometry() { return BufferGeometry; };
-		function _BufferAttribute () { return BufferAttribute; };
-		function _Box3 () { return Box3; };
-		function _Sphere () { return Sphere; };
-		function _Texture () { return Texture; };
-		function _MaterialLoader () { return MaterialLoader; };
+	static buildUglifiedThreeMapping () {
+		function _BufferGeometry() { return BufferGeometry; }
+		function _BufferAttribute () { return BufferAttribute; }
+		function _Box3 () { return Box3; }
+		function _Sphere () { return Sphere; }
+		function _Texture () { return Texture; }
+		function _MaterialLoader () { return MaterialLoader; }
 
-		return DeUglify.buildUglifiedNameAssignment(_BufferGeometry, 'BufferGeometry', /_BufferGeometry/) +
-			DeUglify.buildUglifiedNameAssignment(_BufferAttribute, 'BufferAttribute', /_BufferAttribute/) +
-			DeUglify.buildUglifiedNameAssignment(_Box3, 'Box3', /_Box3/) +
-			DeUglify.buildUglifiedNameAssignment(_Sphere, 'Sphere', /_Sphere/) +
-			DeUglify.buildUglifiedNameAssignment(_Texture, 'Texture', /_Texture/) +
-			DeUglify.buildUglifiedNameAssignment(_MaterialLoader, 'MaterialLoader', /_MaterialLoader/);
+		return DeUglify.buildUglifiedNameAssignment( _BufferGeometry, 'BufferGeometry', /_BufferGeometry/, false ) +
+			DeUglify.buildUglifiedNameAssignment( _BufferAttribute, 'BufferAttribute', /_BufferAttribute/, false ) +
+			DeUglify.buildUglifiedNameAssignment( _Box3, 'Box3', /_Box3/, false ) +
+			DeUglify.buildUglifiedNameAssignment( _Sphere, 'Sphere', /_Sphere/, false ) +
+			DeUglify.buildUglifiedNameAssignment( _Texture, 'Texture', /_Texture/, false ) +
+			DeUglify.buildUglifiedNameAssignment( _MaterialLoader, 'MaterialLoader', /_MaterialLoader/, false );
 	}
 
-	static buildUglifiedNameAssignment(func, name, methodPattern) {
+	static buildUglifiedThreeWtmMapping () {
+		function _DataTransport () { return DataTransport; }
+		function _GeometryTransport () { return GeometryTransport; }
+		function _MeshTransport () { return MeshTransport; }
+		function _MaterialsTransport () { return MaterialsTransport; }
+		function _MaterialUtils () { return MaterialUtils; }
+
+		return DeUglify.buildUglifiedNameAssignment( _DataTransport, 'DataTransport', /_DataTransport/, true ) +
+			DeUglify.buildUglifiedNameAssignment( _GeometryTransport, 'GeometryTransport', /_GeometryTransport/, true ) +
+			DeUglify.buildUglifiedNameAssignment( _MeshTransport, 'MeshTransport', /_MeshTransport/, true ) +
+			DeUglify.buildUglifiedNameAssignment( _MaterialsTransport, 'MaterialsTransport', /_MaterialsTransport/, true ) +
+			DeUglify.buildUglifiedNameAssignment( _MaterialUtils, 'MaterialUtils', /_MaterialUtils/, true );
+	}
+
+	static buildUglifiedNameAssignment(func, name, methodPattern, invert) {
 		let funcStr = func.toString();
 		// remove the method name and any line breaks (rollup lib creation, non-uglify case
 		funcStr = funcStr.replace(methodPattern, "").replace(/[\r\n]+/gm, "");
@@ -48,7 +62,13 @@ class DeUglify {
 		const retrieveNamed = funcStr.trim()
 		// return non-empty string in uglified case (name!=retrieveNamed); e.g. "const BufferGeometry = e";
 		// return empty string in case of non-uglified lib/src
-		return retrieveNamed === name ? "" : "const " + retrieveNamed + " = " + name + ";\n";
+		let output = "";
+		if (retrieveNamed !== name) {
+			const left = invert ? name : retrieveNamed;
+			const right = invert ? retrieveNamed : name;
+			output = "const " + left + " = " + right + ";\n";
+		}
+		return output;
 	}
 }
 

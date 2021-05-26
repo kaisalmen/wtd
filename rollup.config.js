@@ -99,7 +99,7 @@ export default [
         file: `build/${name}.common.min.js`,
         exports: 'auto',
         plugins: [
-            terser(terserConfig)
+            terser()
         ]
       },
       {
@@ -110,7 +110,7 @@ export default [
         format: 'esm',
         file: `build/${name}.module.min.js`,
         plugins: [
-            terser(terserConfig)
+            terser()
         ]
       }
     ],

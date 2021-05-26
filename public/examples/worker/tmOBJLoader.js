@@ -21,7 +21,7 @@ class OBJLoaderWorker {
 			{ code: 'const EventDispatcher = THREE.EventDispatcher;\n' },
 			{ code: DeUglify.buildThreeConst() },
 			{ code: '\n\n' },
-			{ code: DeUglify.buildUglifiedMapping() },
+			{ code: DeUglify.buildUglifiedThreeMapping() },
 			{ code: '\n\n' },
 			{ url: objLoaderLocation },
 			{ code: '\n\nconst OBJLoader = THREE.OBJLoader;\n\n' },
@@ -30,7 +30,9 @@ class OBJLoaderWorker {
 			{ code: ObjectUtils.serializeClass( MaterialsTransport ) },
 			{ code: ObjectUtils.serializeClass( MaterialUtils ) },
 			{ code: ObjectUtils.serializeClass( GeometryTransport ) },
-			{ code: ObjectUtils.serializeClass( MeshTransport ) }
+			{ code: ObjectUtils.serializeClass( MeshTransport ) },
+			{ code: DeUglify.buildUglifiedThreeWtmMapping() },
+			{ code: '\n\n' }
 		]
 	}
 
