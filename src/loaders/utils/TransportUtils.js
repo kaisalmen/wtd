@@ -15,7 +15,8 @@ import { MaterialUtils } from './MaterialUtils.js';
 class DeUglify {
 
 	static buildThreeConst () {
-		return 'const BufferGeometry = THREE.BufferGeometry;\n' +
+		return 'const EventDispatcher = THREE.EventDispatcher;\n' +
+			'const BufferGeometry = THREE.BufferGeometry;\n' +
 			'const BufferAttribute = THREE.BufferAttribute;\n' +
 			'const Box3 = THREE.Box3;\n' +
 			'const Sphere = THREE.Sphere;\n' +

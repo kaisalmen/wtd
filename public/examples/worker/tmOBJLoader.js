@@ -18,7 +18,6 @@ class OBJLoaderWorker {
 		return [
 			{ url: threeJsLocation },
 			{ code: '\n\n' },
-			{ code: 'const EventDispatcher = THREE.EventDispatcher;\n' },
 			{ code: DeUglify.buildThreeConst() },
 			{ code: '\n\n' },
 			{ code: DeUglify.buildUglifiedThreeMapping() },

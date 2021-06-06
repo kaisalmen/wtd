@@ -1,6 +1,6 @@
 {
   "name": "three-wtm",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "WorkerTaskManager for three.js",
   "author": "kaisalmen",
   "license": "MIT",
@@ -11,8 +11,8 @@
   "bugs": {
     "url": "https://github.com/kaisalmen/three-wtm/issues"
   },
-  "main": "three-wtm.common.js",
-  "module": "three-wtm.module.js",
+  "main": "build/three-wtm.common.js",
+  "module": "build/three-wtm.module.js",
   "files": [
     "package.json",
     "LICENSE",
@@ -34,7 +34,7 @@
   "keywords": [],
   "homepage": "https://github.com/kaisalmen/three-wtm#README",
   "dependencies": {
-    "three": "^0.127.0"
+    "three": "^0.129.0"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
@@ -43,10 +43,10 @@
     "@rollup/plugin-node-resolve": "^13.0.0",
     "jsdoc": "^3.6.7",
     "rimraf": "^3.0.2",
-    "rollup": "^2.48.0",
+    "rollup": "^2.51.0",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-terser": "^7.0.2",
-    "snowpack": "^3.5.1",
-    "typescript": "^4.2.4"
+    "snowpack": "^3.5.5",
+    "typescript": "^4.3.2"
   }
 }
