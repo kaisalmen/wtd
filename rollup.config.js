@@ -13,15 +13,14 @@ function buildCopyConfig(min) {
   const basedir = min ? 'build/verifymin' : 'build/verify';
   const examplesDir = basedir + '/public/examples';
   const snowpackConfig = min ? 'dev/verify/min/snowpack.config.js' : 'dev/verify/snowpack.config.js';
-  const moduleReplacer = min ? '../libs/three-wtm/three-wtm.module.min.js' : '../libs/three-wtm/three-wtm.module.js';
-  const moduleReplacerWorker = min ? '../../libs/three-wtm/three-wtm.module.min.js' : '../../libs/three-wtm/three-wtm.module.js';
+  const moduleReplacer = min ? '/libs/three-wtm/three-wtm.module.min.js' : '/libs/three-wtm/three-wtm.module.js';
 
   // transformation instructions: Required to verify examples work with bundled lib
-  const patternWorkerTaskManager = new RegExp('../../dist/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
-  const patternTransportUtils = new RegExp('../../dist/loaders/utils/TransportUtils.js', 'g');
-  const patternMaterialUtils = new RegExp('../../dist/loaders/utils/MaterialUtils.js', 'g');
-  const patternMaterialStore = new RegExp('../../dist/loaders/utils/MaterialStore.js', 'g');
-  const patternDefaultRouting = new RegExp('../../dist/loaders/workerTaskManager/worker/defaultRouting.js', 'g');
+  const patternWorkerTaskManager = new RegExp('/dist/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
+  const patternTransportUtils = new RegExp('/dist/loaders/utils/TransportUtils.js', 'g');
+  const patternMaterialUtils = new RegExp('/dist/loaders/utils/MaterialUtils.js', 'g');
+  const patternMaterialStore = new RegExp('/dist/loaders/utils/MaterialStore.js', 'g');
+  const patternDefaultRouting = new RegExp('/dist/loaders/workerTaskManager/worker/defaultRouting.js', 'g');
   return [
     {
       src: 'public/index.html',
@@ -64,9 +63,9 @@ function buildCopyConfig(min) {
       dest: examplesDir + '/worker/',
       transform: (contents, filename) => {
         let str = contents.toString();
-        str = str.replace(patternDefaultRouting, moduleReplacerWorker);
-        str = str.replace(patternMaterialUtils, moduleReplacerWorker);
-        return str.replace(patternTransportUtils, moduleReplacerWorker);
+        str = str.replace(patternDefaultRouting, moduleReplacer);
+        str = str.replace(patternMaterialUtils, moduleReplacer);
+        return str.replace(patternTransportUtils, moduleReplacer);
       }
     },
     {
