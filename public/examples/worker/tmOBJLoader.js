@@ -6,11 +6,11 @@ import {
 	MeshTransport,
 	ObjectUtils,
 	DeUglify
-} from '/dist/loaders/utils/TransportUtils.js';
+} from '/src/loaders/utils/TransportUtils.js';
 import {
 	MaterialUtils
-} from '/dist/loaders/utils/MaterialUtils.js';
-import { WorkerTaskManagerDefaultRouting } from '/dist/loaders/workerTaskManager/worker/defaultRouting.js';
+} from '/src/loaders/utils/MaterialUtils.js';
+import { WorkerTaskManagerDefaultRouting } from '/src/loaders/workerTaskManager/worker/defaultRouting.js';
 
 class OBJLoaderWorker {
 

@@ -13,14 +13,14 @@ function buildCopyConfig(min) {
   const basedir = min ? 'build/verifymin' : 'build/verify';
   const examplesDir = basedir + '/public/examples';
   const snowpackConfig = min ? 'dev/verify/min/snowpack.config.js' : 'dev/verify/snowpack.config.js';
-  const moduleReplacer = min ? '/libs/three-wtm/three-wtm.module.min.js' : '/libs/three-wtm/three-wtm.module.js';
+  const moduleReplacer = min ? 'three-wtm/build/three-wtm.module.min.js' : 'three-wtm';
 
   // transformation instructions: Required to verify examples work with bundled lib
-  const patternWorkerTaskManager = new RegExp('/dist/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
-  const patternTransportUtils = new RegExp('/dist/loaders/utils/TransportUtils.js', 'g');
-  const patternMaterialUtils = new RegExp('/dist/loaders/utils/MaterialUtils.js', 'g');
-  const patternMaterialStore = new RegExp('/dist/loaders/utils/MaterialStore.js', 'g');
-  const patternDefaultRouting = new RegExp('/dist/loaders/workerTaskManager/worker/defaultRouting.js', 'g');
+  const patternWorkerTaskManager = new RegExp('/src/loaders/workerTaskManager/WorkerTaskManager.js', 'g');
+  const patternTransportUtils = new RegExp('/src/loaders/utils/TransportUtils.js', 'g');
+  const patternMaterialUtils = new RegExp('/src/loaders/utils/MaterialUtils.js', 'g');
+  const patternMaterialStore = new RegExp('/src/loaders/utils/MaterialStore.js', 'g');
+  const patternDefaultRouting = new RegExp('/src/loaders/workerTaskManager/worker/defaultRouting.js', 'g');
   return [
     {
       src: 'public/index.html',
@@ -51,6 +51,10 @@ function buildCopyConfig(min) {
       dest: basedir
     },
     {
+      src: min ? 'dev/verify/min/package.json' : 'dev/verify/package.json',
+      dest: basedir
+    },
+    {
       src: 'public/examples/main.css',
       dest: examplesDir
     },
@@ -67,21 +71,8 @@ function buildCopyConfig(min) {
         str = str.replace(patternMaterialUtils, moduleReplacer);
         return str.replace(patternTransportUtils, moduleReplacer);
       }
-    },
-    {
-      src: 'node_modules/three',
-      dest: basedir + '/libs'
-    },
-    {
-      src: min ? 'build/three-wtm.module.min.js' : 'build/three-wtm.module.js',
-      dest: basedir + '/libs/three-wtm'
     }
   ]
-}
-
-const terserConfig = {
-  keep_classnames: true,
-  module: true
 }
 
 export default [

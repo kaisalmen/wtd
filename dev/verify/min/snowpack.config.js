@@ -6,10 +6,9 @@
 /** @type {import("snowpack").SnowpackUserConfig } */
 module.exports = {
 	mount: {
-		"libs/three-wtm": "/libs/three-wtm",
 		"public": "/",
-		"libs/three": "/libs/three",
-		"src": "/dist"
+		"node_modules/three": "/node_modules/three",
+		"node_modules/three-wtm": "/node_modules/three-wtm"
 	},
 	plugins: [
 		/* ... */

@@ -53,3 +53,9 @@ export class ObjectUtils {
 export class ObjectManipulator {
     static applyProperties(objToAlter: Object, params: Object, forceCreation: boolean): void;
 }
+export class DeUglify {
+    static buildThreeConst(): string;
+    static buildUglifiedThreeMapping(): string;
+    static buildUglifiedThreeWtmMapping(): string;
+    static buildUglifiedNameAssignment(func: any, name: any, methodPattern: any, invert: any): string;
+}

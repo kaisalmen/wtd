@@ -22,7 +22,7 @@
 			import * as THREE from 'three';
 			import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
-			import { WorkerTaskManager } from '/dist/loaders/workerTaskManager/WorkerTaskManager.js';
+			import { WorkerTaskManager } from '/src/loaders/workerTaskManager/WorkerTaskManager.js';
 			import {
 				DataTransport,
 				GeometryTransport,
@@ -30,9 +30,9 @@
 				MaterialsTransport,
 				ObjectUtils,
 				DeUglify
-			} from '/dist/loaders/utils/TransportUtils.js';
-			import { MaterialUtils } from '/dist/loaders/utils/MaterialUtils.js';
-			import { MaterialStore } from '/dist/loaders/utils/MaterialStore.js';
+			} from '/src/loaders/utils/TransportUtils.js';
+			import { MaterialUtils } from '/src/loaders/utils/MaterialUtils.js';
+			import { MaterialStore } from '/src/loaders/utils/MaterialStore.js';
 			import { OBJLoaderWorker } from '/examples/worker/tmOBJLoader.js';
 
 			/**
