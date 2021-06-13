@@ -197,20 +197,12 @@
 							this.scene.add( mesh );
 							break;
 
-						case 'init':
-							console.log( 'Init Completed: ' + payload.id );
-							break;
-
 						case 'execComplete':
 						case 'assetAvailable':
 							switch ( payload.type ) {
 
 								case 'mesh':
-									break;
-
 								case 'material':
-									break;
-
 								case 'void':
 									break;
 
@@ -228,10 +220,12 @@
 				}
 
 				async run () {
+
 					await this.executeTask( this.taskTest1 );
 					await this.executeTask( this.taskTest2 );
 					await this.executeTask( this.taskTest3 );
 					await this.executeTask( this.taskTest4 );
+
 				}
 
 				async executeTask( task ) {

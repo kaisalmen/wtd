@@ -147,17 +147,17 @@ class WorkerTaskManager {
                 if ( workerTypeDefinition.isWorkerModule() ) {
 
                     await workerTypeDefinition.createWorkerModules()
-                        .then( instances => workerTypeDefinition.initWorkers( config, transferables ) )
-                        .then( y => workerTypeDefinition.status.initComplete = true )
-                        .catch( x => console.error( x ) );
+                        .then( () => workerTypeDefinition.initWorkers( config, transferables ) )
+                        .then( () => workerTypeDefinition.status.initComplete = true )
+                        .catch( e => console.error( e ) );
 
                 } else {
 
                     await workerTypeDefinition.loadDependencies()
-                        .then( code => workerTypeDefinition.createWorkers() )
-                        .then( instances => workerTypeDefinition.initWorkers( config, transferables ) )
-                        .then( y => workerTypeDefinition.status.initComplete = true )
-                        .catch( x => console.error( x ) );
+                        .then( () => workerTypeDefinition.createWorkers() )
+                        .then( () => workerTypeDefinition.initWorkers( config, transferables ) )
+                        .then( () => workerTypeDefinition.status.initComplete = true )
+                        .catch( e => console.error( e ) );
 
                 }
 
@@ -222,26 +222,25 @@ class WorkerTaskManager {
                 this.actualExecutionCount ++;
                 let promiseWorker = new Promise( ( resolveWorker, rejectWorker ) => {
 
-                    taskWorker.onmessage = function ( e ) {
+                    taskWorker.onmessage = message => {
 
                         // allow intermediate asset provision before flagging execComplete
-                        if ( e.data.cmd === 'assetAvailable' ) {
+                        if ( message.data.cmd === 'assetAvailable' ) {
 
                             if ( storedExecution.assetAvailableFunction instanceof Function ) {
 
-                                storedExecution.assetAvailableFunction( e.data );
+                                storedExecution.assetAvailableFunction( message.data );
 
                             }
 
                         } else {
 
-                            resolveWorker( e );
+                            resolveWorker( message );
 
                         }
 
                     };
                     taskWorker.onerror = rejectWorker;
-
                     taskWorker.postMessage( {
                         cmd: "execute",
                         workerId: taskWorker.getId(),
@@ -249,10 +248,10 @@ class WorkerTaskManager {
                     }, storedExecution.transferables );
 
                 } );
-                promiseWorker.then( ( e ) => {
+                promiseWorker.then( ( message ) => {
 
                     workerTypeDefinition.returnAvailableTask( taskWorker );
-                    storedExecution.resolve( e.data );
+                    storedExecution.resolve( message.data );
                     this.actualExecutionCount --;
                     this._depleteExecutions();
 
@@ -521,7 +520,12 @@ class WorkerTypeDefinition {
 
             let taskWorkerPromise = new Promise( ( resolveWorker, rejectWorker ) => {
 
-                taskWorker.onmessage = resolveWorker;
+                taskWorker.onmessage = message => {
+
+                    if ( this.verbose ) console.log( 'Init Complete: ' + message.data.id );
+                    resolveWorker( message );
+
+                }
                 taskWorker.onerror = rejectWorker;
 
                 // ensure all transferables are copies to all workers on init!
@@ -543,6 +547,7 @@ class WorkerTypeDefinition {
             promises.push( taskWorkerPromise );
 
         }
+
         if ( this.verbose ) console.log( 'Task: ' + this.getTaskType() + ': Waiting for completion of initialization of all workers.');
         await Promise.all( promises );
         this.workers.available = this.workers.instances;

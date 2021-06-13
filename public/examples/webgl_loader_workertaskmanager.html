@@ -185,7 +185,6 @@
 								.package( false );
 							awaiting.push( this.workerTaskManager.initTaskType( taskDescrObj.name, mt.getMain(), mt.getTransferables() ).catch( e => console.error( e ) ) );
 						} );
-
 					return await Promise.all( awaiting );
 
 				}
@@ -231,9 +230,6 @@
 				 */
 				_processMessage ( payload ) {
 					switch ( payload.cmd ) {
-						case 'init':
-							console.log( 'Init Completed: ' + payload.id );
-							break;
 
 						case 'assetAvailable':
 						case 'execComplete':
