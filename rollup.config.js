@@ -2,7 +2,7 @@ import babel from '@rollup/plugin-babel';
 import copy from 'rollup-plugin-copy';
 import resolve from '@rollup/plugin-node-resolve';
 import { terser } from "rollup-plugin-terser";
-import { name, dependencies, devDependencies } from './package.json';
+import { name, peerDependencies, devDependencies } from './package.json';
 
 const copyConfig = {
   targets: buildCopyConfig(false).concat(buildCopyConfig(true)),
@@ -13,6 +13,7 @@ function buildCopyConfig(min) {
   const basedir = min ? 'build/verifymin' : 'build/verify';
   const examplesDir = basedir + '/public/examples';
   const snowpackConfig = min ? 'dev/verify/min/snowpack.config.js' : 'dev/verify/snowpack.config.js';
+  const verifyPackageJson = min ? 'dev/verify/min/package.json' : 'dev/verify/package.json';
   const moduleReplacer = min ? 'three-wtm/build/three-wtm.module.min.js' : 'three-wtm';
 
   // transformation instructions: Required to verify examples work with bundled lib
@@ -51,7 +52,7 @@ function buildCopyConfig(min) {
       dest: basedir
     },
     {
-      src: min ? 'dev/verify/min/package.json' : 'dev/verify/package.json',
+      src: verifyPackageJson,
       dest: basedir
     },
     {
@@ -104,7 +105,7 @@ export default [
         ]
       }
     ],
-    external: [ ...Object.keys(dependencies), ...Object.keys(devDependencies) ],
+    external: [ ...Object.keys(peerDependencies), ...Object.keys(devDependencies) ],
     plugins: [
       resolve(),
       babel(),
