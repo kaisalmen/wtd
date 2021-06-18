@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - WorkerTaskManager prototype</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+
+	<body>
+		<canvas id="example" style="width: 100%; height: 100vh;"></canvas>
+		<div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - WorkerTaskManager prototype
+			<div id="feedback" style="color: darkorange"></div>
+		</div>
+		<div id="dat" style="user-select: none; position: absolute; left: 0; top: 0; z-Index: 200;"></div>
+
+		<script type="module">
+
+			'use strict';
+
+			import * as THREE from 'three';
+			import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
+
+			import { WorkerTaskManager } from '/src/loaders/workerTaskManager/WorkerTaskManager.js';
+			import {
+				DataTransport,
+				GeometryTransport,
+				MeshTransport,
+				MaterialsTransport,
+				ObjectUtils,
+				DeUglify
+			} from '/src/loaders/utils/TransportUtils.js';
+			import { MaterialUtils } from '/src/loaders/utils/MaterialUtils.js';
+
+			/**
+			 * Hello World example showing standard and module worker using three
+			 */
+			class WorkerTaskManagerHelloWorldExample {
+
+				constructor ( elementToBindTo ) {
+
+					this.renderer = null;
+					this.canvas = elementToBindTo;
+					this.aspectRatio = 1;
+
+					this.scene = null;
+					this.cameraDefaults = {
+						posCamera: new THREE.Vector3( 1000.0, 1000.0, 1000.0 ),
+						posCameraTarget: new THREE.Vector3( 0, 0, 0 ),
+						near: 0.1,
+						far: 10000,
+						fov: 45
+					};
+					this.camera = null;
+					this.cameraTarget = this.cameraDefaults.posCameraTarget;
+					this.controls = null;
+
+				}
+
+				initGL () {
+
+					this.renderer = new THREE.WebGLRenderer( {
+						canvas: this.canvas,
+						antialias: true,
+						autoClear: true
+					} );
+					this.renderer.setClearColor( 0x050505 );
+
+					this.scene = new THREE.Scene();
+
+					this.recalcAspectRatio();
+					this.camera = new THREE.PerspectiveCamera( this.cameraDefaults.fov, this.aspectRatio, this.cameraDefaults.near, this.cameraDefaults.far );
+					this.resetCamera();
+					this.controls = new TrackballControls( this.camera, this.renderer.domElement );
+
+					let ambientLight = new THREE.AmbientLight( 0x404040 );
+					let directionalLight1 = new THREE.DirectionalLight( 0xC0C090 );
+					let directionalLight2 = new THREE.DirectionalLight( 0xC0C090 );
+
+					directionalLight1.position.set( - 100, - 50, 100 );
+					directionalLight2.position.set( 100, 50, - 100 );
+
+					this.scene.add( directionalLight1 );
+					this.scene.add( directionalLight2 );
+					this.scene.add( ambientLight );
+
+					let helper = new THREE.GridHelper( 1000, 30, 0xFF4444, 0x404040 );
+					this.scene.add( helper );
+
+				}
+
+				/** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
+				async initContent () {
+
+					this.workerTaskManager = new WorkerTaskManager( 2 ).setVerbose( true );
+					const init = function ( context, id, config ) {
+						context.postMessage( { cmd: "init",	id: id	} );
+					};
+
+					const execute = function ( context, id, config ) {
+						let bufferGeometry = new THREE.SphereBufferGeometry( 40, 64, 64 );
+						bufferGeometry.name = config.name + config.id;
+						let vertexArray = bufferGeometry.getAttribute( 'position' ).array;
+						for ( let i = 0; i < vertexArray.length; i ++ ) vertexArray[ i ] = vertexArray[ i ] * Math.random() * 0.48;
+						new MeshTransport( 'execComplete', config.id )
+							.setGeometry( bufferGeometry, 0 )
+							.package( false )
+							.postMessage( context );
+					}
+
+					const buildDependencies = function () {
+						return [
+							{ url: '/node_modules/three/build/three.min.js' },
+							{ code: '\n\n' },
+							{ code: DeUglify.buildThreeConst() },
+							{ code: '\n\n' },
+							{ code: DeUglify.buildUglifiedThreeMapping() },
+							{ code: '\n\n' },
+							{ code: ObjectUtils.serializeClass( DataTransport ) },
+							{ code: ObjectUtils.serializeClass( GeometryTransport ) },
+							{ code: ObjectUtils.serializeClass( MaterialUtils ) },
+							{ code: ObjectUtils.serializeClass( MaterialsTransport ) },
+							{ code: ObjectUtils.serializeClass( MeshTransport ) },
+							{ code: DeUglify.buildUglifiedThreeWtmMapping() }
+						]
+					}
+					let awaitInit = []
+					const taskName = 'InlineWorker';
+					this.workerTaskManager.registerTaskType(taskName, init, execute, null, false, buildDependencies());
+					awaitInit.push( this.workerTaskManager.initTaskType(taskName, { name: taskName }) )
+
+					const taskNameModule = 'ModuleWorker';
+					this.workerTaskManager.registerTaskTypeModule(taskNameModule, '/examples/worker/helloWorldWorker.js');
+					awaitInit.push( this.workerTaskManager.initTaskType(taskNameModule, {}) );
+					await Promise.all( awaitInit );
+
+
+					this.workerTaskManager.enqueueForExecution( taskName, {}, null)
+						.then( data => {
+						if ( data.cmd === 'execComplete' ) {
+							const meshTransport = new MeshTransport().loadData( data ).reconstruct( false );
+							const mesh = new THREE.Mesh( meshTransport.getBufferGeometry(), new THREE.MeshPhongMaterial( { color: '#FF0000' }) );
+							mesh.position.set( 100, 0, 0 );
+							this.scene.add( mesh );
+						}
+					} )
+					.catch( e => console.error( e ) );
+
+					this.workerTaskManager.enqueueForExecution( taskName, {}, null)
+					.then( data => {
+						if ( data.cmd === 'execComplete' ) {
+							const meshTransport = new MeshTransport().loadData( data ).reconstruct( false );
+							const mesh = new THREE.Mesh( meshTransport.getBufferGeometry(), new THREE.MeshPhongMaterial() );
+							this.scene.add( mesh );
+						}
+					} )
+					.catch( e => console.error( e ) );
+
+				}
+
+				/**
+				 * This method is invoked when {@link WorkerTaskManager} received a message from a worker.
+				 * @param {object} payload Message received from worker
+				 * @private
+				 */
+				_processMessage ( payload ) {
+					switch ( payload.cmd ) {
+
+						case 'assetAvailable':
+						case 'execComplete':
+
+
+							break;
+
+						default:
+							console.error( payload.id + ': Received unknown command: ' + payload.cmd );
+							break;
+
+					}
+				}
+				resizeDisplayGL () {
+
+					this.controls.handleResize();
+					this.recalcAspectRatio();
+					this.renderer.setSize( this.canvas.offsetWidth, this.canvas.offsetHeight, false );
+					this.updateCamera();
+
+				}
+
+				recalcAspectRatio () {
+
+					this.aspectRatio = (this.canvas.offsetHeight === 0) ? 1 : this.canvas.offsetWidth / this.canvas.offsetHeight;
+
+				}
+
+				resetCamera () {
+
+					this.camera.position.copy( this.cameraDefaults.posCamera );
+					this.cameraTarget.copy( this.cameraDefaults.posCameraTarget );
+					this.updateCamera();
+
+				}
+
+				updateCamera () {
+
+					this.camera.aspect = this.aspectRatio;
+					this.camera.lookAt( this.cameraTarget );
+					this.camera.updateProjectionMatrix();
+
+				}
+
+				render() {
+
+					if ( !this.renderer.autoClear ) this.renderer.clear();
+					this.controls.update();
+					this.renderer.render( this.scene, this.camera );
+
+				}
+
+			}
+
+			let app = new WorkerTaskManagerHelloWorldExample( document.getElementById( 'example' ) );
+			app.initContent();
+
+			let resizeWindow = function () {
+				app.resizeDisplayGL();
+			};
+
+			let render = function () {
+				requestAnimationFrame( render );
+				app.render();
+			};
+
+			window.addEventListener( 'resize', resizeWindow, false );
+
+			console.log( 'Starting initialisation phase...' );
+			app.initGL();
+			app.resizeDisplayGL();
+
+			render();
+
+		</script>
+	</body>
+</html>

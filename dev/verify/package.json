@@ -9,6 +9,6 @@
   "author": "Kai Salmen",
   "license": "MIT",
   "dependencies": {
-    "three-wtm": "file:../../../three-wtm/three-wtm-1.0.0-beta.6.tgz"
+    "three-wtm": "file:../../../three-wtm/three-wtm-1.0.0.tgz"
   }
 }

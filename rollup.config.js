@@ -48,6 +48,17 @@ function buildCopyConfig(min) {
       }
     },
     {
+      src: 'public/examples/wtm_helloworld.html',
+      dest: examplesDir,
+      transform: (contents, filename) => {
+        let str = contents.toString();
+        str = str.replace(patternWorkerTaskManager, moduleReplacer);
+        str = str.replace(patternTransportUtils, moduleReplacer);
+        str = str.replace(patternMaterialUtils, moduleReplacer);
+        return str.replace(patternMaterialStore, moduleReplacer);
+      }
+    },
+    {
       src: snowpackConfig,
       dest: basedir
     },
