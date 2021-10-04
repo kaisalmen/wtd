@@ -28,12 +28,23 @@ The `WorkerTaskManager` allows to register tasks expressed by an initialization,
 
 There exist three possibilities:
 * Press the `Gitpod` button above and start coding and using the examples directly in the browser
-* Checkout the repository and use `docker-compose` to spin up local snowpack dev server
+* Checkout the repository and use `docker-compose up -d` to spin up local snowpack dev server
 * Checkout the repository and run `npm install` and then `npm run dev` to spin up local snowpack dev server
 
 Whatever environment you choose to start [snowpack](https://www.snowpack.dev/) is used to serve the code and the examples using it. With this setup you are able to change the code and examples without invoking an additional bundler. Snowpack ensures all imported npm modules are available if previously installed in local environment (see `npm install`).
 
 If you run snowpack locally you require a `nodejs` and `npm`. The Gitpod and local docker environment ensure all prerequisites are fulfilled. 
+
+In any environment the dev server is reachable on port 8080.
+
+## Main Branches
+
+Main development takes place on branch [main](https://github.com/kaisalmen/three-wtm/tree/main).
+<br>
+The [stable](https://github.com/kaisalmen/three-wtm/tree/stable) branch contains the release versions.
+
+## Docs
+Run `npm run doc` to create the documentation in directory **build/docs**.
 
 ## Examples
 
