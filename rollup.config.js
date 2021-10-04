@@ -2,7 +2,7 @@ import babel from '@rollup/plugin-babel';
 import copy from 'rollup-plugin-copy';
 import resolve from '@rollup/plugin-node-resolve';
 import { terser } from "rollup-plugin-terser";
-import { name, peerDependencies, devDependencies } from './package.json';
+import { name, dependencies, devDependencies } from './package.json';
 
 const copyConfig = {
   targets: buildCopyConfig(false).concat(buildCopyConfig(true)),
@@ -116,7 +116,7 @@ export default [
         ]
       }
     ],
-    external: [ ...Object.keys(peerDependencies), ...Object.keys(devDependencies) ],
+    external: [ ...Object.keys(dependencies), ...Object.keys(devDependencies) ],
     plugins: [
       resolve(),
       babel(),
