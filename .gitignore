@@ -1,6 +1,7 @@
 .idea
 
+/archive
 /build
-
 /node_modules
+
 *.tgz

@@ -1,0 +1,21 @@
+{
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "workbench.editor.revealIfOpen": true,
+    "[javascript]": {
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.formatOnSave": true
+    },
+    "eslint.validate": [
+        "javascript",
+        "typescript"
+    ],
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "vscode.json-language-features"
+  }
+}

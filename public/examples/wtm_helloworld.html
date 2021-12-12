@@ -10,7 +10,7 @@
 	<body>
 		<canvas id="example" style="width: 100%; height: 100vh;"></canvas>
 		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - WorkerTaskManager prototype
+			WorkerTaskManager prototype
 			<div id="feedback" style="color: darkorange"></div>
 		</div>
 		<div id="dat" style="user-select: none; position: absolute; left: 0; top: 0; z-Index: 200;"></div>
@@ -147,7 +147,7 @@
 					} )
 					.catch( e => console.error( e ) );
 
-					this.workerTaskManager.enqueueForExecution( taskName, {}, null)
+					this.workerTaskManager.enqueueForExecution( taskNameModule, {}, null)
 					.then( data => {
 						if ( data.cmd === 'execComplete' ) {
 							const meshTransport = new MeshTransport().loadData( data ).reconstruct( false );
