@@ -17,8 +17,7 @@ class WorkerTaskManager {
      *
      * @param {number} [maxParallelExecutions] How many workers are allowed to be executed in parallel.
      */
-    constructor ( maxParallelExecutions ) {
-
+    constructor(maxParallelExecutions) {
         /**
          * @type {Map<string, WorkerTypeDefinition>}
          */
@@ -31,7 +30,6 @@ class WorkerTaskManager {
          */
         this.storedExecutions = [];
         this.teardown = false;
-
     }
 
     /**
@@ -40,11 +38,9 @@ class WorkerTaskManager {
      * @param {boolean} verbose
      * @return {WorkerTaskManager}
      */
-    setVerbose ( verbose ) {
-
+    setVerbose(verbose) {
         this.verbose = verbose;
         return this;
-
     }
 
     /**
@@ -53,39 +49,33 @@ class WorkerTaskManager {
      * @param {number} maxParallelExecutions How many workers are allowed to be executed in parallel.
      * @return {WorkerTaskManager}
      */
-    setMaxParallelExecutions ( maxParallelExecutions ) {
-
+    setMaxParallelExecutions(maxParallelExecutions) {
         this.maxParallelExecutions = maxParallelExecutions;
         return this;
-
     }
 
     /**
      * Returns the maximum number of parallel executions.
      * @return {number}
      */
-    getMaxParallelExecutions () {
-
+    getMaxParallelExecutions() {
         return this.maxParallelExecutions;
-
     }
 
     /**
      * Returns true if support for the given task type is available.
      *
-     * @param {string} taskType The task type as string
+     * @param {string} taskTypeName The task type as string
      * @return boolean
      */
-    supportsTaskType ( taskType ) {
-
-        return this.taskTypes.has( taskType );
-
+    supportsTaskType(taskTypeName) {
+        return this.taskTypes.has(taskTypeName);
     }
 
     /**
      * Registers functions and dependencies for a new task type.
      *
-     * @param {string} taskType The name to be used for registration.
+     * @param {string} taskTypeName The name to be used for registration.
      * @param {Function} initFunction The function to be called when the worker is initialised
      * @param {Function} executeFunction The function to be called when the worker is executed
      * @param {Function} comRoutingFunction The function that should handle communication, leave undefined for default behavior
@@ -93,200 +83,148 @@ class WorkerTaskManager {
      * @param {Object[]} [dependencyDescriptions]
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTaskType ( taskType, initFunction, executeFunction, comRoutingFunction, fallback, dependencyDescriptions ) {
-
-        let allowedToRegister = ! this.supportsTaskType( taskType );
-        if ( allowedToRegister ) {
-
-            let workerTypeDefinition = new WorkerTypeDefinition( taskType, this.maxParallelExecutions, fallback, this.verbose );
-            workerTypeDefinition.setFunctions( initFunction, executeFunction, comRoutingFunction );
-            workerTypeDefinition.setDependencyDescriptions( dependencyDescriptions );
-            this.taskTypes.set( taskType, workerTypeDefinition );
-
+    registerTaskTypeStandard(taskTypeName, initFunction, executeFunction, comRoutingFunction, fallback, dependencyDescriptions) {
+        let allowedToRegister = !this.supportsTaskType(taskTypeName);
+        if (allowedToRegister) {
+            let workerTypeDefinition = new WorkerTypeDefinition(taskTypeName, this.maxParallelExecutions, fallback, this.verbose);
+            workerTypeDefinition.setFunctions(initFunction, executeFunction, comRoutingFunction);
+            workerTypeDefinition.setDependencyDescriptions(dependencyDescriptions);
+            this.taskTypes.set(taskTypeName, workerTypeDefinition);
         }
         return allowedToRegister;
-
     }
 
     /**
      * Registers functionality for a new task type based on module file.
      *
-     * @param {string} taskType The name to be used for registration.
-     * @param {string} workerModuleUrl The URL to be used for the Worker. Module must provide logic to handle "init" and "execute" messages.
+     * @param {string} taskTypeName The name to be used for registration.
+     * @param {boolean} moduleWorker If the worker is a module or a standard worker
+     * @param {string} workerUrl The URL to be used for the Worker. Worker must provide logic to handle "init" and "execute" messages.
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTaskTypeModule ( taskType, workerModuleUrl ) {
-
-        let allowedToRegister = ! this.supportsTaskType( taskType );
-        if ( allowedToRegister ) {
-
-            let workerTypeDefinition = new WorkerTypeDefinition( taskType, this.maxParallelExecutions, false, this.verbose );
-            workerTypeDefinition.setWorkerModule( workerModuleUrl );
-            this.taskTypes.set( taskType, workerTypeDefinition );
-
+    registerTaskTypeWithUrl(taskTypeName, moduleWorker, workerUrl) {
+        let allowedToRegister = !this.supportsTaskType(taskTypeName);
+        if (allowedToRegister) {
+            let workerTypeDefinition = new WorkerTypeDefinition(taskTypeName, this.maxParallelExecutions, false, this.verbose);
+            workerTypeDefinition.setWorkerUrl(moduleWorker, workerUrl);
+            this.taskTypes.set(taskTypeName, workerTypeDefinition);
         }
         return allowedToRegister;
-
     }
 
     /**
      * Provides initialization configuration and transferable objects.
      *
-     * @param {string} taskType The name of the registered task type.
+     * @param {string} taskTypeName The name of the registered task type.
      * @param {object} config Configuration properties as serializable string.
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      */
-    async initTaskType ( taskType, config, transferables ) {
+    async initTaskType(taskTypeName, config, transferables) {
+        let workerTypeDefinition = this.taskTypes.get(taskTypeName);
+        if (workerTypeDefinition) {
 
-        let workerTypeDefinition = this.taskTypes.get( taskType );
-        if ( workerTypeDefinition ) {
-
-            if ( ! workerTypeDefinition.status.initStarted ) {
-
+            if (!workerTypeDefinition.status.initStarted) {
                 workerTypeDefinition.status.initStarted = true;
-                if ( workerTypeDefinition.isWorkerModule() ) {
-
-                    await workerTypeDefinition.createWorkerModules()
-                        .then( () => workerTypeDefinition.initWorkers( config, transferables ) )
-                        .then( () => workerTypeDefinition.status.initComplete = true )
-                        .catch( e => console.error( e ) );
-
-                } else {
-
+                if (workerTypeDefinition.haveWorkerUrl()) {
+                    await workerTypeDefinition.createWorkerFromUrl(workerTypeDefinition.isWorkerModule())
+                        .then(() => workerTypeDefinition.initWorkers(config, transferables))
+                        .then(() => workerTypeDefinition.status.initComplete = true)
+                        .catch(e => console.error(e));
+                }
+                else {
                     await workerTypeDefinition.loadDependencies()
-                        .then( () => workerTypeDefinition.createWorkers() )
-                        .then( () => workerTypeDefinition.initWorkers( config, transferables ) )
-                        .then( () => workerTypeDefinition.status.initComplete = true )
-                        .catch( e => console.error( e ) );
-
+                        .then(() => workerTypeDefinition.createWorkers())
+                        .then(() => workerTypeDefinition.initWorkers(config, transferables))
+                        .then(() => workerTypeDefinition.status.initComplete = true)
+                        .catch(e => console.error(e));
                 }
-
             }
-            else {
-
-                while ( ! workerTypeDefinition.status.initComplete ) {
-
-                    await this._wait( 10 );
-
-                }
-
-            }
-
         }
-
+        else {
+            while (!workerTypeDefinition.status.initComplete) {
+                await this._wait(10);
+            }
+        }
     }
 
-    async _wait ( milliseconds ) {
-
+    async _wait(milliseconds) {
         return new Promise(resolve => {
-
-            setTimeout( resolve, milliseconds );
-
-        } );
-
+            setTimeout(resolve, milliseconds);
+        });
     }
 
     /**
      * Queues a new task of the given type. Task will not execute until initialization completes.
      *
-     * @param {string} taskType The name of the registered task type.
+     * @param {string} taskTypeName The name of the registered task type.
      * @param {object} config Configuration properties as serializable string.
      * @param {Function} assetAvailableFunction Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
-    async enqueueForExecution ( taskType, config, assetAvailableFunction, transferables ) {
-
-        let localPromise = new Promise( ( resolveUser, rejectUser ) => {
-
-            this.storedExecutions.push( new StoredExecution( taskType, config, assetAvailableFunction, resolveUser, rejectUser, transferables ) );
+    async enqueueForExecution(taskTypeName, config, assetAvailableFunction, transferables) {
+        let localPromise = new Promise((resolveUser, rejectUser) => {
+            this.storedExecutions.push(new StoredExecution(taskTypeName, config, assetAvailableFunction, resolveUser, rejectUser, transferables));
             this._depleteExecutions();
-
-        } );
+        });
         return localPromise;
-
     }
 
-    _depleteExecutions () {
-
+    _depleteExecutions() {
         let counter = 0;
-        while ( this.actualExecutionCount < this.maxParallelExecutions && counter < this.storedExecutions.length ) {
+        while (this.actualExecutionCount < this.maxParallelExecutions && counter < this.storedExecutions.length) {
 
             // TODO: storedExecutions and results from worker seem to get mixed up
-            let storedExecution = this.storedExecutions[ counter ];
-            let workerTypeDefinition = this.taskTypes.get( storedExecution.taskType );
+            let storedExecution = this.storedExecutions[counter];
+            let workerTypeDefinition = this.taskTypes.get(storedExecution.taskTypeName);
             let taskWorker = workerTypeDefinition.getAvailableTask();
-            if ( taskWorker ) {
+            if (taskWorker) {
+                this.storedExecutions.splice(counter, 1);
+                this.actualExecutionCount++;
 
-                this.storedExecutions.splice( counter, 1 );
-                this.actualExecutionCount ++;
-                let promiseWorker = new Promise( ( resolveWorker, rejectWorker ) => {
-
+                let promiseWorker = new Promise((resolveWorker, rejectWorker) => {
                     taskWorker.onmessage = message => {
-
                         // allow intermediate asset provision before flagging execComplete
-                        if ( message.data.cmd === 'assetAvailable' ) {
-
-                            if ( storedExecution.assetAvailableFunction instanceof Function ) {
-
-                                storedExecution.assetAvailableFunction( message.data );
-
+                        if (message.data.cmd === 'assetAvailable') {
+                            if (storedExecution.assetAvailableFunction instanceof Function) {
+                                storedExecution.assetAvailableFunction(message.data);
                             }
-
                         } else {
-
-                            resolveWorker( message );
-
+                            resolveWorker(message);
                         }
-
                     };
                     taskWorker.onerror = rejectWorker;
-                    taskWorker.postMessage( {
+                    taskWorker.postMessage({
                         cmd: "execute",
                         workerId: taskWorker.getId(),
                         config: storedExecution.config
-                    }, storedExecution.transferables );
-
-                } );
-                promiseWorker.then( ( message ) => {
-
-                    workerTypeDefinition.returnAvailableTask( taskWorker );
-                    storedExecution.resolve( message.data );
-                    this.actualExecutionCount --;
+                    }, storedExecution.transferables);
+                });
+                promiseWorker.then((message) => {
+                    workerTypeDefinition.returnAvailableTask(taskWorker);
+                    storedExecution.resolve(message.data);
+                    this.actualExecutionCount--;
                     this._depleteExecutions();
-
-                } ).catch( ( e ) => {
-
-                    storedExecution.reject( "Execution error: " + e );
-
-                } );
-
+                }).catch((e) => {
+                    storedExecution.reject("Execution error: " + e);
+                });
             } else {
-
-                counter ++;
-
+                counter++;
             }
-
         }
-
     }
 
     /**
      * Destroys all workers and associated resources.
      * @return {WorkerTaskManager}
      */
-    dispose () {
-
+    dispose() {
         this.teardown = true;
-        for ( let workerTypeDefinition of this.taskTypes.values() ) {
-
+        for (let workerTypeDefinition of this.taskTypes.values()) {
             workerTypeDefinition.dispose();
-
         }
         return this;
-
     }
-
 }
 
 /**
@@ -297,13 +235,13 @@ class WorkerTypeDefinition {
     /**
      * Creates a new instance of {@link WorkerTypeDefinition}.
      *
-     * @param {string} taskType The name of the registered task type.
+     * @param {string} taskTypeName The name of the registered task type.
      * @param {Number} maximumCount Maximum worker count
      * @param {boolean} fallback Set to true if execution should be performed in main
      * @param {boolean} [verbose] Set if logging should be verbose
      */
-    constructor ( taskType, maximumCount, fallback, verbose ) {
-        this.taskType = taskType;
+    constructor(taskTypeName, maximumCount, fallback, verbose) {
+        this.taskTypeName = taskTypeName;
         this.fallback = fallback;
         this.verbose = verbose === true;
         this.initialised = false;
@@ -320,18 +258,19 @@ class WorkerTypeDefinition {
                 /** @type {string[]} */
                 code: []
             },
+            /** @type {boolean} */
+            moduleWorker: false,
             /**
              * @type {URL}
              */
-            workerModuleUrl: null
+            workerUrl: null
         };
-
 
         this.workers = {
             /** @type {string[]} */
             code: [],
             /** @type {TaskWorker[]|MockedTaskWorker[]} */
-            instances: new Array ( maximumCount ),
+            instances: new Array(maximumCount),
             /** @type {TaskWorker[]|MockedTaskWorker[]} */
             available: []
         };
@@ -340,13 +279,10 @@ class WorkerTypeDefinition {
             initStarted: false,
             initComplete: false
         }
-
     }
 
-    getTaskType () {
-
-        return this.taskType;
-
+    getTaskType() {
+        return this.taskTypeName;
     }
 
     /**
@@ -357,21 +293,19 @@ class WorkerTypeDefinition {
      * @param {Function} executeFunction The function to be called when the worker is executed
      * @param {Function} [comRoutingFunction] The function that should handle communication, leave undefined for default behavior
      */
-    setFunctions ( initFunction, executeFunction, comRoutingFunction ) {
-
+    setFunctions(initFunction, executeFunction, comRoutingFunction) {
         this.functions.init = initFunction;
         this.functions.execute = executeFunction;
         this.functions.comRouting = comRoutingFunction;
-        if ( this.functions.comRouting === undefined || this.functions.comRouting === null ) {
+        if (this.functions.comRouting === undefined || this.functions.comRouting === null) {
 
             this.functions.comRouting = WorkerTaskManagerDefaultRouting.comRouting;
 
         }
-        this._addWorkerCode( 'init', this.functions.init.toString() );
-        this._addWorkerCode( 'execute', this.functions.execute.toString() );
-        this._addWorkerCode( 'comRouting', this.functions.comRouting.toString() );
-        this.workers.code.push( 'self.addEventListener( "message", message => comRouting( self, message, null, init, execute ), false );' );
-
+        this._addWorkerCode('init', this.functions.init.toString());
+        this._addWorkerCode('execute', this.functions.execute.toString());
+        this._addWorkerCode('comRouting', this.functions.comRouting.toString());
+        this.workers.code.push('self.addEventListener( "message", message => comRouting( self, message, null, init, execute ), false );');
     }
 
     /**
@@ -380,17 +314,12 @@ class WorkerTypeDefinition {
      * @param {string} functionString A function as string
      * @private
      */
-    _addWorkerCode ( functionName, functionString ) {
-        if ( functionString.startsWith('function') ) {
-
-            this.workers.code.push( 'const ' + functionName + ' = ' + functionString + ';\n\n' );
-
+    _addWorkerCode(functionName, functionString) {
+        if (functionString.startsWith('function')) {
+            this.workers.code.push('const ' + functionName + ' = ' + functionString + ';\n\n');
         } else {
-
-            this.workers.code.push( 'function ' + functionString + ';\n\n' );
-
+            this.workers.code.push('function ' + functionString + ';\n\n');
         }
-
     }
 
     /**
@@ -398,25 +327,21 @@ class WorkerTypeDefinition {
      *
      * @param {Object[]} dependencyDescriptions URLs of code init and execute functions rely on.
      */
-    setDependencyDescriptions ( dependencyDescriptions ) {
-
-        if ( dependencyDescriptions ) {
-
-            dependencyDescriptions.forEach( description => { this.functions.dependencies.descriptions.push( description ) } );
-
+    setDependencyDescriptions(dependencyDescriptions) {
+        if (dependencyDescriptions) {
+            dependencyDescriptions.forEach(description => { this.functions.dependencies.descriptions.push(description) });
         }
-
     }
 
     /**
      * Set the url of the module worker.
      *
-     * @param {string} workerModuleUrl The URL is created from this string.
+     * @param {boolean} moduleWorker If the worker is a module or a standard worker
+     * @param {string} workerUrl The URL is created from this string.
      */
-    setWorkerModule ( workerModuleUrl ) {
-
-        this.functions.workerModuleUrl = new URL( workerModuleUrl, window.location.href );
-
+    setWorkerUrl(moduleWorker, workerUrl) {
+        this.functions.moduleWorker = moduleWorker;
+        this.functions.workerUrl = new URL(workerUrl, window.location.href);
     }
 
     /**
@@ -424,10 +349,17 @@ class WorkerTypeDefinition {
      *
      * @return {boolean} True or false
      */
-    isWorkerModule () {
+    isWorkerModule() {
+        return (this.functions.moduleWorker && this.haveWorkerUrl());
+    }
 
-        return ( this.functions.workerModuleUrl !== null );
-
+    /**
+     * If a URL for a worker was provided
+     *
+     * @returns {boolean} True or false
+     */
+    haveWorkerUrl() {
+        return (this.functions.workerUrl !== null);
     }
 
     /**
@@ -435,76 +367,62 @@ class WorkerTypeDefinition {
      *
      * @return {String[]}
      */
-    async loadDependencies () {
-
+    async loadDependencies() {
         let promises = [];
         let fileLoader = new FileLoader();
-        fileLoader.setResponseType( 'arraybuffer' );
-        for ( let description of this.functions.dependencies.descriptions ) {
+        fileLoader.setResponseType('arraybuffer');
+        for (let description of this.functions.dependencies.descriptions) {
 
-            if ( description.url ) {
-
-                let url = new URL( description.url, window.location.href );
-                promises.push( fileLoader.loadAsync( url.href, report => { if ( this.verbose ) console.log( report ); } ) );
-
+            if (description.url) {
+                let url = new URL(description.url, window.location.href);
+                promises.push(fileLoader.loadAsync(url.href, report => { if (this.verbose) console.log(report); }));
             }
-            if ( description.code ) {
-
-                promises.push( new Promise( resolve => resolve( description.code ) ) );
-
+            if (description.code) {
+                promises.push(new Promise(resolve => resolve(description.code)));
             }
 
         }
-        if ( this.verbose ) console.log( 'Task: ' + this.getTaskType() + ': Waiting for completion of loading of all dependencies.');
-        this.functions.dependencies.code = await Promise.all( promises );
-
+        if (this.verbose) console.log('Task: ' + this.getTaskType() + ': Waiting for completion of loading of all dependencies.');
+        this.functions.dependencies.code = await Promise.all(promises);
     }
 
     /**
      * Creates workers based on the configured function and dependency strings.
      *
      */
-    async createWorkers () {
-
+    async createWorkers() {
         let worker;
-        if ( !this.fallback ) {
+        if (!this.fallback) {
+            let workerBlob = new Blob(this.functions.dependencies.code.concat(this.workers.code), { type: 'application/javascript' });
+            let objectURL = window.URL.createObjectURL(workerBlob);
 
-            let workerBlob = new Blob( this.functions.dependencies.code.concat( this.workers.code ), { type: 'application/javascript' } );
-            let objectURL = window.URL.createObjectURL( workerBlob );
-            for ( let i = 0; i < this.workers.instances.length; i ++ ) {
-
-                worker = new TaskWorker( i, objectURL );
-                this.workers.instances[ i ] = worker;
-
+            for (let i = 0; i < this.workers.instances.length; i++) {
+                worker = new TaskWorker(i, objectURL);
+                this.workers.instances[i] = worker;
             }
-
         }
         else {
-
-            for ( let i = 0; i < this.workers.instances.length; i ++ ) {
-
-                worker = new MockedTaskWorker( i, this.functions.init, this.functions.execute );
-                this.workers.instances[ i ] = worker;
-
+            for (let i = 0; i < this.workers.instances.length; i++) {
+                worker = new MockedTaskWorker(i, this.functions.init, this.functions.execute);
+                this.workers.instances[i] = worker;
             }
-
         }
-
     }
 
     /**
      * Creates module workers.
      *
      */
-    async createWorkerModules () {
-
-        for ( let worker, i = 0; i < this.workers.instances.length; i++ ) {
-
-            worker = new TaskWorker( i, this.functions.workerModuleUrl.href, { type: "module" } );
-            this.workers.instances[ i ] = worker;
-
+    async createWorkerFromUrl(module) {
+        for (let worker, i = 0; i < this.workers.instances.length; i++) {
+            if (module) {
+                worker = new TaskWorker(i, this.functions.workerUrl.href, { type: "module" });
+            }
+            else {
+                worker = new TaskWorker(i, this.functions.workerUrl.href);
+            }
+            this.workers.instances[i] = worker;
         }
-
     }
 
     /**
@@ -513,45 +431,39 @@ class WorkerTypeDefinition {
      * @param {object} config
      * @param {Transferable[]} transferables
      */
-    async initWorkers ( config, transferables ) {
-
+    async initWorkers(config, transferables) {
         let promises = [];
-        for ( let taskWorker of this.workers.instances ) {
+        for (let taskWorker of this.workers.instances) {
 
-            let taskWorkerPromise = new Promise( ( resolveWorker, rejectWorker ) => {
-
+            let taskWorkerPromise = new Promise((resolveWorker, rejectWorker) => {
                 taskWorker.onmessage = message => {
-
-                    if ( this.verbose ) console.log( 'Init Complete: ' + message.data.id );
-                    resolveWorker( message );
-
+                    if (this.verbose) console.log('Init Complete: ' + message.data.id);
+                    resolveWorker(message);
                 }
                 taskWorker.onerror = rejectWorker;
 
                 // ensure all transferables are copies to all workers on init!
                 let transferablesToWorker;
-                if ( transferables ) {
+                if (transferables) {
                     transferablesToWorker = [];
-                    for ( let i = 0; i < transferables.length; i++ ) {
-                        transferablesToWorker.push( transferables[ i ].slice( 0 ) );
+                    for (let i = 0; i < transferables.length; i++) {
+                        transferablesToWorker.push(transferables[i].slice(0));
                     }
                 }
 
-                taskWorker.postMessage( {
+                taskWorker.postMessage({
                     cmd: "init",
                     workerId: taskWorker.getId(),
                     config: config
-                }, transferablesToWorker );
+                }, transferablesToWorker);
 
-            } );
-            promises.push( taskWorkerPromise );
-
+            });
+            promises.push(taskWorkerPromise);
         }
 
-        if ( this.verbose ) console.log( 'Task: ' + this.getTaskType() + ': Waiting for completion of initialization of all workers.');
-        await Promise.all( promises );
+        if (this.verbose) console.log('Task: ' + this.getTaskType() + ': Waiting for completion of initialization of all workers.');
+        await Promise.all(promises);
         this.workers.available = this.workers.instances;
-
     }
 
     /**
@@ -559,16 +471,12 @@ class WorkerTypeDefinition {
      *
      * @return {TaskWorker|MockedTaskWorker|undefined}
      */
-    getAvailableTask () {
-
+    getAvailableTask() {
         let task = undefined;
-        if ( this.hasTask() ) {
-
+        if (this.hasTask()) {
             task = this.workers.available.shift();
-
         }
         return task;
-
     }
 
     /**
@@ -576,33 +484,25 @@ class WorkerTypeDefinition {
      *
      * @return {boolean}
      */
-    hasTask () {
-
+    hasTask() {
         return this.workers.available.length > 0;
-
     }
 
     /**
      *
      * @param {TaskWorker|MockedTaskWorker} taskWorker
      */
-    returnAvailableTask ( taskWorker ) {
-
-        this.workers.available.push( taskWorker );
-
+    returnAvailableTask(taskWorker) {
+        this.workers.available.push(taskWorker);
     }
 
     /**
      * Dispose all worker instances.
      */
-    dispose () {
-
-        for ( let taskWorker of this.workers.instances ) {
-
+    dispose() {
+        for (let taskWorker of this.workers.instances) {
             taskWorker.terminate();
-
         }
-
     }
 
 }
@@ -615,22 +515,20 @@ class StoredExecution {
     /**
      * Creates a new instance.
      *
-     * @param {string} taskType
+     * @param {string} taskTypeName
      * @param {object} config
      * @param {Function} assetAvailableFunction
      * @param {Function} resolve
      * @param {Function} reject
      * @param {Transferable[]} [transferables]
      */
-    constructor( taskType, config, assetAvailableFunction, resolve, reject, transferables ) {
-
-        this.taskType = taskType;
+    constructor(taskTypeName, config, assetAvailableFunction, resolve, reject, transferables) {
+        this.taskTypeName = taskTypeName;
         this.config = config;
         this.assetAvailableFunction = assetAvailableFunction;
         this.resolve = resolve;
         this.reject = reject;
         this.transferables = transferables;
-
     }
 
 }
@@ -647,11 +545,9 @@ class TaskWorker extends Worker {
      * @param {string} aURL
      * @param {object} [options]
      */
-    constructor( id, aURL, options ) {
-
-        super( aURL, options );
+    constructor(id, aURL, options) {
+        super(aURL, options);
         this.id = id;
-
     }
 
     /**
@@ -659,9 +555,7 @@ class TaskWorker extends Worker {
      * @return {number}
      */
     getId() {
-
         return this.id;
-
     }
 
 }
@@ -679,14 +573,12 @@ class MockedTaskWorker {
      * @param {Function} initFunction
      * @param {Function} executeFunction
      */
-    constructor( id, initFunction, executeFunction ) {
-
+    constructor(id, initFunction, executeFunction) {
         this.id = id;
         this.functions = {
             init: initFunction,
             execute: executeFunction
         }
-
     }
 
     /**
@@ -694,9 +586,7 @@ class MockedTaskWorker {
      * @return {number}
      */
     getId() {
-
         return this.id;
-
     }
 
     /**
@@ -704,24 +594,21 @@ class MockedTaskWorker {
      * @param {String} message
      * @param {Transferable[]} [transfer]
      */
-    postMessage( message, transfer ) {
-
+    postMessage(message, transfer) {
         let scope = this;
         let self = {
-            postMessage: function ( m ) {
-                scope.onmessage( { data: m } )
+            postMessage: function(m) {
+                scope.onmessage({ data: m })
             }
         }
-        WorkerTaskManagerDefaultRouting.comRouting( self, { data: message }, null, scope.functions.init, scope.functions.execute )
-
+        WorkerTaskManagerDefaultRouting.comRouting(self, { data: message }, null, scope.functions.init, scope.functions.execute)
     }
 
     /**
      * Mocking termination
      */
-    terminate () {}
+    terminate() { }
 
 }
-
 
 export { WorkerTaskManager };

@@ -127,11 +127,15 @@
 					}
 					let awaitInit = []
 					const taskName = 'InlineWorker';
-					this.workerTaskManager.registerTaskType(taskName, init, execute, null, false, buildDependencies());
+					this.workerTaskManager.registerTaskTypeStandard(taskName, init, execute, null, false, buildDependencies());
 					awaitInit.push( this.workerTaskManager.initTaskType(taskName, { name: taskName }) )
 
+                    const taskNameFromUrl = 'WorkerFromUrl';
+					this.workerTaskManager.registerTaskTypeWithUrl(taskNameFromUrl, false, '/examples/worker/helloWorldWorkerFromUrl.js');
+					awaitInit.push( this.workerTaskManager.initTaskType(taskNameFromUrl, {}) );
+
 					const taskNameModule = 'ModuleWorker';
-					this.workerTaskManager.registerTaskTypeModule(taskNameModule, '/examples/worker/helloWorldWorker.js');
+					this.workerTaskManager.registerTaskTypeWithUrl(taskNameModule, true, '/examples/worker/helloWorldWorker.js');
 					awaitInit.push( this.workerTaskManager.initTaskType(taskNameModule, {}) );
 					await Promise.all( awaitInit );
 
@@ -147,7 +151,15 @@
 					} )
 					.catch( e => console.error( e ) );
 
-					this.workerTaskManager.enqueueForExecution( taskName, {}, null)
+                    this.workerTaskManager.enqueueForExecution( taskNameFromUrl, { name: 'WorkerFromUrl' }, null)
+						.then( data => {
+						if ( data.cmd === 'WorkerFromUrl' ) {
+							alert( data.cmd );
+						}
+					} )
+					.catch( e => console.error( e ) );
+
+					this.workerTaskManager.enqueueForExecution( taskNameModule, {}, null)
 					.then( data => {
 						if ( data.cmd === 'execComplete' ) {
 							const meshTransport = new MeshTransport().loadData( data ).reconstruct( false );

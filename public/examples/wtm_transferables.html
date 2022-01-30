@@ -156,7 +156,7 @@
 				}
 
 				_initTask( task ) {
-					this.workerTaskManager.registerTaskTypeModule( task.name, task.module );
+					this.workerTaskManager.registerTaskTypeWithUrl( task.name, true, task.module );
 					return this.workerTaskManager.initTaskType( task.name, {} );
 				}
 
