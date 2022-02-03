@@ -17,33 +17,25 @@ class MaterialUtils {
 	 * @param {boolean} force
 	 * @param {boolean} [log] Log messages to the console
 	 */
-	static addMaterial( materialsObject, material, materialName, force, log ) {
+	static addMaterial(materialsObject, material, materialName, force, log) {
 		let existingMaterial;
 		// ensure materialName is set
 		material.name = materialName;
-		if ( ! force ) {
-
-			existingMaterial = materialsObject[ materialName ];
-			if ( existingMaterial ) {
-
-				if ( existingMaterial.uuid !== existingMaterial.uuid ) {
-
-					if ( log ) console.log( 'Same material name "' + existingMaterial.name + '" different uuid [' + existingMaterial.uuid + '|' + material.uuid + ']' );
-
+		if (!force) {
+			existingMaterial = materialsObject[materialName];
+			if (existingMaterial) {
+				if (existingMaterial.uuid !== existingMaterial.uuid) {
+					if (log) console.log('Same material name "' + existingMaterial.name + '" different uuid [' + existingMaterial.uuid + '|' + material.uuid + ']');
 				}
-
-			} else {
-
-				materialsObject[ materialName ] = material;
-				if ( log ) console.info( 'Material with name "' + materialName + '" was added.' );
-
 			}
-
-		} else {
-
-			materialsObject[ materialName ] = material;
-			if ( log ) console.info( 'Material with name "' + materialName + '" was forcefully overridden.' );
-
+			else {
+				materialsObject[materialName] = material;
+				if (log) console.info('Material with name "' + materialName + '" was added.');
+			}
+		}
+		else {
+			materialsObject[materialName] = material;
+			if (log) console.info('Material with name "' + materialName + '" was forcefully overridden.');
 		}
 	}
 
@@ -53,22 +45,16 @@ class MaterialUtils {
 	 * @param {object.<string, Material>}
 	 * @returns {Object} Map of Materials in JSON representation
 	 */
-	static getMaterialsJSON ( materialsObject ) {
-
+	static getMaterialsJSON(materialsObject) {
 		const materialsJSON = {};
 		let material;
-		for ( const materialName in materialsObject ) {
-
-			material = materialsObject[ materialName ];
-			if ( typeof material.toJSON === 'function' ) {
-
-				materialsJSON[ materialName ] = material.toJSON();
-
+		for (const materialName in materialsObject) {
+			material = materialsObject[materialName];
+			if (typeof material.toJSON === 'function') {
+				materialsJSON[materialName] = material.toJSON();
 			}
-
 		}
 		return materialsJSON;
-
 	}
 
 	/**
@@ -78,30 +64,22 @@ class MaterialUtils {
 	 * @param {object} materialCloneInstruction
 	 * @param {boolean} [log]
 	 */
-	static cloneMaterial ( materials, materialCloneInstruction, log ) {
-
+	static cloneMaterial(materials, materialCloneInstruction, log) {
 		let material;
-		if ( materialCloneInstruction ) {
-
+		if (materialCloneInstruction) {
 			let materialNameOrg = materialCloneInstruction.materialNameOrg;
-			materialNameOrg = ( materialNameOrg !== undefined && materialNameOrg !== null ) ? materialNameOrg : '';
-			const materialOrg = materials[ materialNameOrg ];
-			if ( materialOrg ) {
-
+			materialNameOrg = (materialNameOrg !== undefined && materialNameOrg !== null) ? materialNameOrg : '';
+			const materialOrg = materials[materialNameOrg];
+			if (materialOrg) {
 				material = materialOrg.clone();
-				Object.assign( material, materialCloneInstruction.materialProperties );
-				MaterialUtils.addMaterial( materials, material, materialCloneInstruction.materialProperties.name, true );
-
+				Object.assign(material, materialCloneInstruction.materialProperties);
+				MaterialUtils.addMaterial(materials, material, materialCloneInstruction.materialProperties.name, true);
 			}
 			else {
-
-				if ( log ) console.info( 'Requested material "' + materialNameOrg + '" is not available!' );
-
+				if (log) console.info('Requested material "' + materialNameOrg + '" is not available!');
 			}
-
 		}
 		return material;
-
 	}
 
 }

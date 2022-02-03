@@ -3,6 +3,6 @@ export class MaterialStore {
     materials: {};
     addMaterials(newMaterials: any, forceOverrideExisting: boolean): void;
     getMaterials(): Object;
-    getMaterial(materialName: string): any;
+    getMaterial(materialName: string): Material;
     clearMaterials(): void;
 }

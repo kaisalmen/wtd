@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
 
-# Overview 
+# Overview
 The `WorkerTaskManager` allows to register tasks expressed by an initialization, and an execution function with an optional comRounting function to be run in a web worker. It creates one to a maximum number of workers that can be used for execution. Multiple execution requests can be handled in parallel of the main task, If all workers are currently occupied the requested are enqueued, and the returned promise is fulfilled once a worker becomes available again.
 
 ## Features
@@ -33,7 +33,7 @@ There exist three possibilities:
 
 Whatever environment you choose to start [snowpack](https://www.snowpack.dev/) is used to serve the code and the examples using it. With this setup you are able to change the code and examples without invoking an additional bundler. Snowpack ensures all imported npm modules are available if previously installed in local environment (see `npm install`).
 
-If you run snowpack locally you require a `nodejs` and `npm`. The Gitpod and local docker environment ensure all prerequisites are fulfilled. 
+If you run snowpack locally you require a `nodejs` and `npm`. The Gitpod and local docker environment ensure all prerequisites are fulfilled.
 
 In any environment the dev server is reachable on port 8080.
 
@@ -68,22 +68,22 @@ const buildDependencies = function () {
 }
 
 const taskName = 'InlineWorker';
-this.workerTaskManager.registerTaskType(taskName, init, execute, null, false, buildDependencies());
+this.workerTaskManager.registerTaskTypeStandard(taskName, init, execute, null, false, buildDependencies());
 await this.workerTaskManager.initTaskType(taskName, { name: taskName })
     .then( () => this.workerTaskManager.enqueueForExecution( taskName, {}, null))
     .then( data => processData(data) )
     .catch( e => console.error( e ) );
 ```
 
-This is the same block required for a module Worker. The worker code resides in an extra file an contains all imports and exports required:
+This is the same block required for a worker loaded from a URL. The worker code resides in an extra file an contains the required `init` and `execute` functions. If the argument is true, the worker is treated as module worker:
 ```javascript
 const taskNameModule = 'ModuleWorker';
-this.workerTaskManager.registerTaskTypeModule('myModuleTask', '/examples/worker/helloWorldWorker.js');
+this.workerTaskManager.registerTaskTypeWithUrl('myModuleTask', true, '/examples/worker/helloWorldWorker.js');
 await this.workerTaskManager.initTaskType(taskNameModule, {})
     .then( () => this.workerTaskManager.enqueueForExecution( taskName, {}, null))
     .then( data => processData(data) )
     .catch( e => console.error( e ) );
-    
+
 ```
 The examples above are fully specified and used in [wtm_helloworld.html](public/examples/wtm_helloworld.html").
 
@@ -95,7 +95,7 @@ Just run `npm run build`
 ## Local library test environment
 
 Rollup is also used to create local test environments where the library and uglified library are used by the examples.
-Use `npm run prerelease` to build the libraries and the test environment. Inside both `build/verify` or `build/verifymin` you find a npm package.json and snowpack configuration that allows to serve everything. Run `npm run dev`. The example then use the packages library. 
+Use `npm run prerelease` to build the libraries and the test environment. Inside both `build/verify` or `build/verifymin` you find a npm package.json and snowpack configuration that allows to serve everything. Run `npm run dev`. The example then use the packages library.
 
 
 Happy coding!
