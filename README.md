@@ -7,6 +7,8 @@
 # Overview
 The `WorkerTaskManager` allows to register tasks expressed by an initialization, and an execution function with an optional comRounting function to be run in a web worker. It creates one to a maximum number of workers that can be used for execution. Multiple execution requests can be handled in parallel of the main task, If all workers are currently occupied the requested are enqueued, and the returned promise is fulfilled once a worker becomes available again.
 
+The orginal idea of a "TaskManager" was proposed by in Don McCurdy here: https://github.com/mrdoob/three.js/issues/18234 It evolved via https://github.com/mrdoob/three.js/pull/19650 into this repository.
+
 ## Features
 
 - `WorkerTaskManager` supports standard workers:
