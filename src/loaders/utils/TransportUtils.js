@@ -14,7 +14,7 @@ import { MaterialUtils } from './MaterialUtils.js';
 
 class DeUglify {
 
-	static buildThreeConst () {
+	static buildThreeConst() {
 		return 'const EventDispatcher = THREE.EventDispatcher;\n' +
 			'const BufferGeometry = THREE.BufferGeometry;\n' +
 			'const BufferAttribute = THREE.BufferAttribute;\n' +
@@ -24,34 +24,34 @@ class DeUglify {
 			'const MaterialLoader = THREE.MaterialLoader;\n';
 	}
 
-	static buildUglifiedThreeMapping () {
+	static buildUglifiedThreeMapping() {
 		function _BufferGeometry() { return BufferGeometry; }
-		function _BufferAttribute () { return BufferAttribute; }
-		function _Box3 () { return Box3; }
-		function _Sphere () { return Sphere; }
-		function _Texture () { return Texture; }
-		function _MaterialLoader () { return MaterialLoader; }
+		function _BufferAttribute() { return BufferAttribute; }
+		function _Box3() { return Box3; }
+		function _Sphere() { return Sphere; }
+		function _Texture() { return Texture; }
+		function _MaterialLoader() { return MaterialLoader; }
 
-		return DeUglify.buildUglifiedNameAssignment( _BufferGeometry, 'BufferGeometry', /_BufferGeometry/, false ) +
-			DeUglify.buildUglifiedNameAssignment( _BufferAttribute, 'BufferAttribute', /_BufferAttribute/, false ) +
-			DeUglify.buildUglifiedNameAssignment( _Box3, 'Box3', /_Box3/, false ) +
-			DeUglify.buildUglifiedNameAssignment( _Sphere, 'Sphere', /_Sphere/, false ) +
-			DeUglify.buildUglifiedNameAssignment( _Texture, 'Texture', /_Texture/, false ) +
-			DeUglify.buildUglifiedNameAssignment( _MaterialLoader, 'MaterialLoader', /_MaterialLoader/, false );
+		return DeUglify.buildUglifiedNameAssignment(_BufferGeometry, 'BufferGeometry', /_BufferGeometry/, false) +
+			DeUglify.buildUglifiedNameAssignment(_BufferAttribute, 'BufferAttribute', /_BufferAttribute/, false) +
+			DeUglify.buildUglifiedNameAssignment(_Box3, 'Box3', /_Box3/, false) +
+			DeUglify.buildUglifiedNameAssignment(_Sphere, 'Sphere', /_Sphere/, false) +
+			DeUglify.buildUglifiedNameAssignment(_Texture, 'Texture', /_Texture/, false) +
+			DeUglify.buildUglifiedNameAssignment(_MaterialLoader, 'MaterialLoader', /_MaterialLoader/, false);
 	}
 
-	static buildUglifiedThreeWtmMapping () {
-		function _DataTransport () { return DataTransport; }
-		function _GeometryTransport () { return GeometryTransport; }
-		function _MeshTransport () { return MeshTransport; }
-		function _MaterialsTransport () { return MaterialsTransport; }
-		function _MaterialUtils () { return MaterialUtils; }
+	static buildUglifiedThreeWtmMapping() {
+		function _DataTransport() { return DataTransport; }
+		function _GeometryTransport() { return GeometryTransport; }
+		function _MeshTransport() { return MeshTransport; }
+		function _MaterialsTransport() { return MaterialsTransport; }
+		function _MaterialUtils() { return MaterialUtils; }
 
-		return DeUglify.buildUglifiedNameAssignment( _DataTransport, 'DataTransport', /_DataTransport/, true ) +
-			DeUglify.buildUglifiedNameAssignment( _GeometryTransport, 'GeometryTransport', /_GeometryTransport/, true ) +
-			DeUglify.buildUglifiedNameAssignment( _MeshTransport, 'MeshTransport', /_MeshTransport/, true ) +
-			DeUglify.buildUglifiedNameAssignment( _MaterialsTransport, 'MaterialsTransport', /_MaterialsTransport/, true ) +
-			DeUglify.buildUglifiedNameAssignment( _MaterialUtils, 'MaterialUtils', /_MaterialUtils/, true );
+		return DeUglify.buildUglifiedNameAssignment(_DataTransport, 'DataTransport', /_DataTransport/, true) +
+			DeUglify.buildUglifiedNameAssignment(_GeometryTransport, 'GeometryTransport', /_GeometryTransport/, true) +
+			DeUglify.buildUglifiedNameAssignment(_MeshTransport, 'MeshTransport', /_MeshTransport/, true) +
+			DeUglify.buildUglifiedNameAssignment(_MaterialsTransport, 'MaterialsTransport', /_MaterialsTransport/, true) +
+			DeUglify.buildUglifiedNameAssignment(_MaterialUtils, 'MaterialUtils', /_MaterialUtils/, true);
 	}
 
 	static buildUglifiedNameAssignment(func, name, methodPattern, invert) {
@@ -85,11 +85,10 @@ class DataTransport {
 	 * @param {string} [cmd]
 	 * @param {string} [id]
 	 */
-	constructor( cmd, id ) {
-
+	constructor(cmd, id) {
 		this.main = {
-			cmd: ( cmd !== undefined ) ? cmd : 'unknown',
-			id: ( id !== undefined ) ? id : 0,
+			cmd: (cmd !== undefined) ? cmd : 'unknown',
+			id: (id !== undefined) ? id : 0,
 			type: 'DataTransport',
 			/** @type {number} */
 			progress: 0,
@@ -99,7 +98,6 @@ class DataTransport {
 		};
 		/** @type {ArrayBuffer[]} */
 		this.transferables = [];
-
 	}
 
 	/**
@@ -107,35 +105,27 @@ class DataTransport {
 	 * @param {object} transportObject
 	 * @return {DataTransport}
 	 */
-	loadData( transportObject ) {
-
+	loadData(transportObject) {
 		this.main.cmd = transportObject.cmd;
 		this.main.id = transportObject.id;
 		this.main.type = 'DataTransport';
-		this.setProgress( transportObject.progress );
-		this.setParams( transportObject.params );
+		this.setProgress(transportObject.progress);
+		this.setParams(transportObject.params);
 
-		if ( transportObject.buffers ) {
-
-			Object.entries( transportObject.buffers ).forEach( ( [name, buffer] ) => {
-
-				this.main.buffers[ name ] = buffer;
-
-			} );
-
+		if (transportObject.buffers) {
+			Object.entries(transportObject.buffers).forEach(([name, buffer]) => {
+				this.main.buffers[name] = buffer;
+			});
 		}
 		return this;
-
 	}
 
 	/**
 	 * Returns the value of the command.
 	 * @return {string}
 	 */
-	getCmd () {
-
+	getCmd() {
 		return this.main.cmd;
-
 	}
 
 	/**
@@ -143,9 +133,7 @@ class DataTransport {
 	 * @return {string}
 	 */
 	getId() {
-
 		return this.main.id;
-
 	}
 
 	/**
@@ -153,13 +141,11 @@ class DataTransport {
 	 * @param {object.<string, *>} params
 	 * @return {DataTransport}
 	 */
-	setParams( params ) {
-
-		if ( params !== null && params !== undefined ) {
+	setParams(params) {
+		if (params !== null && params !== undefined) {
 			this.main.params = params;
 		}
 		return this;
-
 	}
 
 	/**
@@ -167,9 +153,7 @@ class DataTransport {
 	 * @return {object.<string, *>}
 	 */
 	getParams() {
-
 		return this.main.params;
-
 	}
 
 	/**
@@ -177,11 +161,9 @@ class DataTransport {
 	 * @param {number} numericalValue
 	 * @return {DataTransport}
 	 */
-	setProgress( numericalValue ) {
-
+	setProgress(numericalValue) {
 		this.main.progress = numericalValue;
 		return this;
-
 	}
 
 	/**
@@ -190,11 +172,9 @@ class DataTransport {
 	 * @param {ArrayBuffer} buffer
 	 * @return {DataTransport}
 	 */
-	addBuffer ( name, buffer ) {
-
-		this.main.buffers[ name ] = buffer;
+	addBuffer(name, buffer) {
+		this.main.buffers[name] = buffer;
 		return this;
-
 	}
 
 	/**
@@ -202,10 +182,8 @@ class DataTransport {
 	 * @param {string} name
 	 * @return {ArrayBuffer}
 	 */
-	getBuffer( name ) {
-
-		return this.main.buffers[ name ];
-
+	getBuffer(name) {
+		return this.main.buffers[name];
 	}
 
 	/**
@@ -213,20 +191,14 @@ class DataTransport {
 	 * @param {boolean} cloneBuffers
 	 * @return {DataTransport}
 	 */
-	package( cloneBuffers ) {
-
-		for ( let buffer of Object.values( this.main.buffers ) ) {
-
-			if ( buffer !== null && buffer !== undefined ) {
-
-				const potentialClone = cloneBuffers ? buffer.slice( 0 ) : buffer;
-				this.transferables.push( potentialClone );
-
+	package(cloneBuffers) {
+		for (let buffer of Object.values(this.main.buffers)) {
+			if (buffer !== null && buffer !== undefined) {
+				const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
+				this.transferables.push(potentialClone);
 			}
-
 		}
 		return this;
-
 	}
 
 	/**
@@ -234,9 +206,7 @@ class DataTransport {
 	 * @return {object}
 	 */
 	getMain() {
-
 		return this.main;
-
 	}
 
 	/**
@@ -244,9 +214,7 @@ class DataTransport {
 	 * @return {ArrayBuffer[]}
 	 */
 	getTransferables() {
-
 		return this.transferables;
-
 	}
 
 	/**
@@ -254,11 +222,9 @@ class DataTransport {
 	 * @param {object} postMessageImpl
 	 * @return {DataTransport}
 	 */
-	postMessage( postMessageImpl ) {
-
-		postMessageImpl.postMessage( this.main, this.transferables );
+	postMessage(postMessageImpl) {
+		postMessageImpl.postMessage(this.main, this.transferables);
 		return this;
-
 	}
 }
 
@@ -272,16 +238,14 @@ class MaterialsTransport extends DataTransport {
 	 * @param {string} [cmd]
 	 * @param {string} [id]
 	 */
-	constructor( cmd, id ) {
-
-		super( cmd, id );
+	constructor(cmd, id) {
+		super(cmd, id);
 		this.main.type = 'MaterialsTransport';
 		/** {object.<string, Material>} */
 		this.main.materials = {};
 		/** {object.<number, string>} */
 		this.main.multiMaterialNames = {};
 		this.main.cloneInstructions = [];
-
 	}
 
 	/**
@@ -289,34 +253,25 @@ class MaterialsTransport extends DataTransport {
 	 * @param {object} transportObject
 	 * @return {MaterialsTransport}
 	 */
-	loadData( transportObject ) {
-
-		super.loadData( transportObject );
+	loadData(transportObject) {
+		super.loadData(transportObject);
 		this.main.type = 'MaterialsTransport';
-		Object.assign( this.main, transportObject );
+		Object.assign(this.main, transportObject);
 
 		const materialLoader = new MaterialLoader();
-		Object.entries( this.main.materials ).forEach( ( [ name, materialObject ] ) => {
-
-			this.main.materials[ name ] = materialLoader.parse( materialObject )
-
-		} );
+		Object.entries(this.main.materials).forEach(([name, materialObject]) => {
+			this.main.materials[name] = materialLoader.parse(materialObject)
+		});
 		return this;
-
 	}
 
-	_cleanMaterial ( material ) {
-
-		Object.entries( material ).forEach( ( [key, value] ) => {
-
-			if ( value instanceof Texture || value === null ) {
-				material[ key ] = undefined;
-
+	_cleanMaterial(material) {
+		Object.entries(material).forEach(([key, value]) => {
+			if (value instanceof Texture || value === null) {
+				material[key] = undefined;
 			}
-
-		} );
+		});
 		return material;
-
 	}
 
 	/**
@@ -325,11 +280,9 @@ class MaterialsTransport extends DataTransport {
 	 * @param {ArrayBuffer} buffer
 	 * @return {MaterialsTransport}
 	 */
-	addBuffer( name, buffer ) {
-
-		super.addBuffer( name, buffer );
+	addBuffer(name, buffer) {
+		super.addBuffer(name, buffer);
 		return this;
-
 	}
 
 	/**
@@ -337,54 +290,42 @@ class MaterialsTransport extends DataTransport {
 	 * @param {object.<string, *>} params
 	 * @return {MaterialsTransport}
 	 */
-	setParams( params ) {
-
-		super.setParams( params );
+	setParams(params) {
+		super.setParams(params);
 		return this;
-
 	}
 
 	/**
 	 * Set an object containing named materials.
 	 * @param {object.<string, Material>} materials
 	 */
-	setMaterials ( materials ) {
-
-		if ( materials !== undefined && materials !== null && Object.keys( materials ).length > 0 ) this.main.materials = materials;
+	setMaterials(materials) {
+		if (materials !== undefined && materials !== null && Object.keys(materials).length > 0) this.main.materials = materials;
 		return this;
-
 	}
 
 	/**
 	 * Returns all maerials
 	 * @return {object.<string, Material>}
 	 */
-	getMaterials () {
-
+	getMaterials() {
 		return this.main.materials;
-
 	}
 
 	/**
 	 * Removes all textures and null values from all materials
 	 */
-	cleanMaterials () {
-
+	cleanMaterials() {
 		let clonedMaterials = {};
 		let clonedMaterial;
-		for ( let material of Object.values( this.main.materials ) ) {
-
-			if ( typeof material.clone === 'function' ) {
-
+		for (let material of Object.values(this.main.materials)) {
+			if (typeof material.clone === 'function') {
 				clonedMaterial = material.clone();
-				clonedMaterials[ clonedMaterial.name ] = this._cleanMaterial( clonedMaterial );
-
+				clonedMaterials[clonedMaterial.name] = this._cleanMaterial(clonedMaterial);
 			}
-
 		}
-		this.setMaterials( clonedMaterials );
+		this.setMaterials(clonedMaterials);
 		return this;
-
 	}
 
 	/**
@@ -392,40 +333,30 @@ class MaterialsTransport extends DataTransport {
 	 * @param {boolean} cloneBuffers
 	 * @return {DataTransport}
 	 */
-	package ( cloneBuffers) {
-
-		super.package( cloneBuffers );
-		this.main.materials = MaterialUtils.getMaterialsJSON( this.main.materials );
+	package(cloneBuffers) {
+		super.package(cloneBuffers);
+		this.main.materials = MaterialUtils.getMaterialsJSON(this.main.materials);
 		return this;
-
 	}
 
 	/**
 	 * Tell whether a multi-material was defined
 	 * @return {boolean}
 	 */
-	hasMultiMaterial () {
-
-		return ( Object.keys( this.main.multiMaterialNames ).length > 0 );
-
+	hasMultiMaterial() {
+		return (Object.keys(this.main.multiMaterialNames).length > 0);
 	}
 
 	/**
 	 * Returns a single material if it is defined or null.
 	 * @return {Material|null}
 	 */
-	getSingleMaterial () {
-
-		if ( Object.keys( this.main.materials ).length > 0 ) {
-
-			return Object.entries( this.main.materials )[ 0 ][ 1 ];
-
+	getSingleMaterial() {
+		if (Object.keys(this.main.materials).length > 0) {
+			return Object.entries(this.main.materials)[0][1];
 		} else {
-
 			return null;
-
 		}
-
 	}
 
 	/**
@@ -436,37 +367,27 @@ class MaterialsTransport extends DataTransport {
 	 *
 	 * @return {Material|Material[]}
 	 */
-	processMaterialTransport ( materials, log ) {
-
-		for ( let i = 0; i < this.main.cloneInstructions.length; i ++ ) {
-
-			MaterialUtils.cloneMaterial( materials, this.main.cloneInstructions[ i ], log );
-
+	processMaterialTransport(materials, log) {
+		for (let i = 0; i < this.main.cloneInstructions.length; i++) {
+			MaterialUtils.cloneMaterial(materials, this.main.cloneInstructions[i], log);
 		}
 
 		let outputMaterial;
-		if ( this.hasMultiMaterial() ) {
-
+		if (this.hasMultiMaterial()) {
 			// multi-material
 			outputMaterial = [];
-			Object.entries( this.main.multiMaterialNames ).forEach( ( [ materialIndex, materialName ] ) => {
-
-				outputMaterial[ materialIndex ] = materials[ materialName ];
-
-			} );
-
+			Object.entries(this.main.multiMaterialNames).forEach(([materialIndex, materialName]) => {
+				outputMaterial[materialIndex] = materials[materialName];
+			});
 		}
 		else {
-
 			const singleMaterial = this.getSingleMaterial();
-			if (singleMaterial !== null ) {
-				outputMaterial = materials[ singleMaterial.name ];
-				if ( !outputMaterial ) outputMaterial = singleMaterial;
+			if (singleMaterial !== null) {
+				outputMaterial = materials[singleMaterial.name];
+				if (!outputMaterial) outputMaterial = singleMaterial;
 			}
-
 		}
 		return outputMaterial;
-
 	}
 }
 
@@ -480,9 +401,8 @@ class GeometryTransport extends DataTransport {
 	 * @param {string} [cmd]
 	 * @param {string} [id]
 	 */
-	constructor( cmd, id ) {
-
-		super( cmd, id );
+	constructor(cmd, id) {
+		super(cmd, id);
 		this.main.type = 'GeometryTransport';
 		// 0: mesh, 1: line, 2: point
 		/** @type {number} */
@@ -491,7 +411,6 @@ class GeometryTransport extends DataTransport {
 		this.main.geometry = {};
 		/** @type {BufferGeometry} */
 		this.main.bufferGeometry = null;
-
 	}
 
 	/**
@@ -499,12 +418,10 @@ class GeometryTransport extends DataTransport {
 	 * @param {object} transportObject
 	 * @return {GeometryTransport}
 	 */
-	loadData( transportObject ) {
-
-		super.loadData( transportObject );
+	loadData(transportObject) {
+		super.loadData(transportObject);
 		this.main.type = 'GeometryTransport';
-		return this.setGeometry( transportObject.geometry, transportObject.geometryType );
-
+		return this.setGeometry(transportObject.geometry, transportObject.geometryType);
 	}
 
 	/**
@@ -512,9 +429,7 @@ class GeometryTransport extends DataTransport {
 	 * @return {number}
 	 */
 	getGeometryType() {
-
 		return this.main.geometryType;
-
 	}
 
 	/**
@@ -522,11 +437,9 @@ class GeometryTransport extends DataTransport {
 	 * @param {object} params
 	 * @return {GeometryTransport}
 	 */
-	setParams( params ) {
-
-		super.setParams( params );
+	setParams(params) {
+		super.setParams(params);
 		return this;
-
 	}
 
 	/**
@@ -536,10 +449,10 @@ class GeometryTransport extends DataTransport {
 	 * @param {number} geometryType [0=Mesh|1=LineSegments|2=Points]
 	 * @return {GeometryTransport}
 	 */
-	setGeometry( geometry, geometryType ) {
+	setGeometry(geometry, geometryType) {
 		this.main.geometry = geometry;
 		this.main.geometryType = geometryType;
-		if ( geometry instanceof BufferGeometry ) this.main.bufferGeometry = geometry;
+		if (geometry instanceof BufferGeometry) this.main.bufferGeometry = geometry;
 
 		return this;
 	}
@@ -550,24 +463,23 @@ class GeometryTransport extends DataTransport {
 	 * @param {boolean} cloneBuffers Clone buffers if their content shall stay in the current context.
 	 * @return {GeometryTransport}
 	 */
-	package( cloneBuffers ) {
-
-		super.package( cloneBuffers );
-		const vertexBA = this.main.geometry.getAttribute( 'position' );
-		const normalBA = this.main.geometry.getAttribute( 'normal' );
-		const uvBA = this.main.geometry.getAttribute( 'uv' );
-		const colorBA = this.main.geometry.getAttribute( 'color' );
-		const skinIndexBA = this.main.geometry.getAttribute( 'skinIndex' );
-		const skinWeightBA = this.main.geometry.getAttribute( 'skinWeight' );
+	package(cloneBuffers) {
+		super.package(cloneBuffers);
+		const vertexBA = this.main.geometry.getAttribute('position');
+		const normalBA = this.main.geometry.getAttribute('normal');
+		const uvBA = this.main.geometry.getAttribute('uv');
+		const colorBA = this.main.geometry.getAttribute('color');
+		const skinIndexBA = this.main.geometry.getAttribute('skinIndex');
+		const skinWeightBA = this.main.geometry.getAttribute('skinWeight');
 		const indexBA = this.main.geometry.getIndex();
 
-		this._addBufferAttributeToTransferable( vertexBA, cloneBuffers );
-		this._addBufferAttributeToTransferable( normalBA, cloneBuffers );
-		this._addBufferAttributeToTransferable( uvBA, cloneBuffers );
-		this._addBufferAttributeToTransferable( colorBA, cloneBuffers );
-		this._addBufferAttributeToTransferable( skinIndexBA, cloneBuffers );
-		this._addBufferAttributeToTransferable( skinWeightBA, cloneBuffers );
-		this._addBufferAttributeToTransferable( indexBA, cloneBuffers );
+		this._addBufferAttributeToTransferable(vertexBA, cloneBuffers);
+		this._addBufferAttributeToTransferable(normalBA, cloneBuffers);
+		this._addBufferAttributeToTransferable(uvBA, cloneBuffers);
+		this._addBufferAttributeToTransferable(colorBA, cloneBuffers);
+		this._addBufferAttributeToTransferable(skinIndexBA, cloneBuffers);
+		this._addBufferAttributeToTransferable(skinWeightBA, cloneBuffers);
+		this._addBufferAttributeToTransferable(indexBA, cloneBuffers);
 		return this;
 	}
 
@@ -576,31 +488,28 @@ class GeometryTransport extends DataTransport {
 	 * @param {boolean} cloneBuffers
 	 * @return {GeometryTransport}
 	 */
-	reconstruct( cloneBuffers ) {
-
-		if ( this.main.bufferGeometry instanceof BufferGeometry ) return this;
+	reconstruct(cloneBuffers) {
+		if (this.main.bufferGeometry instanceof BufferGeometry) return this;
 		this.main.bufferGeometry = new BufferGeometry();
 
 		const transferredGeometry = this.main.geometry;
-		this._assignAttribute( transferredGeometry.attributes.position, 'position', cloneBuffers );
-		this._assignAttribute( transferredGeometry.attributes.normal, 'normal', cloneBuffers );
-		this._assignAttribute( transferredGeometry.attributes.uv, 'uv', cloneBuffers );
-		this._assignAttribute( transferredGeometry.attributes.color, 'color', cloneBuffers );
-		this._assignAttribute( transferredGeometry.attributes.skinIndex, 'skinIndex', cloneBuffers );
-		this._assignAttribute( transferredGeometry.attributes.skinWeight, 'skinWeight', cloneBuffers );
+		this._assignAttribute(transferredGeometry.attributes.position, 'position', cloneBuffers);
+		this._assignAttribute(transferredGeometry.attributes.normal, 'normal', cloneBuffers);
+		this._assignAttribute(transferredGeometry.attributes.uv, 'uv', cloneBuffers);
+		this._assignAttribute(transferredGeometry.attributes.color, 'color', cloneBuffers);
+		this._assignAttribute(transferredGeometry.attributes.skinIndex, 'skinIndex', cloneBuffers);
+		this._assignAttribute(transferredGeometry.attributes.skinWeight, 'skinWeight', cloneBuffers);
 
 		const index = transferredGeometry.index;
-		if ( index !== null && index !== undefined ) {
-
-			const indexBuffer = cloneBuffers ? index.array.slice( 0 ) : index.array;
-			this.main.bufferGeometry.setIndex( new BufferAttribute( indexBuffer, index.itemSize, index.normalized ) );
-
+		if (index !== null && index !== undefined) {
+			const indexBuffer = cloneBuffers ? index.array.slice(0) : index.array;
+			this.main.bufferGeometry.setIndex(new BufferAttribute(indexBuffer, index.itemSize, index.normalized));
 		}
 		const boundingBox = transferredGeometry.boundingBox;
-		if ( boundingBox !== null ) this.main.bufferGeometry.boundingBox = Object.assign( new Box3(), boundingBox );
+		if (boundingBox !== null) this.main.bufferGeometry.boundingBox = Object.assign(new Box3(), boundingBox);
 
 		const boundingSphere = transferredGeometry.boundingSphere;
-		if ( boundingSphere !== null ) this.main.bufferGeometry.boundingSphere = Object.assign( new Sphere(), boundingSphere );
+		if (boundingSphere !== null) this.main.bufferGeometry.boundingSphere = Object.assign(new Sphere(), boundingSphere);
 
 		this.main.bufferGeometry.uuid = transferredGeometry.uuid;
 		this.main.bufferGeometry.name = transferredGeometry.name;
@@ -609,7 +518,6 @@ class GeometryTransport extends DataTransport {
 		this.main.bufferGeometry.drawRange = transferredGeometry.drawRange;
 		this.main.bufferGeometry.userData = transferredGeometry.userData;
 		return this;
-
 	}
 
 	/**
@@ -617,33 +525,23 @@ class GeometryTransport extends DataTransport {
 	 * @return {BufferGeometry|null}
 	 */
 	getBufferGeometry() {
-
-		return this.main.bufferGeometry
-
+		return this.main.bufferGeometry;
 	}
 
-	_addBufferAttributeToTransferable( input, cloneBuffer ) {
-
-		if ( input !== null && input !== undefined ) {
-
-			const arrayBuffer = cloneBuffer ? input.array.slice( 0 ) : input.array;
-			this.transferables.push( arrayBuffer.buffer );
-
+	_addBufferAttributeToTransferable(input, cloneBuffer) {
+		if (input !== null && input !== undefined) {
+			const arrayBuffer = cloneBuffer ? input.array.slice(0) : input.array;
+			this.transferables.push(arrayBuffer.buffer);
 		}
 		return this;
-
 	}
 
-	_assignAttribute( attr, attrName, cloneBuffer ) {
-
-		if ( attr ) {
-
-			const arrayBuffer = cloneBuffer ? attr.array.slice( 0 ) : attr.array;
-			this.main.bufferGeometry.setAttribute( attrName, new BufferAttribute( arrayBuffer, attr.itemSize, attr.normalized ) );
-
+	_assignAttribute(attr, attrName, cloneBuffer) {
+		if (attr) {
+			const arrayBuffer = cloneBuffer ? attr.array.slice(0) : attr.array;
+			this.main.bufferGeometry.setAttribute(attrName, new BufferAttribute(arrayBuffer, attr.itemSize, attr.normalized));
 		}
 		return this;
-
 	}
 
 }
@@ -659,13 +557,11 @@ class MeshTransport extends GeometryTransport {
 	 * @param {string} [cmd]
 	 * @param {string} [id]
 	 */
-	constructor( cmd, id ) {
-
-		super( cmd, id );
+	constructor(cmd, id) {
+		super(cmd, id);
 		this.main.type = 'MeshTransport';
 		// needs to be added as we cannot inherit from both materials and geometry
 		this.main.materialsTransport = new MaterialsTransport();
-
 	}
 
 	/**
@@ -673,14 +569,12 @@ class MeshTransport extends GeometryTransport {
 	 * @param {object} transportObject
 	 * @return {MeshTransport}
 	 */
-	loadData( transportObject ) {
-
-		super.loadData( transportObject );
+	loadData(transportObject) {
+		super.loadData(transportObject);
 		this.main.type = 'MeshTransport';
 		this.main.meshName = transportObject.meshName;
-		this.main.materialsTransport = new MaterialsTransport().loadData( transportObject.materialsTransport.main );
+		this.main.materialsTransport = new MaterialsTransport().loadData(transportObject.materialsTransport.main);
 		return this;
-
 	}
 
 	/**
@@ -688,11 +582,9 @@ class MeshTransport extends GeometryTransport {
 	 * @param {object} params
 	 * @return {MeshTransport}
 	 */
-	setParams( params ) {
-
-		super.setParams( params );
+	setParams(params) {
+		super.setParams(params);
 		return this;
-
 	}
 
 	/**
@@ -700,20 +592,16 @@ class MeshTransport extends GeometryTransport {
 	 * @param {MaterialsTransport} materialsTransport
 	 * @return {MeshTransport}
 	 */
-	setMaterialsTransport( materialsTransport ) {
-
-		if ( materialsTransport instanceof MaterialsTransport ) this.main.materialsTransport = materialsTransport;
+	setMaterialsTransport(materialsTransport) {
+		if (materialsTransport instanceof MaterialsTransport) this.main.materialsTransport = materialsTransport;
 		return this;
-
 	}
 
 	/**
 	 * @return {MaterialsTransport}
 	 */
 	getMaterialsTransport() {
-
 		return this.main.materialsTransport;
-
 	}
 
 	/**
@@ -722,12 +610,10 @@ class MeshTransport extends GeometryTransport {
 	 * @param {number} geometryType
 	 * @return {MeshTransport}
 	 */
-	setMesh( mesh, geometryType ) {
-
+	setMesh(mesh, geometryType) {
 		this.main.meshName = mesh.name;
-		super.setGeometry( mesh.geometry, geometryType );
+		super.setGeometry(mesh.geometry, geometryType);
 		return this;
-
 	}
 
 	/**
@@ -735,10 +621,9 @@ class MeshTransport extends GeometryTransport {
 	 * @param {boolean} cloneBuffers
 	 * @return {MeshTransport}
 	 */
-	package( cloneBuffers ) {
-
-		super.package( cloneBuffers );
-		if ( this.main.materialsTransport !== null ) this.main.materialsTransport.package( cloneBuffers );
+	package(cloneBuffers) {
+		super.package(cloneBuffers);
+		if (this.main.materialsTransport !== null) this.main.materialsTransport.package(cloneBuffers);
 		return this;
 	}
 
@@ -747,12 +632,10 @@ class MeshTransport extends GeometryTransport {
 	 * @param {boolean} cloneBuffers
 	 * @return {MeshTransport}
 	 */
-	reconstruct( cloneBuffers ) {
-
-		super.reconstruct( cloneBuffers );
+	reconstruct(cloneBuffers) {
+		super.reconstruct(cloneBuffers);
 		// so far nothing needs to be done for material
 		return this;
-
 	}
 
 }
@@ -771,40 +654,32 @@ class ObjectUtils {
 	 * @param processPrototype
 	 * @return {string}
 	 */
-	static serializePrototype( targetClass, targetPrototype, fullObjectName, processPrototype ) {
-
+	static serializePrototype(targetClass, targetPrototype, fullObjectName, processPrototype) {
 		let prototypeFunctions = [];
 		let objectString = '';
 		let target;
-		if ( processPrototype ) {
+		if (processPrototype) {
 			objectString = targetClass.toString() + "\n\n"
 			target = targetPrototype;
-		} else {
+		}
+		else {
 			target = targetClass;
 		}
-		for ( let name in target ) {
-
-			let objectPart = target[ name ];
+		for (let name in target) {
+			let objectPart = target[name];
 			let code = objectPart.toString();
-
-			if ( typeof objectPart === 'function' ) {
-
-				prototypeFunctions.push( '\t' + name + ': ' + code + ',\n\n' );
-
+			if (typeof objectPart === 'function') {
+				prototypeFunctions.push('\t' + name + ': ' + code + ',\n\n');
 			}
-
 		}
 
 		let protoString = processPrototype ? '.prototype' : '';
 		objectString += fullObjectName + protoString + ' = {\n\n';
-		for ( let i = 0; i < prototypeFunctions.length; i ++ ) {
-
-			objectString += prototypeFunctions[ i ];
-
+		for (let i = 0; i < prototypeFunctions.length; i++) {
+			objectString += prototypeFunctions[i];
 		}
 		objectString += '\n}\n;';
 		return objectString;
-
 	}
 
 	/**
@@ -812,10 +687,8 @@ class ObjectUtils {
 	 * @param {object} targetClass An ES6+ class
 	 * @return {string}
 	 */
-	static serializeClass( targetClass ) {
-
+	static serializeClass(targetClass) {
 		return targetClass.toString() + "\n\n";
-
 	}
 
 }
@@ -833,29 +706,22 @@ class ObjectManipulator {
 	 * @param {Object} params The parameter object
 	 * @param {boolean} forceCreation Force the creation of a property
 	 */
-	static applyProperties ( objToAlter, params, forceCreation ) {
-
+	static applyProperties(objToAlter, params, forceCreation) {
 		// fast-fail
-		if ( objToAlter === undefined || objToAlter === null || params === undefined || params === null ) return;
+		if (objToAlter === undefined || objToAlter === null || params === undefined || params === null) return;
 
 		let property, funcName, values;
-		for ( property in params ) {
+		for (property in params) {
+			funcName = 'set' + property.substring(0, 1).toLocaleUpperCase() + property.substring(1);
+			values = params[property];
 
-			funcName = 'set' + property.substring( 0, 1 ).toLocaleUpperCase() + property.substring( 1 );
-			values = params[ property ];
-
-			if ( typeof objToAlter[ funcName ] === 'function' ) {
-
-				objToAlter[ funcName ]( values );
-
-			} else if ( objToAlter.hasOwnProperty( property ) || forceCreation ) {
-
-				objToAlter[ property ] = values;
-
+			if (typeof objToAlter[funcName] === 'function') {
+				objToAlter[funcName](values);
 			}
-
+			else if (objToAlter.hasOwnProperty(property) || forceCreation) {
+				objToAlter[property] = values;
+			}
 		}
-
 	}
 
 }

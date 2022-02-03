@@ -9,18 +9,18 @@ export class WorkerTaskManager {
     setVerbose(verbose: boolean): WorkerTaskManager;
     setMaxParallelExecutions(maxParallelExecutions: number): WorkerTaskManager;
     getMaxParallelExecutions(): number;
-    supportsTaskType(taskType: string): boolean;
-    registerTaskType(taskType: string, initFunction: Function, executeFunction: Function, comRoutingFunction: Function, fallback: boolean, dependencyDescriptions?: Object[] | undefined): boolean;
-    registerTaskTypeModule(taskType: string, workerModuleUrl: string): boolean;
-    initTaskType(taskType: string, config: object, transferables?: Transferable[] | undefined): Promise<void>;
+    supportsTaskType(taskTypeName: string): boolean;
+    registerTaskTypeStandard(taskTypeName: string, initFunction: Function, executeFunction: Function, comRoutingFunction: Function, fallback: boolean, dependencyDescriptions?: Object[] | undefined): boolean;
+    registerTaskTypeWithUrl(taskTypeName: string, moduleWorker: boolean, workerUrl: string): boolean;
+    initTaskType(taskTypeName: string, config: object, transferables?: Transferable[] | undefined): Promise<void>;
     _wait(milliseconds: any): Promise<any>;
-    enqueueForExecution(taskType: string, config: object, assetAvailableFunction: Function, transferables?: Transferable[] | undefined): Promise<any>;
+    enqueueForExecution(taskTypeName: string, config: object, assetAvailableFunction: Function, transferables?: Transferable[] | undefined): Promise<any>;
     _depleteExecutions(): void;
     dispose(): WorkerTaskManager;
 }
 declare class WorkerTypeDefinition {
-    constructor(taskType: string, maximumCount: number, fallback: boolean, verbose?: boolean | undefined);
-    taskType: string;
+    constructor(taskTypeName: string, maximumCount: number, fallback: boolean, verbose?: boolean | undefined);
+    taskTypeName: string;
     fallback: boolean;
     verbose: boolean;
     initialised: boolean;
@@ -32,7 +32,8 @@ declare class WorkerTypeDefinition {
             descriptions: Object[];
             code: string[];
         };
-        workerModuleUrl: URL;
+        moduleWorker: boolean;
+        workerUrl: URL;
     };
     workers: {
         code: string[];
@@ -47,11 +48,12 @@ declare class WorkerTypeDefinition {
     setFunctions(initFunction: Function, executeFunction: Function, comRoutingFunction?: Function | undefined): void;
     private _addWorkerCode;
     setDependencyDescriptions(dependencyDescriptions: Object[]): void;
-    setWorkerModule(workerModuleUrl: string): void;
+    setWorkerUrl(moduleWorker: boolean, workerUrl: string): void;
     isWorkerModule(): boolean;
+    haveWorkerUrl(): boolean;
     loadDependencies(): string[];
     createWorkers(): Promise<void>;
-    createWorkerModules(): Promise<void>;
+    createWorkerFromUrl(module: any): Promise<void>;
     initWorkers(config: object, transferables: Transferable[]): Promise<void>;
     getAvailableTask(): TaskWorker | MockedTaskWorker | undefined;
     hasTask(): boolean;
@@ -59,8 +61,8 @@ declare class WorkerTypeDefinition {
     dispose(): void;
 }
 declare class StoredExecution {
-    constructor(taskType: string, config: object, assetAvailableFunction: Function, resolve: Function, reject: Function, transferables?: Transferable[] | undefined);
-    taskType: string;
+    constructor(taskTypeName: string, config: object, assetAvailableFunction: Function, resolve: Function, reject: Function, transferables?: Transferable[] | undefined);
+    taskTypeName: string;
     config: object;
     assetAvailableFunction: Function;
     resolve: Function;

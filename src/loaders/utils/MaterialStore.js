@@ -20,31 +20,27 @@ class MaterialStore {
 	 * Creates a new {@link MaterialStore}.
 	 * @param {boolean} createDefaultMaterials
 	 */
-	constructor( createDefaultMaterials ) {
-
+	constructor(createDefaultMaterials) {
 		this.materials = {};
-		if ( createDefaultMaterials ) {
-
-			const defaultMaterial = new MeshStandardMaterial( { color: 0xDCF1FF } );
+		if (createDefaultMaterials) {
+			const defaultMaterial = new MeshStandardMaterial({ color: 0xDCF1FF });
 			defaultMaterial.name = 'defaultMaterial';
 
-			const defaultVertexColorMaterial = new MeshStandardMaterial( { color: 0xDCF1FF } );
+			const defaultVertexColorMaterial = new MeshStandardMaterial({ color: 0xDCF1FF });
 			defaultVertexColorMaterial.name = 'defaultVertexColorMaterial';
 			defaultVertexColorMaterial.vertexColors = VertexColors;
 
 			const defaultLineMaterial = new LineBasicMaterial();
 			defaultLineMaterial.name = 'defaultLineMaterial';
 
-			const defaultPointMaterial = new PointsMaterial( { size: 0.1 } );
+			const defaultPointMaterial = new PointsMaterial({ size: 0.1 });
 			defaultPointMaterial.name = 'defaultPointMaterial';
 
-			this.materials[ defaultMaterial.name ] = defaultMaterial;
-			this.materials[ defaultVertexColorMaterial.name ] = defaultVertexColorMaterial;
-			this.materials[ defaultLineMaterial.name ] = defaultLineMaterial;
-			this.materials[ defaultPointMaterial.name ] = defaultPointMaterial;
-
+			this.materials[defaultMaterial.name] = defaultMaterial;
+			this.materials[defaultVertexColorMaterial.name] = defaultVertexColorMaterial;
+			this.materials[defaultLineMaterial.name] = defaultLineMaterial;
+			this.materials[defaultPointMaterial.name] = defaultPointMaterial;
 		}
-
 	}
 
 	/**
@@ -53,21 +49,15 @@ class MaterialStore {
 	 * @param {object<string, Material>} newMaterials Object with named {@link Material}
 	 * @param {boolean} forceOverrideExisting boolean Override existing material
 	 */
-	addMaterials ( newMaterials, forceOverrideExisting ) {
-
-		if ( newMaterials === undefined || newMaterials === null ) newMaterials = {};
-		if ( Object.keys( newMaterials ).length > 0 ) {
-
+	addMaterials(newMaterials, forceOverrideExisting) {
+		if (newMaterials === undefined || newMaterials === null) newMaterials = {};
+		if (Object.keys(newMaterials).length > 0) {
 			let material;
-			for ( const materialName in newMaterials ) {
-
-				material = newMaterials[ materialName ];
-				MaterialUtils.addMaterial( this.materials, material, materialName, forceOverrideExisting === true );
-
+			for (const materialName in newMaterials) {
+				material = newMaterials[materialName];
+				MaterialUtils.addMaterial(this.materials, material, materialName, forceOverrideExisting === true);
 			}
-
 		}
-
 	}
 
 	/**
@@ -75,10 +65,8 @@ class MaterialStore {
 	 *
 	 * @returns {Object} Map of {@link Material}
 	 */
-	getMaterials () {
-
+	getMaterials() {
 		return this.materials;
-
 	}
 
 	/**
@@ -86,19 +74,15 @@ class MaterialStore {
 	 * @param {String} materialName
 	 * @returns {Material}
 	 */
-	getMaterial ( materialName ) {
-
-		return this.materials[ materialName ];
-
+	getMaterial(materialName) {
+		return this.materials[materialName];
 	}
 
 	/**
 	 * Removes all materials
 	 */
-	clearMaterials () {
-
+	clearMaterials() {
 		this.materials = {};
-
 	}
 
 }
