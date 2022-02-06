@@ -1,0 +1,42 @@
+{
+  "name": "three-wtm",
+  "version": "2.0.0-dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "splitting": false,
+    "sourcemap": true,
+    "dts": true,
+    "format": ["esm"],
+    "target": "esnext",
+    "external": ["three"]
+  },
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "dev": "vite",
+    "lint": "eslint src",
+    "build": "npm run clean && tsup",
+    "serve": "tsc && vite preview"
+  },
+  "dependencies": {
+		"three": "^0.137.5",
+    "@types/three": "^0.137.0"
+	},
+  "devDependencies": {
+    "jsdoc": "^3.6.10",
+    "tsup": "^5.11.13"
+  }
+}

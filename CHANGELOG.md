@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.0-dev
+- Switch from snowpack to vitejs
+
 ## 1.1.0
 - Added the possibility to load a non-module worker from a URL. Triggered by https://github.com/kaisalmen/WWOBJLoader/issues/60
 - Updated example wtm_helloworld.html to reflect how this is done.
