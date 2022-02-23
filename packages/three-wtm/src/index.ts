@@ -1,7 +1,6 @@
 import {
     WorkerTaskManager,
     Payload,
-    PayloadConfig,
     WorkerTaskManagerWorker,
     WorkerTaskManagerDefaultWorker
 } from './loaders/workerTaskManager/WorkerTaskManager';
@@ -9,13 +8,11 @@ import { MaterialUtils, MaterialCloneInstructions } from './loaders/utils/Materi
 import { MaterialStore } from './loaders/utils/MaterialStore';
 import { DataTransport, ObjectManipulator } from './loaders/utils/DataTransport';
 import { MaterialsTransport } from './loaders/utils/MaterialsTransport';
-import { GeometryTransport } from './loaders/utils/GeometryTransport';
-import { MeshTransport } from './loaders/utils/MeshTransport';
+import { MeshTransport, MeshTransportDef } from './loaders/utils/MeshTransport';
 
 export {
     WorkerTaskManager,
     Payload,
-    PayloadConfig,
     WorkerTaskManagerWorker,
     WorkerTaskManagerDefaultWorker,
     DataTransport,
@@ -24,6 +21,6 @@ export {
     MaterialCloneInstructions,
     MaterialStore,
     MaterialsTransport,
-    GeometryTransport,
-    MeshTransport
+    MeshTransport,
+    MeshTransportDef
 };

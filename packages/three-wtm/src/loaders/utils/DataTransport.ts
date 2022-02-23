@@ -1,14 +1,14 @@
-export type DataTransportDef = {
-    cmd: string;
-    id: number;
+import { Payload } from '../..';
+
+export type DataTransportDef = Payload & {
     type: string;
     progress: number;
-    buffers: Map<string, ArrayBuffer>;
-    params: Record<string, unknown>;
+    buffers: Map<string, ArrayBufferLike>;
 };
 
 export function buildDataTransport(type: string, cmd?: string, id?: number): DataTransportDef {
     return {
+        name: 'DataTransportDef',
         cmd: (cmd !== undefined) ? cmd : 'unknown',
         id: (id !== undefined) ? id : 0,
         type: type,
@@ -19,7 +19,7 @@ export function buildDataTransport(type: string, cmd?: string, id?: number): Dat
     };
 }
 
-export function copyBuffers(input: Map<string, ArrayBuffer>, output: ArrayBuffer[], cloneBuffers: boolean) {
+export function copyBuffers(input: Map<string, ArrayBuffer>, output: Transferable[], cloneBuffers: boolean) {
     for (const buffer of Object.values(input)) {
         if (buffer !== null && buffer !== undefined) {
             const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
@@ -32,8 +32,10 @@ export function copyBuffers(input: Map<string, ArrayBuffer>, output: ArrayBuffer
  * @param {unknown} params
  * @return {MeshTransport}
  */
-export function setParams(input: Record<string, unknown>, params: Record<string, unknown>) {
-    input.params = params;
+export function setParams(input: Record<string, unknown> | undefined, params: Record<string, unknown> | undefined) {
+    if (input && params) {
+        input.params = params;
+    }
 }
 
 /**
@@ -42,7 +44,7 @@ export function setParams(input: Record<string, unknown>, params: Record<string,
 export class DataTransport {
 
     private main: DataTransportDef;
-    private transferables: ArrayBuffer[];
+    private transferables: Transferable[];
 
     /**
      * Creates a new {@link DataTransport}.
@@ -92,7 +94,7 @@ export class DataTransport {
       * @param {Record<string, unknown>} params
       * @return {DataTransport}
       */
-    setParams(params: Record<string, unknown>): DataTransport {
+    setParams(params: Record<string, unknown> | undefined): DataTransport {
         setParams(this.main.params, params);
         return this;
     }
@@ -143,22 +145,6 @@ export class DataTransport {
     package(cloneBuffers: boolean): DataTransport {
         copyBuffers(this.main.buffers, this.transferables, cloneBuffers);
         return this;
-    }
-
-    /**
-     * Return main data object
-     * @return {DataTransportDef}
-     */
-    getMain(): DataTransportDef {
-        return this.main;
-    }
-
-    /**
-     * Return all transferable in one array.
-     * @return {ArrayBuffer[]}
-     */
-    getTransferables(): ArrayBuffer[] {
-        return this.transferables;
     }
 }
 

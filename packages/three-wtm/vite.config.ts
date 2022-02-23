@@ -1,7 +1,6 @@
 /* eslint-disable no-undef */
 import { defineConfig } from 'vite';
 import path from 'path';
-import typescript from '@rollup/plugin-typescript';
 
 export default defineConfig({
     build: {
@@ -9,14 +8,6 @@ export default defineConfig({
         rollupOptions: {
             external: ['three'],
             plugins: [
-                typescript({
-                    target: 'ESNext',
-                    rootDir: path.resolve('./src'),
-                    declaration: true,
-                    declarationDir: path.resolve('./dist'),
-                    exclude: path.resolve('./node_modules/**'),
-                    allowSyntheticDefaultImports: true,
-                })
             ]
         },
         lib: {

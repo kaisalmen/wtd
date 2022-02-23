@@ -71,10 +71,10 @@ class WorkerTaskManager {
      *
      * @param {string} taskTypeName The name to be used for registration.
      * @param {boolean} moduleWorker If the worker is a module or a standard worker
-     * @param {string} workerUrl The URL to be used for the Worker. Worker must provide logic to handle "init" and "execute" messages.
+     * @param {URL} workerUrl The URL to be used for the Worker. Worker must provide logic to handle "init" and "execute" messages.
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTaskTypeWithUrl(taskTypeName: string, moduleWorker: boolean, workerUrl: string) {
+    registerTaskTypeWithUrl(taskTypeName: string, moduleWorker: boolean, workerUrl: URL) {
         const allowedToRegister = !this.supportsTaskType(taskTypeName);
         if (allowedToRegister) {
             const workerTypeDefinition = new WorkerTypeDefinition(taskTypeName, this.maxParallelExecutions, this.verbose);
@@ -88,10 +88,10 @@ class WorkerTaskManager {
      * Provides initialization configuration and transferable objects.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {PayloadConfig} config Configuration properties as serializable string.
+     * @param {Payload} payload Configuration properties as serializable string.
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      */
-    async initTaskType(taskTypeName: string, config: PayloadConfig, transferables?: Transferable[]) {
+    async initTaskType(taskTypeName: string, payload: Payload, transferables?: Transferable[]) {
         const workerTypeDefinition = this.taskTypes.get(taskTypeName);
         if (workerTypeDefinition) {
 
@@ -99,7 +99,7 @@ class WorkerTaskManager {
                 workerTypeDefinition.getStatus().initStarted = true;
                 if (workerTypeDefinition.haveWorkerUrl()) {
                     await workerTypeDefinition.createWorkerFromUrl(workerTypeDefinition.isWorkerModule())
-                        .then(() => workerTypeDefinition.initWorkers(config, transferables))
+                        .then(() => workerTypeDefinition.initWorkers(payload, transferables))
                         .then(() => workerTypeDefinition.getStatus().initComplete = true)
                         .catch(e => console.error(e));
                 }
@@ -122,14 +122,14 @@ class WorkerTaskManager {
      * Queues a new task of the given type. Task will not execute until initialization completes.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {PayloadConfig} config Configuration properties as serializable string.
+     * @param {Payload} payload Configuration properties as serializable string.
      * @param {Function} assetAvailableFunction Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, config: PayloadConfig, assetAvailableFunction?: Function, transferables?: Transferable[]) {
+    async enqueueForExecution(taskTypeName: string, payload: Payload, assetAvailableFunction?: Function, transferables?: Transferable[]) {
         const localPromise = new Promise((resolveUser, rejectUser) => {
-            this.storedExecutions.push(new StoredExecution(taskTypeName, config, resolveUser, rejectUser, assetAvailableFunction, transferables));
+            this.storedExecutions.push(new StoredExecution(taskTypeName, payload, resolveUser, rejectUser, assetAvailableFunction, transferables));
             this.depleteExecutions();
         });
         return localPromise;
@@ -160,11 +160,9 @@ class WorkerTaskManager {
                             }
                         };
                         taskWorker.onerror = rejectWorker;
-                        taskWorker.postMessage({
-                            cmd: 'execute',
-                            workerId: taskWorker.getId(),
-                            config: storedExecution.config
-                        }, storedExecution.transferables!);
+                        storedExecution.payload.cmd = 'execute';
+                        storedExecution.payload.workerId = taskWorker.getId();
+                        taskWorker.postMessage(storedExecution.payload, storedExecution.transferables!);
                     });
                     promiseWorker.then((message: unknown) => {
                         workerTypeDefinition.returnAvailableTask(taskWorker);
@@ -254,11 +252,11 @@ class WorkerTypeDefinition {
      * Set the url of the module worker.
      *
      * @param {boolean} moduleWorker If the worker is a module or a standard worker
-     * @param {string} workerUrl The URL is created from this string.
+     * @param {URL} workerUrl The URL is created from this string.
      */
-    setWorkerUrl(moduleWorker: boolean, workerUrl: string) {
+    setWorkerUrl(moduleWorker: boolean, workerUrl: URL) {
         this.moduleWorker = moduleWorker;
-        this.workerUrl = new URL(workerUrl, window.location.href);
+        this.workerUrl = workerUrl;
     }
 
     /**
@@ -300,31 +298,28 @@ class WorkerTypeDefinition {
     /**
      * Initialises all workers with common configuration data.
      *
-     * @param {PayloadConfig} config
+     * @param {Payload payload
      * @param {Transferable[]} transferables
      */
-    async initWorkers(config: PayloadConfig, transferables?: Transferable[]) {
+    async initWorkers(payload: Payload, transferables?: Transferable[]) {
         const promises = [];
         for (const taskWorker of this.workers.instances) {
 
             const taskWorkerPromise = new Promise((resolveWorker, rejectWorker) => {
                 taskWorker.onmessage = message => {
-                    if (this.verbose) console.log(`Init Complete: ${config.name}: ${message.data.id}`);
+                    if (this.verbose) console.log(`Init Complete: ${payload.name}: ${message.data.id}`);
                     resolveWorker(message);
                 };
                 taskWorker.onerror = rejectWorker;
-                const message = {
-                    cmd: 'init',
-                    workerId: taskWorker.getId(),
-                    config: config
-                };
+                payload.cmd = 'init';
+                payload.workerId = taskWorker.getId();
                 if (transferables) {
                     // ensure all transferables are copies to all workers on init!
                     const transferablesToWorker = transferables.slice(0, transferables.length);
-                    taskWorker.postMessage(message, transferablesToWorker);
+                    taskWorker.postMessage(payload, transferablesToWorker);
                 }
                 else {
-                    taskWorker.postMessage(message);
+                    taskWorker.postMessage(payload);
                 }
             });
             promises.push(taskWorkerPromise);
@@ -382,15 +377,15 @@ class WorkerTypeDefinition {
 class StoredExecution {
 
     taskTypeName: string;
-    config: PayloadConfig;
+    payload: Payload;
     resolve: Function;
     reject: Function;
     assetAvailableFunction?: Function;
     transferables?: Transferable[];
 
-    constructor(taskTypeName: string, config: PayloadConfig, resolve: Function, reject: Function, assetAvailableFunction?: Function, transferables?: Transferable[]) {
+    constructor(taskTypeName: string, payload: Payload, resolve: Function, reject: Function, assetAvailableFunction?: Function, transferables?: Transferable[]) {
         this.taskTypeName = taskTypeName;
-        this.config = config;
+        this.payload = payload;
         this.resolve = resolve;
         this.reject = reject;
         this.assetAvailableFunction = assetAvailableFunction;
@@ -429,22 +424,18 @@ class TaskWorker extends Worker {
 }
 
 type Payload = {
-    cmd: string,
-    id: string,
-    workerId: string,
-    config: PayloadConfig
-}
-
-type PayloadConfig = {
-    name: string,
-    id: string
+    name: string;
+    id: number;
+    cmd: string;
+    workerId?: number;
+    params?: Record<string, unknown>;
 }
 
 interface WorkerTaskManagerWorker {
 
-    init(workerId: string, config: PayloadConfig): void;
+    init(payload: Payload): void;
 
-    execute(workerId: string, config: PayloadConfig): void;
+    execute(payload: Payload): void;
 
     comRouting(message: never): void;
 
@@ -452,24 +443,26 @@ interface WorkerTaskManagerWorker {
 
 class WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
 
-    init(workerId: string, config: PayloadConfig): void {
-        console.log(`WorkerTaskManagerDefaultWorker#init: workerId: ${workerId} config: ${config}`);
+    init(payload: Payload): void {
+        console.log(`WorkerTaskManagerDefaultWorker#init: name: ${payload.name} id: ${payload.id} workerId: ${payload.workerId}`);
     }
 
-    execute(workerId: string, config: PayloadConfig): void {
-        console.log(`WorkerTaskManagerDefaultWorker#execute: workerId: ${workerId} config: ${config}`);
+    execute(payload: Payload): void {
+        console.log(`WorkerTaskManagerDefaultWorker#execute: name: ${payload.name} id: ${payload.id} workerId: ${payload.workerId}`);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
         const payload = (message as MessageEvent).data as Payload;
-        if (payload.cmd === 'init') {
-            this.init(payload.workerId, payload.config);
-        }
-        else if (payload.cmd === 'execute') {
-            this.execute(payload.workerId, payload.config);
+        if (payload) {
+            if (payload.cmd === 'init') {
+                this.init(payload);
+            }
+            else if (payload.cmd === 'execute') {
+                this.execute(payload);
+            }
         }
     }
 }
 
-export { WorkerTaskManager, Payload, PayloadConfig, WorkerTaskManagerWorker, WorkerTaskManagerDefaultWorker };
+export { WorkerTaskManager, Payload, WorkerTaskManagerWorker, WorkerTaskManagerDefaultWorker };

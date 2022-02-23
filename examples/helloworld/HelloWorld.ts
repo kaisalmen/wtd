@@ -1,21 +1,9 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, Payload } from 'three-wtm';
+import { WorkerTaskManager, Payload, MeshTransport } from 'three-wtm';
+import { MeshTransportDef } from 'three-wtm';
 
-//import { HelloWorldWorker } from '../worker/helloWorldWorkerModule?Worker';
-
-/*
-import {
-    DataTransport,
-    GeometryTransport,
-    MeshTransport,
-    MaterialsTransport,
-    ObjectUtils,
-    DeUglify
-} from '/src/loaders/utils/TransportUtils';
-import { MaterialUtils } from '/src/loaders/utils/MaterialUtils';
-*/
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
     posCameraTarget: THREE.Vector3;
@@ -29,20 +17,20 @@ export type CameraDefaults = {
  */
 class WorkerTaskManagerHelloWorldExample {
 
-    renderer: THREE.WebGLRenderer;
-    canvas: HTMLElement;
-    scene: THREE.Scene = new THREE.Scene();
-    camera: THREE.PerspectiveCamera;
-    cameraTarget: THREE.Vector3;
-    cameraDefaults: CameraDefaults = {
+    private renderer: THREE.WebGLRenderer;
+    private canvas: HTMLElement;
+    private scene: THREE.Scene = new THREE.Scene();
+    private camera: THREE.PerspectiveCamera;
+    private cameraTarget: THREE.Vector3;
+    private cameraDefaults: CameraDefaults = {
         posCamera: new THREE.Vector3(1000.0, 1000.0, 1000.0),
         posCameraTarget: new THREE.Vector3(0, 0, 0),
         near: 0.1,
         far: 10000,
         fov: 45
     };
-    controls: TrackballControls;
-    workerTaskManager: WorkerTaskManager = new WorkerTaskManager(2).setVerbose(true);
+    private controls: TrackballControls;
+    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(2).setVerbose(true);
 
     constructor(elementToBindTo: HTMLElement | null) {
         if (elementToBindTo === null) throw Error('Bad element HTML given as canvas.');
@@ -79,38 +67,38 @@ class WorkerTaskManagerHelloWorldExample {
     async initContent() {
         const awaitInit = [];
         const taskNameStandard = 'WorkerStandard';
-        const workerStandardPC = { name: taskNameStandard, id: taskNameStandard };
-        this.workerTaskManager.registerTaskTypeWithUrl(taskNameStandard, false, '../worker/helloWorldWorkerStandard?Worker');
+        const workerStandardPC = { name: taskNameStandard, id: 0, cmd: 'init' } as Payload;
+        this.workerTaskManager.registerTaskTypeWithUrl(taskNameStandard, false, new URL('../worker/helloWorldWorkerStandard', import.meta.url));
         awaitInit.push(this.workerTaskManager.initTaskType(taskNameStandard, workerStandardPC));
 
         this.workerTaskManager.enqueueForExecution(taskNameStandard, workerStandardPC)
-            .then((data: unknown) => {
-                const cmd = (data as Payload).cmd;
-                if (cmd === 'executeComplete') console.log(`${taskNameStandard}: executeComplete`);
+            .then((e: unknown) => {
+                const data = e as Payload;
+                if (data.cmd === 'execComplete') {
+                    console.log(`${taskNameStandard}: execComplete`);
+                }
             })
-            .catch(e => console.error(e));
+            .catch((e: unknown) => console.error(e));
 
         const taskNameModule = 'WorkerModule';
-        const workerModulePC = { name: taskNameModule, id: taskNameModule };
-        this.workerTaskManager.registerTaskTypeWithUrl(taskNameModule, true, '../worker/helloWorldWorkerModule?Worker');
+        const workerModulePC = { name: taskNameModule, id: 0, cmd: 'init' } as Payload;
+        this.workerTaskManager.registerTaskTypeWithUrl(taskNameModule, true, new URL('../worker/helloWorldWorkerModule', import.meta.url));
         awaitInit.push(this.workerTaskManager.initTaskType(taskNameModule, workerModulePC));
         await Promise.all(awaitInit);
 
         this.workerTaskManager.enqueueForExecution(taskNameModule, workerModulePC)
-            .then((data: unknown) => {
-                const cmd = (data as Payload).cmd;
-                if (cmd === 'executeComplete') console.log(`${taskNameModule}: executeComplete`);
-            })
-            .catch(e => console.error(e));
-        /*
-                data => {
-                    if (data.cmd === 'execComplete') {
-                        const meshTransport = new MeshTransport().loadData(data).reconstruct(false);
-                        const mesh = new THREE.Mesh(meshTransport.getBufferGeometry(), new THREE.MeshPhongMaterial());
-                        this.scene.add(mesh);
-                    }
+            .then((e: unknown) => {
+                const data = e as Payload;
+                if (data.cmd === 'execComplete') {
+                    console.log(`${taskNameModule}: execComplete`);
+
+                    const meshTransport = new MeshTransport();
+                    meshTransport.loadData(data as MeshTransportDef).reconstruct(false);
+                    const mesh = new THREE.Mesh(meshTransport.getBufferGeometry(), new THREE.MeshPhongMaterial());
+                    this.scene.add(mesh);
                 }
-        */
+            })
+            .catch((e: unknown) => console.error(e));
     }
 
     /**
@@ -172,5 +160,4 @@ const requestRender = function() {
     requestAnimationFrame(requestRender);
     app.render();
 };
-
 requestRender();

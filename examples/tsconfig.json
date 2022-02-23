@@ -5,7 +5,11 @@
     "outDir": "./dist"
   },
   "include": [
-    "**/*.ts"
+    "helloworld/**/*.ts",
+    "transferables/**/*.ts",
+    "worker/helloWorldWorkerModule.ts",
+    "worker/transferableWorkerTest1.ts",
+    "worker/transferableWorkerTest4.ts"
   ],
   "exclude": [
     "dist",

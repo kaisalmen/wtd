@@ -30,7 +30,7 @@ const TransferableWorkerTest1 = {
 
     execute: function(context, id, config) {
         const test1 = {
-            cmd: 'executeComplete',
+            cmd: 'execComplete',
             data: new Uint32Array(32 * 1024 * 1024)
         }
         context.postMessage(test1);

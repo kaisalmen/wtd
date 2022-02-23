@@ -1,32 +1,32 @@
-//import { SphereBufferGeometry } from 'three';
-import { PayloadConfig, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
-//import { MeshTransport } from '../../src/loaders/utils/TransportUtils';
+import { SphereBufferGeometry } from 'three';
+import { Payload, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker, MeshTransport } from 'three-wtm';
 
 declare const self: DedicatedWorkerGlobalScope;
 
 export class HelloWorldWorker extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
 
-    init(workerId: string, config: PayloadConfig) {
-        console.log(config);
-        self.postMessage({ cmd: 'init', id: workerId });
+    init(payload: Payload) {
+        console.log(`HelloWorldWorker#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+        self.postMessage(payload);
     }
 
-    execute(workerId: string, config: PayloadConfig) {
-        console.log(config);
-        self.postMessage({ cmd: 'executeComplete', id: workerId });
-        /*
-            let bufferGeometry = new SphereBufferGeometry(40, 64, 64);
-            bufferGeometry.name = config.name + config.id;
-            let vertexArray = bufferGeometry.getAttribute('position').array;
-            for (let i = 0; i < vertexArray.length; i++) vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
-            new MeshTransport('execComplete', config.id)
-                .setGeometry(bufferGeometry, 0)
-                .package(false)
-                .postMessage(context);
-        */
+    execute(payload: Payload) {
+        console.log(`HelloWorldWorker#execute: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+
+        const bufferGeometry = new SphereBufferGeometry(40, 64, 64);
+        bufferGeometry.name = payload.name + payload.id;
+        const vertexArray = bufferGeometry.getAttribute('position').array as number[];
+        for (let i = 0; i < vertexArray.length; i++) {
+            vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
+        }
+        const mt = new MeshTransport('execComplete', payload.id)
+            .setGeometry(bufferGeometry, 0)
+            .package(false);
+        const data = mt.getData();
+        self.postMessage(data.main, data.transferables);
     }
 
 }
 
-const simpleWorker = new HelloWorldWorker();
-self.onmessage = message => simpleWorker.comRouting(message);
+const worker = new HelloWorldWorker();
+self.onmessage = message => worker.comRouting(message);
