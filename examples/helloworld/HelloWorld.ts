@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, Payload, MeshTransport } from 'three-wtm';
-import { MeshTransportDef } from 'three-wtm';
+import { WorkerTaskManager, PayloadType, MeshTransport, MeshTransportPayload } from 'three-wtm';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -67,13 +66,13 @@ class WorkerTaskManagerHelloWorldExample {
     async initContent() {
         const awaitInit = [];
         const taskNameStandard = 'WorkerStandard';
-        const workerStandardPC = { name: taskNameStandard, id: 0, cmd: 'init' } as Payload;
+        const workerStandardPC = { name: taskNameStandard, id: 0, cmd: 'init' } as PayloadType;
         this.workerTaskManager.registerTaskTypeWithUrl(taskNameStandard, false, new URL('../worker/helloWorldWorkerStandard', import.meta.url));
         awaitInit.push(this.workerTaskManager.initTaskType(taskNameStandard, workerStandardPC));
 
         this.workerTaskManager.enqueueForExecution(taskNameStandard, workerStandardPC)
             .then((e: unknown) => {
-                const data = e as Payload;
+                const data = e as PayloadType;
                 if (data.cmd === 'execComplete') {
                     console.log(`${taskNameStandard}: execComplete`);
                 }
@@ -81,21 +80,26 @@ class WorkerTaskManagerHelloWorldExample {
             .catch((e: unknown) => console.error(e));
 
         const taskNameModule = 'WorkerModule';
-        const workerModulePC = { name: taskNameModule, id: 0, cmd: 'init' } as Payload;
+        const workerModulePC = { name: taskNameModule, id: 0, cmd: 'init' } as PayloadType;
         this.workerTaskManager.registerTaskTypeWithUrl(taskNameModule, true, new URL('../worker/helloWorldWorkerModule', import.meta.url));
         awaitInit.push(this.workerTaskManager.initTaskType(taskNameModule, workerModulePC));
         await Promise.all(awaitInit);
 
         this.workerTaskManager.enqueueForExecution(taskNameModule, workerModulePC)
             .then((e: unknown) => {
-                const data = e as Payload;
+                const data = e as PayloadType;
                 if (data.cmd === 'execComplete') {
                     console.log(`${taskNameModule}: execComplete`);
 
-                    const meshTransport = new MeshTransport();
-                    meshTransport.loadData(data as MeshTransportDef).reconstruct(false);
-                    const mesh = new THREE.Mesh(meshTransport.getBufferGeometry(), new THREE.MeshPhongMaterial());
-                    this.scene.add(mesh);
+                    const mt = new MeshTransport();
+                    mt.loadData(data as MeshTransportPayload, false);
+                    if (mt.getBufferGeometry()) {
+                        const mesh = new THREE.Mesh(
+                            mt.getBufferGeometry() as THREE.BufferGeometry,
+                            new THREE.MeshPhongMaterial()
+                        );
+                        this.scene.add(mesh);
+                    }
                 }
             })
             .catch((e: unknown) => console.error(e));
@@ -106,7 +110,7 @@ class WorkerTaskManagerHelloWorldExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    _processMessage(payload: Payload) {
+    _processMessage(payload: PayloadType) {
         switch (payload.cmd) {
             case 'assetAvailable':
             case 'execComplete':

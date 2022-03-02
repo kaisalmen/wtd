@@ -1,20 +1,23 @@
-import { WorkerTaskManagerDefaultRouting } from '/src/loaders/workerTaskManager/worker/defaultRouting.js';
+import { DataTransport, Payload, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
 
-const TransferableWorkerTest2 = {
+class TransferableWorkerTest2 extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
+    init(payload: Payload) {
+        console.log(`TransferableWorkerTest2#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+        payload.cmd = 'initComplete';
+        self.postMessage(payload);
+    }
 
-    init: function(context, id, config) {
-        context.postMessage({ cmd: "init", id: id });
-    },
-
-    execute: function(context, id, config) {
-        const test2 = {
-            cmd: config.params.name,
-            data: new Uint32Array(32 * 1024 * 1024)
+    execute(payload: Payload) {
+        console.log(`TransferableWorkerTest4#execute: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+        if (payload.params) {
+            const dt = new DataTransport('execComplete', payload.id);
+            dt.getPayload().name = payload.params.name as string;
+            dt.getPayload().addBuffer('data', new Uint32Array(32 * 1024 * 1024));
+            const packed = dt.package(false);
+            self.postMessage(packed.payload, packed.transferables);
         }
-        context.postMessage(test2, [test2.data.buffer]);
     }
 }
 
-self.addEventListener('message', message => WorkerTaskManagerDefaultRouting.comRouting(self, message, TransferableWorkerTest2, 'init', 'execute'), false);
-
-export { TransferableWorkerTest2 }
+const worker = new TransferableWorkerTest2();
+self.onmessage = message => worker.comRouting(message);

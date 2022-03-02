@@ -1,20 +1,36 @@
 import { Material, MaterialLoader, Texture } from 'three';
 import { MaterialCloneInstructions, MaterialUtils } from './MaterialUtils';
-import { buildDataTransport, copyBuffers, DataTransportDef, setParams } from './DataTransport';
+import { PayloadType } from '../..';
+import { DataTransportPayload } from './DataTransport';
 
-export type MaterialsTransportDef = DataTransportDef & {
+export type MaterialsTransportPayloadType = PayloadType & {
     materials: Map<string, Material>;
     materialsJson: Map<string, unknown>;
     multiMaterialNames: Map<number, string>;
     cloneInstructions: MaterialCloneInstructions[];
 };
 
-function buildMaterialsTransport(cmd?: string, id?: number): MaterialsTransportDef {
-    const materialsTransportDef = buildDataTransport('MaterialsTransport', cmd, id) as MaterialsTransportDef;
-    materialsTransportDef.materials = new Map();
-    materialsTransportDef.multiMaterialNames = new Map();
-    materialsTransportDef.cloneInstructions = [];
-    return materialsTransportDef;
+export class MaterialsTransportPayload extends DataTransportPayload implements MaterialsTransportPayloadType {
+
+    type = 'MaterialsTransportPayload';
+    materials: Map<string, Material> = new Map();
+    materialsJson: Map<string, unknown> = new Map();
+    multiMaterialNames: Map<number, string> = new Map();
+    cloneInstructions: MaterialCloneInstructions[] = [];
+
+    constructor(cmd?: string, id?: number) {
+        super(cmd, id);
+    }
+
+    package(cloneBuffers: boolean): { payload: MaterialsTransportPayloadType, transferables: Transferable[] } {
+        const transferables: Transferable[] = [];
+        this.fillTransferables(this.buffers.values(), transferables, cloneBuffers);
+        this.materialsJson = MaterialUtils.getMaterialsJSON(this.materials);
+        return {
+            payload: this,
+            transferables: transferables
+        }
+    }
 }
 
 /**
@@ -22,8 +38,7 @@ function buildMaterialsTransport(cmd?: string, id?: number): MaterialsTransportD
  */
 export class MaterialsTransport {
 
-    private main: MaterialsTransportDef;
-    private transferables: ArrayBuffer[];
+    private payload: MaterialsTransportPayload;
 
     /**
      * Creates a new {@link MeshMessageStructure}.
@@ -31,33 +46,32 @@ export class MaterialsTransport {
      * @param {number} [id]
      */
     constructor(cmd?: string, id?: number) {
-        this.main = buildMaterialsTransport(cmd, id);
-        this.transferables = [];
+        this.payload = new MaterialsTransportPayload(cmd, id);
     }
 
     /**
      * @param {MaterialsTransportDef} transportObject
      * @return {MaterialsTransport}
      */
-    loadData(transportObject: MaterialsTransportDef): MaterialsTransport {
-        this.main = buildMaterialsTransport(transportObject.cmd, transportObject.id);
+    loadData(transportObject: MaterialsTransportPayload): MaterialsTransportPayload {
+        this.payload = new MaterialsTransportPayload(transportObject.cmd, transportObject.id);
         for (const entry of transportObject.multiMaterialNames.entries()) {
-            this.main.multiMaterialNames.set(entry[0], entry[1]);
+            this.payload.multiMaterialNames.set(entry[0], entry[1]);
         }
         for (const cloneInstruction of transportObject.cloneInstructions) {
-            this.main.cloneInstructions.push(cloneInstruction);
+            this.payload.cloneInstructions.push(cloneInstruction);
         }
-        this.main.cloneInstructions = transportObject.cloneInstructions;
+        this.payload.cloneInstructions = transportObject.cloneInstructions;
 
         const materialLoader = new MaterialLoader();
         for (const entry of transportObject.materialsJson.entries()) {
-            this.main.materials.set(entry[0], materialLoader.parse(entry[1]));
+            this.payload.materials.set(entry[0], materialLoader.parse(entry[1]));
         }
-        return this;
+        return this.payload;
     }
 
-    getMaterialsTransportDef(): MaterialsTransportDef {
-        return this.main;
+    getMaterialsTransportDef(): MaterialsTransportPayload {
+        return this.payload;
     }
 
     private cleanMaterial(material: Material): Material {
@@ -76,7 +90,7 @@ export class MaterialsTransport {
      * @return {MaterialsTransport}
      */
     addBuffer(name: string, buffer: ArrayBuffer): MaterialsTransport {
-        this.main.buffers.set(name, buffer);
+        this.payload.buffers.set(name, buffer);
         return this;
     }
 
@@ -85,7 +99,7 @@ export class MaterialsTransport {
       * @return {MaterialsTransport}
       */
     setParams(params: Record<string, unknown>): MaterialsTransport {
-        setParams(this.main.params, params);
+        this.payload.params = params;
         return this;
     }
 
@@ -95,7 +109,7 @@ export class MaterialsTransport {
      */
     setMaterials(materials: Map<string, Material>): MaterialsTransport {
         for (const entry of materials.entries()) {
-            this.main.materials.set(entry[0], entry[1]);
+            this.payload.materials.set(entry[0], entry[1]);
         }
         return this;
     }
@@ -105,7 +119,7 @@ export class MaterialsTransport {
      * @return {Map<string, Material>}
      */
     getMaterials(): Map<string, Material> {
-        return this.main.materials;
+        return this.payload.materials;
     }
 
     /**
@@ -113,7 +127,7 @@ export class MaterialsTransport {
      */
     cleanMaterials(): MaterialsTransport {
         const clonedMaterials = new Map();
-        for (const material of Object.values(this.main.materials)) {
+        for (const material of Object.values(this.payload.materials)) {
             if (typeof material.clone === 'function') {
                 const clonedMaterial = material.clone();
                 clonedMaterials.set(clonedMaterial.name, this.cleanMaterial(clonedMaterial));
@@ -127,10 +141,8 @@ export class MaterialsTransport {
      * @param {boolean} cloneBuffers
      * @return {DataTransport}
      */
-    package(cloneBuffers: boolean) {
-        copyBuffers(this.main.buffers, this.transferables, cloneBuffers);
-        this.main.materialsJson = MaterialUtils.getMaterialsJSON(this.main.materials);
-        return this;
+    package(cloneBuffers: boolean): { payload: MaterialsTransportPayloadType, transferables: Transferable[] } {
+        return this.payload.package(cloneBuffers);
     }
 
     /**
@@ -138,7 +150,7 @@ export class MaterialsTransport {
      * @return {boolean}
      */
     hasMultiMaterial() {
-        return (Object.keys(this.main.multiMaterialNames).length > 0);
+        return (Object.keys(this.payload.multiMaterialNames).length > 0);
     }
 
     /**
@@ -146,8 +158,8 @@ export class MaterialsTransport {
      * @return {Material|null}
      */
     getSingleMaterial() {
-        if (Object.keys(this.main.materials).length > 0) {
-            return Object.entries(this.main.materials)[0][1];
+        if (Object.keys(this.payload.materials).length > 0) {
+            return Object.entries(this.payload.materials)[0][1];
         } else {
             return null;
         }
@@ -162,13 +174,13 @@ export class MaterialsTransport {
      * @return {Material|Material[]}
      */
     processMaterialTransport(materials: Map<string, Material>, log?: boolean): Material | undefined | Material[] | undefined[] {
-        for (const cloneInstruction of this.main.cloneInstructions) {
+        for (const cloneInstruction of this.payload.cloneInstructions) {
             MaterialUtils.cloneMaterial(materials, cloneInstruction, log);
         }
         if (this.hasMultiMaterial()) {
             // multi-material
             const outputMaterials: Material[] | undefined[] = [];
-            for (const entry of this.main.multiMaterialNames.entries()) {
+            for (const entry of this.payload.multiMaterialNames.entries()) {
                 const mat = materials.get(entry[1]);
                 outputMaterials[entry[0]] = mat ? mat : undefined;
             }

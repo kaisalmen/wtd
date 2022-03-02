@@ -1,24 +1,39 @@
 import { Box3, BufferAttribute, BufferGeometry, InterleavedBufferAttribute, Mesh, Sphere } from 'three';
-import { buildDataTransport, DataTransportDef, setParams } from './DataTransport';
-import { MaterialsTransport } from './MaterialsTransport';
+import { PayloadType } from '../workerTaskManager/WorkerTaskManager';
+import { DataTransportPayload } from './DataTransport';
+import { MaterialsTransport, MaterialsTransportPayload } from './MaterialsTransport';
 
-export type MeshTransportDef = DataTransportDef & {
-    // 0: mesh, 1: line, 2: point
+export type MeshTransportPayloadType = PayloadType & {
     geometryType: 0 | 1 | 2;
-    geometry: BufferGeometry | Record<string, never>;
-    bufferGeometry: BufferGeometry | undefined;
+    bufferGeometry: BufferGeometry | Record<string, unknown> | undefined;
     meshName: string | undefined;
-    materialsTransport: MaterialsTransport;
+    materialsTransportPayload: MaterialsTransportPayload | undefined;
 };
 
-export function buildGeometryTransport(cmd?: string, id?: number): MeshTransportDef {
-    const meshTransportDef = buildDataTransport('MeshTransport', cmd, id) as MeshTransportDef;
-    meshTransportDef.geometryType = 0;
-    meshTransportDef.geometry = {};
-    meshTransportDef.bufferGeometry = undefined;
-    meshTransportDef.meshName = undefined;
-    meshTransportDef.materialsTransport = new MaterialsTransport();
-    return meshTransportDef;
+export class MeshTransportPayload extends DataTransportPayload implements MeshTransportPayloadType {
+
+    type = 'MeshTransportPayload';
+    // 0: mesh, 1: line, 2: point
+    geometryType: 0 | 1 | 2 = 0;
+    bufferGeometry: BufferGeometry | Record<string, unknown> | undefined;
+    meshName: string | undefined;
+    materialsTransportPayload: MaterialsTransportPayload = new MaterialsTransportPayload();
+
+    constructor(cmd?: string, id?: number) {
+        super(cmd, id);
+    }
+
+    getGeometryType() {
+        return this.geometryType;
+    }
+
+    setMaterialsTransportPayload(materialsTransportPayload: MaterialsTransportPayload) {
+        this.materialsTransportPayload = materialsTransportPayload;
+    }
+
+    getMaterialsTransport() {
+        return this.materialsTransportPayload;
+    }
 }
 
 /**
@@ -26,7 +41,7 @@ export function buildGeometryTransport(cmd?: string, id?: number): MeshTransport
  */
 export class MeshTransport {
 
-    private main: MeshTransportDef;
+    private payload: MeshTransportPayload;
 
     /**
      * Creates a new {@link MeshTransport}.
@@ -34,88 +49,72 @@ export class MeshTransport {
      * @param {number} [id]
      */
     constructor(cmd?: string, id?: number) {
-        this.main = buildGeometryTransport(cmd, id);
-    }
-
-    /**
-     * @param {MeshTransportDef} transportObject
-     * @return {MeshTransport}
-     */
-    loadData(transportObject: MeshTransportDef) {
-        this.main = buildGeometryTransport(transportObject.cmd, transportObject.id);
-        this.main.meshName = transportObject.meshName;
-        if (transportObject.materialsTransport) {
-            this.main.materialsTransport = new MaterialsTransport().loadData(transportObject.materialsTransport.getMaterialsTransportDef());
-        }
-        return this;
-    }
-
-    /**
-     * @param {Record<string, unknown>} params
-     * @return {MeshTransport}
-     */
-    setParams(params: Record<string, unknown>): MeshTransport {
-        setParams(this.main.params, params);
-        return this;
-    }
-
-    /**
-     * Returns the geometry type [0=Mesh|1=LineSegments|2=Points]
-     * @return {number}
-     */
-    getGeometryType() {
-        return this.main.geometryType;
+        this.payload = new MeshTransportPayload(cmd, id);
     }
 
     /**
      * The {@link MaterialsTransport} wraps all info regarding the material for the mesh.
-     * @param {MaterialsTransport} materialsTransport
-     * @return {MeshTransport}
+     * @param {MaterialsTransportPayload} materialsTransportPayload
      */
-    setMaterialsTransport(materialsTransport: MaterialsTransport) {
-        this.main.materialsTransport = materialsTransport;
-        return this;
-    }
-
-    /**
-     * @return {MaterialsTransport}
-     */
-    getMaterialsTransport(): MaterialsTransport {
-        return this.main.materialsTransport;
+    setMaterialsTransport(materialsTransportPayload: MaterialsTransportPayload) {
+        this.payload.setMaterialsTransportPayload(materialsTransportPayload);
     }
 
     /**
      * Set the {@link BufferGeometry} and geometry type that can be used when a mesh is created.
      *
-     * @param {BufferGeometry} geometry
+     * @param {BufferGeometry} bufferGeometry
      * @param {number} geometryType [0=Mesh|1=LineSegments|2=Points]
-     * @return {GeometryTransport}
      */
-    setGeometry(geometry: BufferGeometry | Record<string, never>, geometryType: 0 | 1 | 2) {
-        this.main.geometry = geometry;
-        this.main.geometryType = geometryType;
-        if (geometry instanceof BufferGeometry) this.main.bufferGeometry = geometry;
-        return this;
+    setBufferGeometry(bufferGeometry: BufferGeometry | undefined, geometryType: 0 | 1 | 2) {
+        this.payload.bufferGeometry = bufferGeometry;
+        this.payload.geometryType = geometryType;
     }
 
     /**
      * Returns the {@link BufferGeometry}.
-     * @return {BufferGeometry|null}
+     * @return {BufferGeometry | Record<string, unknown> | undefined}
      */
     getBufferGeometry() {
-        return this.main.bufferGeometry;
+        return this.payload.bufferGeometry;
     }
 
     /**
      * Sets the mesh and the geometry type [0=Mesh|1=LineSegments|2=Points]
      * @param {Mesh} mesh
      * @param {number} geometryType
-     * @return {MeshTransport}
      */
     setMesh(mesh: Mesh, geometryType: 0 | 1 | 2) {
-        this.main.meshName = mesh.name;
-        this.setGeometry(mesh.geometry, geometryType);
-        return this;
+        this.payload.meshName = mesh.name;
+        this.setBufferGeometry(mesh.geometry, geometryType);
+    }
+
+    /**
+     * @param {MeshTransportPayload} transportObject
+     */
+    loadData(transportObject: MeshTransportPayload, cloneBuffers: boolean): void {
+        this.payload = Object.assign(new MeshTransportPayload(), transportObject);
+        this.payload.bufferGeometry = MeshTransport.reconstructBuffer(cloneBuffers, this.payload.bufferGeometry as Record<string, unknown>);
+
+        if (transportObject.materialsTransportPayload) {
+            this.payload.materialsTransportPayload = new MaterialsTransport().loadData(transportObject.materialsTransportPayload);
+        }
+    }
+
+    /**
+     * @param {boolean} cloneBuffers
+     */
+    package(cloneBuffers: boolean): { payload: MeshTransportPayload, transferables: Transferable[] } {
+        MeshTransport.packageBuffer(cloneBuffers, this.payload.bufferGeometry as BufferGeometry, this.payload.buffers);
+
+        const transferables: Transferable[] = [];
+        this.payload.fillTransferables(this.payload.buffers.values(), transferables, cloneBuffers);
+
+        if (this.payload.materialsTransportPayload) this.payload.materialsTransportPayload.package(cloneBuffers);
+        return {
+            payload: this.payload,
+            transferables: transferables
+        };
     }
 
     /**
@@ -123,68 +122,74 @@ export class MeshTransport {
      *
      * @param {boolean} cloneBuffers Clone buffers if their content shall stay in the current context.
      */
-    private packageBuffer(cloneBuffers: boolean, buffers: Map<string, ArrayBuffer>,
-        geometry: BufferGeometry | Record<string, never>) {
-
+    static packageBuffer(cloneBuffers: boolean, bufferGeometry: BufferGeometry | undefined, buffers: Map<string, ArrayBuffer>) {
         // fast-fail
-        if (!(geometry instanceof BufferGeometry)) return;
+        if (!(bufferGeometry instanceof BufferGeometry)) return;
 
-        const vertexBA = geometry.getAttribute('position');
-        const normalBA = geometry.getAttribute('normal');
-        const uvBA = geometry.getAttribute('uv');
-        const colorBA = geometry.getAttribute('color');
-        const skinIndexBA = geometry.getAttribute('skinIndex');
-        const skinWeightBA = geometry.getAttribute('skinWeight');
-        const indexBA = geometry.getIndex();
+        const vertexBA = bufferGeometry.getAttribute('position');
+        const normalBA = bufferGeometry.getAttribute('normal');
+        const uvBA = bufferGeometry.getAttribute('uv');
+        const colorBA = bufferGeometry.getAttribute('color');
+        const skinIndexBA = bufferGeometry.getAttribute('skinIndex');
+        const skinWeightBA = bufferGeometry.getAttribute('skinWeight');
+        const indexBA = bufferGeometry.getIndex();
 
-        this.addBufferAttributeToTransferable('position', vertexBA, cloneBuffers, buffers);
-        this.addBufferAttributeToTransferable('normal', normalBA, cloneBuffers, buffers);
-        this.addBufferAttributeToTransferable('uv', uvBA, cloneBuffers, buffers);
-        this.addBufferAttributeToTransferable('color', colorBA, cloneBuffers, buffers);
-        this.addBufferAttributeToTransferable('skinIndex', skinIndexBA, cloneBuffers, buffers);
-        this.addBufferAttributeToTransferable('skinWeight', skinWeightBA, cloneBuffers, buffers);
-        this.addBufferAttributeToTransferable('index', indexBA, cloneBuffers, buffers);
+        MeshTransport.addAttributeToBuffers('position', vertexBA, cloneBuffers, buffers);
+        MeshTransport.addAttributeToBuffers('normal', normalBA, cloneBuffers, buffers);
+        MeshTransport.addAttributeToBuffers('uv', uvBA, cloneBuffers, buffers);
+        MeshTransport.addAttributeToBuffers('color', colorBA, cloneBuffers, buffers);
+        MeshTransport.addAttributeToBuffers('skinIndex', skinIndexBA, cloneBuffers, buffers);
+        MeshTransport.addAttributeToBuffers('skinWeight', skinWeightBA, cloneBuffers, buffers);
+        MeshTransport.addAttributeToBuffers('index', indexBA, cloneBuffers, buffers);
     }
 
     /**
      * Reconstructs the {@link BufferGeometry} from the raw buffers.
      * @param {boolean} cloneBuffers
-     * @return {GeometryTransport}
      */
-    private reconstructBuffer(cloneBuffers: boolean, bufferGeometry: BufferGeometry | undefined,
-        transferredGeometry: BufferGeometry | Record<string, never>) {
-
+    static reconstructBuffer(cloneBuffers: boolean, transferredGeometry: BufferGeometry | Record<string, unknown>): BufferGeometry {
         // fast-fail: We already have a bufferGeometry
-        if (bufferGeometry instanceof BufferGeometry) return;
+        if (transferredGeometry instanceof BufferGeometry) return transferredGeometry;
 
-        bufferGeometry = new BufferGeometry();
-        this.assignAttributeFromTransferable(bufferGeometry, transferredGeometry.attributes.position, 'position', cloneBuffers);
-        this.assignAttributeFromTransferable(bufferGeometry, transferredGeometry.attributes.normal, 'normal', cloneBuffers);
-        this.assignAttributeFromTransferable(bufferGeometry, transferredGeometry.attributes.uv, 'uv', cloneBuffers);
-        this.assignAttributeFromTransferable(bufferGeometry, transferredGeometry.attributes.color, 'color', cloneBuffers);
-        this.assignAttributeFromTransferable(bufferGeometry, transferredGeometry.attributes.skinIndex, 'skinIndex', cloneBuffers);
-        this.assignAttributeFromTransferable(bufferGeometry, transferredGeometry.attributes.skinWeight, 'skinWeight', cloneBuffers);
-
-        const index = transferredGeometry.index;
-        if (index !== null && index !== undefined) {
-            const indexBuffer = cloneBuffers ? Array.from(index.array).slice(0) : index.array;
-            bufferGeometry.setIndex(new BufferAttribute(indexBuffer, index.itemSize, index.normalized));
+        const bufferGeometry = new BufferGeometry();
+        if (transferredGeometry.attributes) {
+            const attr = transferredGeometry.attributes as Record<string, BufferAttribute | InterleavedBufferAttribute>;
+            MeshTransport.assignAttributeFromTransfered(bufferGeometry, attr.position, 'position', cloneBuffers);
+            MeshTransport.assignAttributeFromTransfered(bufferGeometry, attr.normal, 'normal', cloneBuffers);
+            MeshTransport.assignAttributeFromTransfered(bufferGeometry, attr.uv, 'uv', cloneBuffers);
+            MeshTransport.assignAttributeFromTransfered(bufferGeometry, attr.color, 'color', cloneBuffers);
+            MeshTransport.assignAttributeFromTransfered(bufferGeometry, attr.skinIndex, 'skinIndex', cloneBuffers);
+            MeshTransport.assignAttributeFromTransfered(bufferGeometry, attr.skinWeight, 'skinWeight', cloneBuffers);
         }
+
+        // TODO: morphAttributes
+
+        if (transferredGeometry.index !== null) {
+            const indexAttr = transferredGeometry.index as BufferAttribute;
+            const indexBuffer = cloneBuffers ? Array.from(indexAttr.array).slice(0) : indexAttr.array;
+            bufferGeometry.setIndex(new BufferAttribute(indexBuffer, indexAttr.itemSize, indexAttr.normalized));
+        }
+
         const boundingBox = transferredGeometry.boundingBox;
-        if (boundingBox !== null) bufferGeometry.boundingBox = Object.assign(new Box3(), boundingBox);
+        if (boundingBox !== null) {
+            bufferGeometry.boundingBox = Object.assign(new Box3(), boundingBox);
+        }
 
         const boundingSphere = transferredGeometry.boundingSphere;
-        if (boundingSphere !== null) bufferGeometry.boundingSphere = Object.assign(new Sphere(), boundingSphere);
+        if (boundingSphere !== null) {
+            bufferGeometry.boundingSphere = Object.assign(new Sphere(), boundingSphere);
+        }
 
-        bufferGeometry.uuid = transferredGeometry.uuid;
-        bufferGeometry.name = transferredGeometry.name;
-        bufferGeometry.type = transferredGeometry.type;
-        bufferGeometry.groups = transferredGeometry.groups;
-        bufferGeometry.drawRange = transferredGeometry.drawRange;
-        bufferGeometry.userData = transferredGeometry.userData;
+        bufferGeometry.uuid = transferredGeometry.uuid as string;
+        bufferGeometry.name = transferredGeometry.name as string;
+        bufferGeometry.type = transferredGeometry.type as string;
+        bufferGeometry.groups = transferredGeometry.groups as Array<{ start: number; count: number; materialIndex?: number | undefined }>;
+        bufferGeometry.drawRange = transferredGeometry.drawRange as { start: number; count: number };
+        bufferGeometry.userData = transferredGeometry.userData as Record<string, unknown>;
+        return bufferGeometry;
     }
 
-    private addBufferAttributeToTransferable(name: string, input: BufferAttribute | InterleavedBufferAttribute | null | undefined,
+    static addAttributeToBuffers(name: string, input: BufferAttribute | InterleavedBufferAttribute | null | undefined,
         cloneBuffer: boolean, buffers: Map<string, ArrayBuffer>): void {
         if (input && input !== null) {
             const arrayLike = (cloneBuffer ? Array.from(input.array).slice(0) : input.array) as Uint8Array;
@@ -192,43 +197,12 @@ export class MeshTransport {
         }
     }
 
-    private assignAttributeFromTransferable(bufferGeometry: BufferGeometry, attr: BufferAttribute | InterleavedBufferAttribute,
+    static assignAttributeFromTransfered(bufferGeometry: BufferGeometry, attr: BufferAttribute | InterleavedBufferAttribute | undefined,
         attrName: string, cloneBuffer: boolean): void {
-        if (bufferGeometry instanceof BufferAttribute) {
+        if (attr) {
             const arrayLike = (cloneBuffer ? Array.from(attr.array).slice(0) : attr.array) as number[];
             bufferGeometry.setAttribute(attrName, new BufferAttribute(arrayLike, attr.itemSize, attr.normalized));
         }
-    }
-
-    /**
-     * @param {boolean} cloneBuffers
-     * @return {MeshTransport}
-     */
-    package(cloneBuffers: boolean): MeshTransport {
-        this.packageBuffer(cloneBuffers, this.main.buffers, this.main.geometry);
-        if (this.main.materialsTransport !== null) this.main.materialsTransport.package(cloneBuffers);
-        return this;
-    }
-
-    /**
-     * @param {boolean} cloneBuffers
-     * @return {MeshTransport}
-     */
-    reconstruct(cloneBuffers: boolean): MeshTransport {
-        this.reconstructBuffer(cloneBuffers, this.main.bufferGeometry, this.main.geometry);
-        // so far nothing needs to be done for material
-        return this;
-    }
-
-    getData(): { main: MeshTransportDef, transferables: Transferable[] } {
-        const trans: Transferable[] = [];
-        for (const buf of this.main.buffers.values()) {
-            trans.push((buf as Uint8Array).buffer);
-        }
-        return {
-            main: this.main,
-            transferables: trans
-        };
     }
 
 }

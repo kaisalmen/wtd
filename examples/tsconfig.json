@@ -8,8 +8,7 @@
     "helloworld/**/*.ts",
     "transferables/**/*.ts",
     "worker/helloWorldWorkerModule.ts",
-    "worker/transferableWorkerTest1.ts",
-    "worker/transferableWorkerTest4.ts"
+    "worker/transferableWorkerTest*.ts"
   ],
   "exclude": [
     "dist",

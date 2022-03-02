@@ -88,10 +88,10 @@ class WorkerTaskManager {
      * Provides initialization configuration and transferable objects.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {Payload} payload Configuration properties as serializable string.
+     * @param {PayloadType} payload Configuration properties as serializable string.
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      */
-    async initTaskType(taskTypeName: string, payload: Payload, transferables?: Transferable[]) {
+    async initTaskType(taskTypeName: string, payload: PayloadType, transferables?: Transferable[]) {
         const workerTypeDefinition = this.taskTypes.get(taskTypeName);
         if (workerTypeDefinition) {
 
@@ -122,12 +122,12 @@ class WorkerTaskManager {
      * Queues a new task of the given type. Task will not execute until initialization completes.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {Payload} payload Configuration properties as serializable string.
+     * @param {PayloadType} payload Configuration properties as serializable string.
      * @param {Function} assetAvailableFunction Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, payload: Payload, assetAvailableFunction?: Function, transferables?: Transferable[]) {
+    async enqueueForExecution(taskTypeName: string, payload: PayloadType, assetAvailableFunction?: Function, transferables?: Transferable[]) {
         const localPromise = new Promise((resolveUser, rejectUser) => {
             this.storedExecutions.push(new StoredExecution(taskTypeName, payload, resolveUser, rejectUser, assetAvailableFunction, transferables));
             this.depleteExecutions();
@@ -298,16 +298,16 @@ class WorkerTypeDefinition {
     /**
      * Initialises all workers with common configuration data.
      *
-     * @param {Payload payload
+     * @param {PayloadType} payload
      * @param {Transferable[]} transferables
      */
-    async initWorkers(payload: Payload, transferables?: Transferable[]) {
+    async initWorkers(payload: PayloadType, transferables?: Transferable[]) {
         const promises = [];
         for (const taskWorker of this.workers.instances) {
 
             const taskWorkerPromise = new Promise((resolveWorker, rejectWorker) => {
                 taskWorker.onmessage = message => {
-                    if (this.verbose) console.log(`Init Complete: ${payload.name}: ${message.data.id}`);
+                    if (this.verbose) console.log(`Init Complete: ${payload.type}: ${message.data.id}`);
                     resolveWorker(message);
                 };
                 taskWorker.onerror = rejectWorker;
@@ -377,13 +377,13 @@ class WorkerTypeDefinition {
 class StoredExecution {
 
     taskTypeName: string;
-    payload: Payload;
+    payload: PayloadType;
     resolve: Function;
     reject: Function;
     assetAvailableFunction?: Function;
     transferables?: Transferable[];
 
-    constructor(taskTypeName: string, payload: Payload, resolve: Function, reject: Function, assetAvailableFunction?: Function, transferables?: Transferable[]) {
+    constructor(taskTypeName: string, payload: PayloadType, resolve: Function, reject: Function, assetAvailableFunction?: Function, transferables?: Transferable[]) {
         this.taskTypeName = taskTypeName;
         this.payload = payload;
         this.resolve = resolve;
@@ -423,19 +423,34 @@ class TaskWorker extends Worker {
 
 }
 
-type Payload = {
-    name: string;
-    id: number;
+type PayloadType = {
     cmd: string;
+    id: number;
+    name: string | 'unknown';
+    type?: string | 'unknown';
     workerId?: number;
     params?: Record<string, unknown>;
+    buffers?: Map<string, ArrayBufferLike>;
+    progress?: number;
+}
+
+interface Payload extends PayloadType {
+
+    addBuffer(name: string, buffer: ArrayBuffer): void;
+
+    getBuffer(name: string): ArrayBufferLike | undefined;
+
+    reconstructBuffers(input: Map<string, ArrayBufferLike>, cloneBuffers?: boolean): void;
+
+    fillTransferables(input: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean): void;
+
 }
 
 interface WorkerTaskManagerWorker {
 
-    init(payload: Payload): void;
+    init(payload: PayloadType): void;
 
-    execute(payload: Payload): void;
+    execute(payload: PayloadType): void;
 
     comRouting(message: never): void;
 
@@ -443,17 +458,17 @@ interface WorkerTaskManagerWorker {
 
 class WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
 
-    init(payload: Payload): void {
-        console.log(`WorkerTaskManagerDefaultWorker#init: name: ${payload.name} id: ${payload.id} workerId: ${payload.workerId}`);
+    init(payload: PayloadType): void {
+        console.log(`WorkerTaskManagerDefaultWorker#init: name: ${payload.type} id: ${payload.id} workerId: ${payload.workerId}`);
     }
 
-    execute(payload: Payload): void {
-        console.log(`WorkerTaskManagerDefaultWorker#execute: name: ${payload.name} id: ${payload.id} workerId: ${payload.workerId}`);
+    execute(payload: PayloadType): void {
+        console.log(`WorkerTaskManagerDefaultWorker#execute: name: ${payload.type} id: ${payload.id} workerId: ${payload.workerId}`);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
-        const payload = (message as MessageEvent).data as Payload;
+        const payload = (message as MessageEvent).data as PayloadType;
         if (payload) {
             if (payload.cmd === 'init') {
                 this.init(payload);
@@ -465,4 +480,4 @@ class WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
     }
 }
 
-export { WorkerTaskManager, Payload, WorkerTaskManagerWorker, WorkerTaskManagerDefaultWorker };
+export { WorkerTaskManager, PayloadType, Payload, WorkerTaskManagerWorker, WorkerTaskManagerDefaultWorker };

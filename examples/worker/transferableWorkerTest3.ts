@@ -1,24 +1,28 @@
 import { TorusKnotBufferGeometry } from 'three';
-import { WorkerTaskManagerDefaultRouting } from '/src/loaders/workerTaskManager/worker/defaultRouting.js';
+import { DataTransport, Payload, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
 
-const TransferableWorkerTest3 = {
+class TransferableWorkerTest3 extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
 
-    init: function(context, id, config) {
-        context.postMessage({ cmd: "init", id: id });
-    },
+    init(payload: Payload) {
+        console.log(`TransferableWorkerTest3#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+        payload.cmd = 'initComplete';
+        self.postMessage(payload);
+    }
 
-    execute: function(context, id, config) {
-        let bufferGeometry = new TorusKnotBufferGeometry(20, 3, config.params.segments, config.params.segments);
-        bufferGeometry.name = config.params.name;
+    execute(payload: Payload) {
+        console.log(`TransferableWorkerTest3#execute: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+        if (payload.params) {
+            const bufferGeometry = new TorusKnotBufferGeometry(20, 3, payload.params.segments as number, payload.params.segments as number);
+            bufferGeometry.name = payload.params.name as string;
 
-        const test3 = {
-            cmd: config.params.name,
-            data: bufferGeometry
+            const dt = new DataTransport('execComplete', payload.id);
+            dt.getPayload().name = payload.params.name as string;
+            dt.getPayload().params = bufferGeometry as unknown as Record<string, unknown>;
+            const packed = dt.package(false);
+            self.postMessage(packed.payload, packed.transferables);
         }
-        context.postMessage(test3);
     }
 }
 
-self.addEventListener('message', message => WorkerTaskManagerDefaultRouting.comRouting(self, message, TransferableWorkerTest3, 'init', 'execute'), false);
-
-export { TransferableWorkerTest3 }
+const worker = new TransferableWorkerTest3();
+self.onmessage = message => worker.comRouting(message);

@@ -1,40 +1,41 @@
-import { Payload } from '../..';
+import { Payload } from '../workerTaskManager/WorkerTaskManager';
 
-export type DataTransportDef = Payload & {
-    type: string;
-    progress: number;
-    buffers: Map<string, ArrayBufferLike>;
-};
+export class DataTransportPayload implements Payload {
 
-export function buildDataTransport(type: string, cmd?: string, id?: number): DataTransportDef {
-    return {
-        name: 'DataTransportDef',
-        cmd: (cmd !== undefined) ? cmd : 'unknown',
-        id: (id !== undefined) ? id : 0,
-        type: type,
-        progress: 0,
-        buffers: new Map(),
-        params: {
-        }
-    };
-}
+    name = 'unknown';
+    type = 'DataTransportPayload';
+    cmd: string;
+    id: number;
+    workerId?: number | undefined = 0;
+    params?: Record<string, unknown> = {};
+    buffers: Map<string, ArrayBufferLike> = new Map();
+    progress = 0;
 
-export function copyBuffers(input: Map<string, ArrayBuffer>, output: Transferable[], cloneBuffers: boolean) {
-    for (const buffer of Object.values(input)) {
-        if (buffer !== null && buffer !== undefined) {
+    constructor(cmd?: string, id?: number) {
+        this.cmd = (cmd !== undefined) ? cmd : 'unknown';
+        this.id = (id !== undefined) ? id : 0;
+    }
+
+    addBuffer(name: string, buffer: ArrayBuffer): void {
+        this.buffers.set(name, buffer);
+    }
+
+    getBuffer(name: string): ArrayBufferLike | undefined {
+        return this.buffers.get(name);
+    }
+
+    reconstructBuffers(input: Map<string, ArrayBufferLike>, cloneBuffers?: boolean) {
+        for (const [name, buffer] of input) {
             const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
-            output.push(potentialClone);
+            this.buffers.set(name, potentialClone);
         }
     }
-}
 
-/**
- * @param {unknown} params
- * @return {MeshTransport}
- */
-export function setParams(input: Record<string, unknown> | undefined, params: Record<string, unknown> | undefined) {
-    if (input && params) {
-        input.params = params;
+    fillTransferables(input: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean) {
+        for (const buffer of input) {
+            const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
+            output.push((potentialClone as Uint8Array).buffer);
+        }
     }
 }
 
@@ -43,8 +44,7 @@ export function setParams(input: Record<string, unknown> | undefined, params: Re
  */
 export class DataTransport {
 
-    private main: DataTransportDef;
-    private transferables: Transferable[];
+    private payload: DataTransportPayload;
 
     /**
      * Creates a new {@link DataTransport}.
@@ -52,99 +52,34 @@ export class DataTransport {
      * @param {number} [id]
      */
     constructor(cmd?: string, id?: number) {
-        this.main = buildDataTransport('DataTransport', cmd, id);
-        this.transferables = [];
+        this.payload = new DataTransportPayload(cmd, id);
+    }
+
+    getPayload(): DataTransportPayload {
+        return this.payload;
     }
 
     /**
      * Populate this object with previously serialized data.
-     * @param {DataTransportDef} transportObject
-     * @return {DataTransport}
+     * @param {Payload} transportObject
      */
-    loadData(transportObject: DataTransportDef): DataTransport {
-        this.main = buildDataTransport('DataTransport', transportObject.cmd, transportObject.id);
-        this.setProgress(transportObject.progress);
-        this.setParams(transportObject.params);
-
-        if (transportObject.buffers) {
-            Object.entries(transportObject.buffers).forEach(([name, buffer]) => {
-                this.main.buffers.set(name, buffer);
-            });
-        }
-        return this;
-    }
-
-    /**
-     * Returns the value of the command.
-     * @return {string}
-     */
-    getCmd(): string {
-        return this.main.cmd;
-    }
-
-    /**
-     * Returns the id.
-     * @return {number}
-     */
-    getId(): number {
-        return this.main.id;
-    }
-
-    /**
-      * @param {Record<string, unknown>} params
-      * @return {DataTransport}
-      */
-    setParams(params: Record<string, unknown> | undefined): DataTransport {
-        setParams(this.main.params, params);
-        return this;
-    }
-
-    /**
-     * Return the parameter object
-     * @return {unknown}
-     */
-    getParams(): unknown {
-        return this.main.params;
-    }
-
-    /**
-     * Set the current progress (e.g. percentage of progress)
-     * @param {number} numericalValue
-     * @return {DataTransport}
-     */
-    setProgress(numericalValue: number): DataTransport {
-        this.main.progress = numericalValue;
-        return this;
-    }
-
-    /**
-     * Add a named {@link ArrayBuffer}
-     * @param {string} name
-     * @param {ArrayBuffer} buffer
-     * @return {DataTransport}
-     */
-    addBuffer(name: string, buffer: ArrayBuffer): DataTransport {
-        this.main.buffers.set(name, buffer);
-        return this;
-    }
-
-    /**
-     * Retrieve an {@link ArrayBuffer} by name
-     * @param {string} name
-     * @return {ArrayBuffer}
-     */
-    getBuffer(name: string) {
-        return this.main.buffers.get(name);
+    loadData(transportObject: DataTransportPayload, cloneBuffers?: boolean): void {
+        this.payload = Object.assign(new DataTransportPayload(), transportObject);
+        this.payload.reconstructBuffers(transportObject.buffers, cloneBuffers);
     }
 
     /**
      * Package all data buffers into the transferable array. Clone if data needs to stay in current context.
      * @param {boolean} cloneBuffers
-     * @return {DataTransport}
      */
-    package(cloneBuffers: boolean): DataTransport {
-        copyBuffers(this.main.buffers, this.transferables, cloneBuffers);
-        return this;
+    package(cloneBuffers: boolean): { payload: DataTransportPayload, transferables: Transferable[] } {
+        const transferables: Transferable[] = [];
+        this.payload.fillTransferables(this.payload.buffers.values(), transferables, cloneBuffers);
+
+        return {
+            payload: this.payload,
+            transferables: transferables
+        };
     }
 }
 
