@@ -2,18 +2,15 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
-import { WorkerTaskManager } from '/src/loaders/workerTaskManager/WorkerTaskManager.js';
-import {
-    DataTransport,
-    GeometryTransport,
-    MeshTransport,
-    MaterialsTransport,
-    ObjectUtils,
-    DeUglify
-} from '/src/loaders/utils/TransportUtils.js';
-import { MaterialUtils } from '/src/loaders/utils/MaterialUtils.js';
-import { MaterialStore } from '/src/loaders/utils/MaterialStore.js';
-import { OBJLoaderWorker } from '/examples/worker/tmOBJLoader.js';
+import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, DataTransportPayloadUtils, MeshTransportPayloadUtils, MaterialsTransportPayloadUtils, MaterialStore, MaterialsTransportPayload } from 'three-wtm';
+
+export type CameraDefaults = {
+    posCamera: THREE.Vector3;
+    posCameraTarget: THREE.Vector3;
+    near: number;
+    far: number;
+    fov: number;
+};
 
 /**
  * The aim of this example is to show two possible ways how to use the {@link WorkerTaskManager}:
@@ -26,51 +23,43 @@ import { OBJLoaderWorker } from '/examples/worker/tmOBJLoader.js';
  */
 class WorkerTaskManagerExample {
 
-    constructor(elementToBindTo) {
+    private renderer: THREE.WebGLRenderer;
+    private canvas: HTMLElement;
+    private scene: THREE.Scene = new THREE.Scene();
+    private camera: THREE.PerspectiveCamera;
+    private cameraTarget: THREE.Vector3;
+    private cameraDefaults: CameraDefaults = {
+        posCamera: new THREE.Vector3(1000.0, 1000.0, 1000.0),
+        posCameraTarget: new THREE.Vector3(0, 0, 0),
+        near: 0.1,
+        far: 10000,
+        fov: 45
+    };
+    private controls: TrackballControls;
+    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(8).setVerbose(true);
 
-        this.renderer = null;
+    private objectsUsed: Map<number, THREE.Vector3> = new Map();
+    private tasksToUse: PayloadType[] = [];
+    private materialStore = new MaterialStore(true);
+
+    constructor(elementToBindTo: HTMLElement | null) {
+        if (elementToBindTo === null) throw Error('Bad element HTML given as canvas.');
         this.canvas = elementToBindTo;
-        this.aspectRatio = 1;
-
-        this.scene = null;
-        this.cameraDefaults = {
-            posCamera: new THREE.Vector3(1000.0, 1000.0, 1000.0),
-            posCameraTarget: new THREE.Vector3(0, 0, 0),
-            near: 0.1,
-            far: 10000,
-            fov: 45
-        };
-        this.camera = null;
-        this.cameraTarget = this.cameraDefaults.posCameraTarget;
-        this.controls = null;
-
-        this.objectsUsed = new Map();
-
-        this.workerTaskManager = new WorkerTaskManager(8).setVerbose(true);
-        this.tasksToUse = [];
-        this.materialStore = new MaterialStore(true);
-
-    }
-
-    initGL() {
-
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
-            antialias: true,
-            autoClear: true
+            antialias: true
         });
         this.renderer.setClearColor(0x050505);
 
-        this.scene = new THREE.Scene();
-
-        this.recalcAspectRatio();
-        this.camera = new THREE.PerspectiveCamera(this.cameraDefaults.fov, this.aspectRatio, this.cameraDefaults.near, this.cameraDefaults.far);
+        this.cameraTarget = this.cameraDefaults.posCameraTarget;
+        this.camera = new THREE.PerspectiveCamera(this.cameraDefaults.fov, this.recalcAspectRatio(), this.cameraDefaults.near, this.cameraDefaults.far);
         this.resetCamera();
+
         this.controls = new TrackballControls(this.camera, this.renderer.domElement);
 
-        let ambientLight = new THREE.AmbientLight(0x404040);
-        let directionalLight1 = new THREE.DirectionalLight(0xC0C090);
-        let directionalLight2 = new THREE.DirectionalLight(0xC0C090);
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        const directionalLight1 = new THREE.DirectionalLight(0xC0C090);
+        const directionalLight2 = new THREE.DirectionalLight(0xC0C090);
 
         directionalLight1.position.set(- 100, - 50, 100);
         directionalLight2.position.set(100, 50, - 100);
@@ -79,100 +68,74 @@ class WorkerTaskManagerExample {
         this.scene.add(directionalLight2);
         this.scene.add(ambientLight);
 
-        let helper = new THREE.GridHelper(1000, 30, 0xFF4444, 0x404040);
+        const helper = new THREE.GridHelper(1000, 30, 0xFF4444, 0x404040);
+        helper.name = 'grid';
         this.scene.add(helper);
+    }
 
+    resizeDisplayGL() {
+        this.controls.handleResize();
+        this.renderer.setSize(this.canvas.offsetWidth, this.canvas.offsetHeight, false);
+        this.updateCamera();
+    }
+
+    recalcAspectRatio() {
+        return (this.canvas.offsetHeight === 0) ? 1 : this.canvas.offsetWidth / this.canvas.offsetHeight;
+    }
+
+    resetCamera() {
+        this.camera.position.copy(this.cameraDefaults.posCamera);
+        this.cameraTarget.copy(this.cameraDefaults.posCameraTarget);
+        this.updateCamera();
+    }
+
+    updateCamera() {
+        this.camera.aspect = this.recalcAspectRatio();
+        this.camera.lookAt(this.cameraTarget);
+        this.camera.updateProjectionMatrix();
+    }
+
+    render() {
+        if (!this.renderer.autoClear) this.renderer.clear();
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
     }
 
     /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
     async initContent() {
+        const awaiting: Array<Promise<void>> = [];
 
-        /** Simplest way to define a worker for {@link WorkerTaskManager} */
-        class InlineWorker {
+        const helloWorldWorker = new DataTransportPayload('init', 0);
+        helloWorldWorker.name = 'HelloWorldWorker';
+        this.workerTaskManager.registerTask(helloWorldWorker.name, true, new URL('../worker/helloWorldWorkerStandard', import.meta.url));
+        this.tasksToUse.push(helloWorldWorker);
+        awaiting.push(this.workerTaskManager.initTaskType(helloWorldWorker.name, helloWorldWorker));
 
-            static init(context, id, config) {
+        const objLoaderWorker = new MaterialsTransportPayload('init', 0);
+        objLoaderWorker.name = 'OBJLoaderdWorker';
+        objLoaderWorker.params = { filename: '../models/female02_vertex_colors.obj' };
+        this.workerTaskManager.registerTask(objLoaderWorker.name, true, new URL('../worker/tmOBJLoader', import.meta.url));
+        this.tasksToUse.push(objLoaderWorker);
 
-                context.storage = { whoami: config.id };
-                context.postMessage({ cmd: "init", id: id });
-
-            }
-
-            static execute(context, id, config) {
-
-                let bufferGeometry = new THREE.SphereBufferGeometry(40, 64, 64);
-                bufferGeometry.name = 'InlineWorker' + config.id;
-                let vertexArray = bufferGeometry.getAttribute('position').array;
-                for (let i = 0; i < vertexArray.length; i++) vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
-                new MeshTransport('execComplete', config.id)
-                    .setGeometry(bufferGeometry, 0)
-                    .package(false)
-                    .postMessage(context);
-
-            }
-
-            static buildStandardWorkerDependencies(threeJsLocation) {
-                return [
-                    { url: threeJsLocation },
-                    { code: '\n\n' },
-                    { code: DeUglify.buildThreeConst() },
-                    { code: '\n\n' },
-                    { code: DeUglify.buildUglifiedThreeMapping() },
-                    { code: '\n\n' },
-                    { code: ObjectUtils.serializeClass(DataTransport) },
-                    { code: ObjectUtils.serializeClass(GeometryTransport) },
-                    { code: ObjectUtils.serializeClass(MaterialUtils) },
-                    { code: ObjectUtils.serializeClass(MaterialsTransport) },
-                    { code: ObjectUtils.serializeClass(MeshTransport) },
-                    { code: DeUglify.buildUglifiedThreeWtmMapping() },
-                    { code: '\n\n' }
-                ];
-
-            }
-
-        }
-
-        let awaiting = [];
-        let taskDescr = {
-            name: 'InlineWorker',
-            funcInit: InlineWorker.init,
-            funcExec: InlineWorker.execute,
-            dependencies: InlineWorker.buildStandardWorkerDependencies('/node_modules/three/build/three.min.js')
-        };
-        this.tasksToUse.push(taskDescr);
-        this.workerTaskManager.registerTaskTypeStandard(taskDescr.name, taskDescr.funcInit, taskDescr.funcExec, null, false, taskDescr.dependencies);
-        awaiting.push(this.workerTaskManager.initTaskType(taskDescr.name, { param1: 'param1value' }).catch(e => console.error(e)));
-
-        const taskDescrObj = {
-            name: 'OBJLoaderStandard',
-            filenameObj: '../models/female02_vertex_colors.obj',
-            funcInit: OBJLoaderWorker.init,
-            funcExec: OBJLoaderWorker.execute,
-            dependencies: OBJLoaderWorker.buildStandardWorkerDependencies('/node_modules/three/build/three.min.js', '/node_modules/three/examples/js/loaders/OBJLoader.js')
-        };
-        this.tasksToUse.push(taskDescrObj);
-        this.workerTaskManager.registerTaskTypeStandard(taskDescrObj.name, taskDescrObj.funcInit, taskDescrObj.funcExec, null, false, taskDescrObj.dependencies);
-        const loadObj = async function(filenameObj) {
-            let fileLoader = new THREE.FileLoader();
+        const loadObj = async function(filenameObj: string) {
+            const fileLoader = new THREE.FileLoader();
             fileLoader.setResponseType('arraybuffer');
             return await fileLoader.loadAsync(filenameObj);
-        }
-        await loadObj(taskDescrObj.filenameObj)
-            .then(buffer => {
-                const mt = new MaterialsTransport()
-                    .addBuffer('modelData', buffer)
-                    .setMaterials(this.materialStore.getMaterials())
-                    .cleanMaterials()
-                    .package(false);
-                awaiting.push(this.workerTaskManager.initTaskType(taskDescrObj.name, mt.getMain(), mt.getTransferables()).catch(e => console.error(e)));
+        };
+        await loadObj(objLoaderWorker.params?.filename as string)
+            .then((buffer: string | ArrayBuffer) => {
+                objLoaderWorker.buffers.set('modelData', buffer as ArrayBufferLike);
+                objLoaderWorker.materials = this.materialStore.getMaterials();
+                MaterialsTransportPayloadUtils.cleanMaterials(objLoaderWorker);
+                MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoaderWorker, false);
+                awaiting.push(this.workerTaskManager.initTaskType(objLoaderWorker.name, objLoaderWorker));
             });
         return await Promise.all(awaiting);
-
     }
 
     /** Once all tasks are initialized a 100 tasks are enqueued for execution by WorkerTaskManager. */
     async executeWorkers() {
-
-        if (this.tasksToUse.length === 0) throw "No Tasks have been selected. Aborting..."
+        if (this.tasksToUse.length === 0) throw new Error('No Tasks have been selected. Aborting...');
 
         console.time('start');
         let globalCount = 0;
@@ -180,27 +143,31 @@ class WorkerTaskManagerExample {
         const executions = [];
 
         for (let i = 0; i < 1000; i++) {
+            const payload = new DataTransportPayload('execute', globalCount);
+            const payloadType = this.tasksToUse[taskToUseIndex];
+            payload.name = `${payloadType.name}_${globalCount}`;
+            payload.params = payloadType.params;
+            const packed = DataTransportPayloadUtils.packDataTransportPayload(payload, false);
 
-            let taskDescr = this.tasksToUse[taskToUseIndex];
-            const tb = new DataTransport('execute', globalCount).setParams({ modelName: taskDescr.name });
-            let promise = this.workerTaskManager.enqueueForExecution(taskDescr.name, tb.getMain(),
-                data => this._processMessage(data))
-                .then(data => this._processMessage(data))
-                .catch(e => console.error(e))
+            const promise = this.workerTaskManager.enqueueForExecution(payloadType.name, packed.payload,
+                (e: PayloadType) => this._processMessage(e), packed.transferables)
+                .then((e: unknown) => {
+                    const data = e as PayloadType;
+                    this._processMessage(data);
+                })
+                .catch((e: unknown) => console.error(e));
             executions.push(promise);
 
             globalCount++;
             taskToUseIndex++;
-            if (taskToUseIndex === this.tasksToUse.length) taskToUseIndex = 0;
-
+            if (taskToUseIndex === this.tasksToUse.length) {
+                taskToUseIndex = 0;
+            }
         }
-        await Promise.all(executions).then(x => {
-
+        await Promise.all(executions).then(() => {
             console.timeEnd('start');
             this.workerTaskManager.dispose();
-
         });
-
     }
 
     /**
@@ -208,48 +175,39 @@ class WorkerTaskManagerExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    _processMessage(payload) {
+    _processMessage(payload: PayloadType) {
         switch (payload.cmd) {
-
             case 'assetAvailable':
             case 'execComplete':
-                if (payload.type === 'MeshTransport') {
-
-                    const meshTransport = new MeshTransport().loadData(payload).reconstruct(false);
-
-                    const materialsTransport = meshTransport.getMaterialsTransport();
-                    let material = materialsTransport.processMaterialTransport(this.materialStore ? this.materialStore.getMaterials() : {}, true);
-                    if (material === undefined || material === null) {
-
-                        let randArray = new Uint8Array(3);
+                if (payload.type === 'MeshTransportPayload') {
+                    const mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload as MeshTransportPayload, false);
+                    let material = MaterialsTransportPayloadUtils.processMaterialTransport(mtp.materialsTransportPayload, this.materialStore.getMaterials(), true);
+                    if (!material) {
+                        const randArray = new Uint8Array(3);
                         window.crypto.getRandomValues(randArray);
                         const color = new THREE.Color(randArray[0] / 255, randArray[1] / 255, randArray[2] / 255);
                         material = new THREE.MeshPhongMaterial({ color: color });
-
                     }
-                    const mesh = new THREE.Mesh(meshTransport.getBufferGeometry(), material);
-                    this._addMesh(mesh, meshTransport.getId());
-
-                } else if (payload.type !== 'DataTransport') {
-
-                    console.error('Provided payload.type was neither mesh nor assetAvailable: ' + payload.cmd);
-
+                    if (mtp.bufferGeometry) {
+                        const mesh = new THREE.Mesh(mtp.bufferGeometry as THREE.BufferGeometry, material as THREE.Material);
+                        this._addMesh(mesh, mtp.id);
+                    }
+                }
+                else if (payload.type === 'DataTransportPayload') {
+                    console.log(`execComplete: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
                 }
                 break;
 
             default:
                 console.error(payload.id + ': Received unknown command: ' + payload.cmd);
                 break;
-
         }
     }
 
     /** Add mesh at random position, but keep sub-meshes of an object together, therefore we need */
-    _addMesh(mesh, id) {
-
+    _addMesh(mesh: THREE.Mesh, id: number) {
         let pos = this.objectsUsed.get(id);
-        if (pos === undefined) {
-
+        if (!pos) {
             // sphere positions
             const baseFactor = 750;
             pos = new THREE.Vector3(baseFactor * Math.random(), baseFactor * Math.random(), baseFactor * Math.random());
@@ -257,76 +215,28 @@ class WorkerTaskManagerExample {
             pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), 2 * Math.PI * Math.random());
             pos.applyAxisAngle(new THREE.Vector3(0, 0, 1), 2 * Math.PI * Math.random());
             this.objectsUsed.set(id, pos);
-
         }
         mesh.position.set(pos.x, pos.y, pos.z);
         mesh.name = id + '' + mesh.name;
         this.scene.add(mesh);
-
     }
-
-    resizeDisplayGL() {
-
-        this.controls.handleResize();
-        this.recalcAspectRatio();
-        this.renderer.setSize(this.canvas.offsetWidth, this.canvas.offsetHeight, false);
-        this.updateCamera();
-
-    }
-
-    recalcAspectRatio() {
-
-        this.aspectRatio = (this.canvas.offsetHeight === 0) ? 1 : this.canvas.offsetWidth / this.canvas.offsetHeight;
-
-    }
-
-    resetCamera() {
-
-        this.camera.position.copy(this.cameraDefaults.posCamera);
-        this.cameraTarget.copy(this.cameraDefaults.posCameraTarget);
-        this.updateCamera();
-
-    }
-
-    updateCamera() {
-
-        this.camera.aspect = this.aspectRatio;
-        this.camera.lookAt(this.cameraTarget);
-        this.camera.updateProjectionMatrix();
-
-    }
-
-    render() {
-
-        if (!this.renderer.autoClear) this.renderer.clear();
-        this.controls.update();
-        this.renderer.render(this.scene, this.camera);
-
-    }
-
 }
 
-let app = new WorkerTaskManagerExample(document.getElementById('example'));
+const app = new WorkerTaskManagerExample(document.getElementById('example'));
+
+window.addEventListener('resize', () => app.resizeDisplayGL(), false);
+
+console.log('Starting initialisation phase...');
+app.resizeDisplayGL();
+
+const requestRender = function() {
+    requestAnimationFrame(requestRender);
+    app.render();
+};
+requestRender();
 
 console.time('Init tasks');
-app.initContent().then(x => {
+app.initContent().then(() => {
     console.timeEnd('Init tasks');
     app.executeWorkers();
 }).catch(x => alert(x));
-
-let resizeWindow = function() {
-    app.resizeDisplayGL();
-};
-
-let render = function() {
-    requestAnimationFrame(render);
-    app.render();
-};
-
-window.addEventListener('resize', resizeWindow, false);
-
-console.log('Starting initialisation phase...');
-app.initGL();
-app.resizeDisplayGL();
-
-render();

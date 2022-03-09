@@ -7,8 +7,8 @@
   "include": [
     "helloworld/**/*.ts",
     "transferables/**/*.ts",
-    "worker/helloWorldWorkerModule.ts",
-    "worker/transferableWorkerTest*.ts"
+    "threejsobj/**/*.ts",
+    "worker/*.ts"
   ],
   "exclude": [
     "dist",

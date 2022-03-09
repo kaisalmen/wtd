@@ -18,7 +18,7 @@ export default defineConfig({
                 main: path.resolve(__dirname, 'index.html'),
                 helloworld: path.resolve(__dirname, 'helloworld/index.html'),
                 transferables: path.resolve(__dirname, 'transferables/index.html'),
-                //                threejsobj: path.resolve(__dirname, 'examples/threejsobj/index.html')
+                threejsobj: path.resolve(__dirname, 'examples/threejsobj/index.html')
             },
             plugins: [
             ]

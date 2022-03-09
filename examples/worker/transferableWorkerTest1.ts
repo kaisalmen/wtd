@@ -1,14 +1,16 @@
-import { Payload, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
+import { DataTransportPayload, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
+
+declare const self: DedicatedWorkerGlobalScope;
 
 class TransferableWorkerTest1 extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
 
-    init(payload: Payload) {
+    init(payload: DataTransportPayload) {
         console.log(`HelloWorldWorker#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
         payload.cmd = 'initComplete';
         self.postMessage(payload);
     }
 
-    execute(payload: Payload) {
+    execute(payload: DataTransportPayload) {
         console.log(`HelloWorldWorker#execute: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
         payload.cmd = 'execComplete';
         payload.params = {

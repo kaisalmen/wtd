@@ -80,7 +80,7 @@ await this.workerTaskManager.initTaskType(taskName, { name: taskName })
 This is the same block required for a worker loaded from a URL. The worker code resides in an extra file an contains the required `init` and `execute` functions. If the argument is true, the worker is treated as module worker:
 ```javascript
 const taskNameModule = 'ModuleWorker';
-this.workerTaskManager.registerTaskTypeWithUrl('myModuleTask', true, '/examples/worker/helloWorldWorker.js');
+this.workerTaskManager.registerTask('myModuleTask', true, '/examples/worker/helloWorldWorker.js');
 await this.workerTaskManager.initTaskType(taskNameModule, {})
     .then( () => this.workerTaskManager.enqueueForExecution( taskName, {}, null))
     .then( data => processData(data) )

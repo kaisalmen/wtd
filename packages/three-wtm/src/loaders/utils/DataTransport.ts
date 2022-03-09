@@ -1,6 +1,11 @@
-import { Payload } from '../workerTaskManager/WorkerTaskManager';
+import { PayloadType } from '../workerTaskManager/WorkerTaskManager';
 
-export class DataTransportPayload implements Payload {
+type DataTransportPayloadType = PayloadType & {
+    buffers?: Map<string, ArrayBufferLike>;
+    progress?: number;
+};
+
+export class DataTransportPayload implements DataTransportPayloadType {
 
     name = 'unknown';
     type = 'DataTransportPayload';
@@ -16,70 +21,35 @@ export class DataTransportPayload implements Payload {
         this.id = (id !== undefined) ? id : 0;
     }
 
-    addBuffer(name: string, buffer: ArrayBuffer): void {
-        this.buffers.set(name, buffer);
-    }
-
-    getBuffer(name: string): ArrayBufferLike | undefined {
-        return this.buffers.get(name);
-    }
-
-    reconstructBuffers(input: Map<string, ArrayBufferLike>, cloneBuffers?: boolean) {
-        for (const [name, buffer] of input) {
-            const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
-            this.buffers.set(name, potentialClone);
-        }
-    }
-
-    fillTransferables(input: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean) {
-        for (const buffer of input) {
-            const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
-            output.push((potentialClone as Uint8Array).buffer);
-        }
-    }
 }
 
-/**
- * Define a base structure that is used to ship data in between main and workers.
- */
-export class DataTransport {
-
-    private payload: DataTransportPayload;
-
-    /**
-     * Creates a new {@link DataTransport}.
-     * @param {string} [cmd]
-     * @param {number} [id]
-     */
-    constructor(cmd?: string, id?: number) {
-        this.payload = new DataTransportPayload(cmd, id);
-    }
-
-    getPayload(): DataTransportPayload {
-        return this.payload;
-    }
-
-    /**
-     * Populate this object with previously serialized data.
-     * @param {Payload} transportObject
-     */
-    loadData(transportObject: DataTransportPayload, cloneBuffers?: boolean): void {
-        this.payload = Object.assign(new DataTransportPayload(), transportObject);
-        this.payload.reconstructBuffers(transportObject.buffers, cloneBuffers);
-    }
+export class DataTransportPayloadUtils {
 
     /**
      * Package all data buffers into the transferable array. Clone if data needs to stay in current context.
      * @param {boolean} cloneBuffers
      */
-    package(cloneBuffers: boolean): { payload: DataTransportPayload, transferables: Transferable[] } {
+    static packDataTransportPayload(payload: DataTransportPayload, cloneBuffers: boolean): { payload: DataTransportPayload, transferables: Transferable[] } {
         const transferables: Transferable[] = [];
-        this.payload.fillTransferables(this.payload.buffers.values(), transferables, cloneBuffers);
+        DataTransportPayloadUtils.fillTransferables(payload.buffers.values(), transferables, cloneBuffers);
 
         return {
-            payload: this.payload,
+            payload: payload,
             transferables: transferables
         };
+    }
+
+    static fillTransferables(input: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean) {
+        for (const buffer of input) {
+            const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
+            output.push((potentialClone as Uint8Array).buffer);
+        }
+    }
+
+    static unpackDataTransportPayload(payload: DataTransportPayload, cloneBuffers: boolean) {
+        for (const [name, buffer] of payload.buffers) {
+            payload.buffers.set(name, cloneBuffers ? buffer.slice(0) : buffer);
+        }
     }
 }
 

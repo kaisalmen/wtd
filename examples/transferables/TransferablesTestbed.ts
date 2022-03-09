@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, Payload, PayloadType, DataTransportPayload, DataTransport, MeshTransportPayload, MeshTransport } from 'three-wtm';
+import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, MeshTransportPayloadUtils } from 'three-wtm';
 
 type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -149,23 +149,22 @@ class TransferablesTestbed {
     }
 
     _initTask(task: ExampleTask) {
-        this.workerTaskManager.registerTaskTypeWithUrl(task.name, true, task.module);
-        return this.workerTaskManager.initTaskType(task.name, { name: task.name, id: task.id, cmd: 'init' });
+        this.workerTaskManager.registerTask(task.name, true, task.module);
+        const payload = new DataTransportPayload('init', task.id);
+        payload.name = task.name;
+        return this.workerTaskManager.initTaskType(task.name, payload);
     }
 
     async executeWorker(task: ExampleTask) {
-        const payload = {
-            id: task.id,
+        const payload = new DataTransportPayload('execute', task.id);
+        payload.name = task.name;
+        payload.params = {
             name: task.name,
-            cmd: 'execute',
-            params: {
-                name: task.name,
-                segments: task.segments
-            }
+            segments: task.segments
         };
         const promiseExec = this.workerTaskManager.enqueueForExecution(task.name, payload)
             .then((e: unknown) => {
-                const data = e as Payload;
+                const data = e as PayloadType;
                 this._processMessage(data);
             })
             .catch((e: unknown) => console.error(e));
@@ -177,29 +176,26 @@ class TransferablesTestbed {
         switch (payload.cmd) {
             case 'execComplete':
                 console.log(`TransferableTestbed#execComplete: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
-                if ((payload as Payload).type === 'DataTransportPayload') {
-                    const transportDef = payload as DataTransportPayload;
-                    const dt = new DataTransport();
-                    dt.loadData(transportDef, false);
-                    if (Object.keys(dt.getPayload().params).length > 0) {
+                if (payload.type === 'DataTransportPayload') {
+                    if (payload.params && Object.keys(payload.params).length > 0 &&
+                        payload.params.geometry) {
+                        //  && (payload.params.geometry as Record<string, unknown>).type === 'TorusKnotGeometry'
                         const mesh = new THREE.Mesh(
-                            MeshTransport.reconstructBuffer(false, dt.getPayload().params as Record<string, unknown>),
+                            MeshTransportPayloadUtils.reconstructBuffer(false, payload.params.geometry as THREE.BufferGeometry),
                             new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff0000) })
                         );
                         mesh.position.set(100, 0, 0);
                         this.scene.add(mesh);
                     }
                     else {
-                        console.log(`${dt.getPayload().name}: Just data`);
+                        console.log(`${payload.name}: Just data`);
                     }
                 }
-                else if ((payload as Payload).type === 'MeshTransportPayload') {
-                    const transportDef = payload as MeshTransportPayload;
-                    const mt = new MeshTransport();
-                    mt.loadData(transportDef, false);
-                    if (mt.getBufferGeometry()) {
+                else if (payload.type === 'MeshTransportPayload') {
+                    const mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload as MeshTransportPayload, false);
+                    if (mtp.bufferGeometry) {
                         const mesh = new THREE.Mesh(
-                            mt.getBufferGeometry() as THREE.BufferGeometry,
+                            mtp.bufferGeometry as THREE.BufferGeometry,
                             new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff0000) })
                         );
                         this.scene.add(mesh);

@@ -22,6 +22,6 @@
     "serve": "tsc && vite preview"
   },
   "dependencies": {
-    "three-wtm": "../packages/three-wtm"
+    "three-wtm": "../packages/three-wtm/index.js"
   }
 }

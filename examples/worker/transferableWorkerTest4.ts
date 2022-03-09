@@ -1,23 +1,25 @@
 import { TorusKnotBufferGeometry } from 'three';
-import { MeshTransport, Payload, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
+import { DataTransportPayload, MeshTransportPayload, MeshTransportPayloadUtils, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
+
+declare const self: DedicatedWorkerGlobalScope;
 
 class TransferableWorkerTest4 extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
 
-    init(payload: Payload) {
+    init(payload: DataTransportPayload) {
         console.log(`TransferableWorkerTest4#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
         payload.cmd = 'initComplete';
         self.postMessage(payload);
     }
 
-    execute(payload: Payload) {
+    execute(payload: DataTransportPayload) {
         console.log(`TransferableWorkerTest4#execute: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
         if (payload.params) {
             const bufferGeometry = new TorusKnotBufferGeometry(20, 3, payload.params.segments as number, payload.params.segments as number);
             bufferGeometry.name = payload.name;
 
-            const mt = new MeshTransport('execComplete', payload.id);
-            mt.setBufferGeometry(bufferGeometry, 0);
-            const packed = mt.package(false);
+            const mtp = new MeshTransportPayload('execComplete', payload.id);
+            MeshTransportPayloadUtils.setBufferGeometry(mtp, bufferGeometry, 0);
+            const packed = MeshTransportPayloadUtils.packMeshTransportPayload(mtp, false);
             self.postMessage(packed.payload, packed.transferables);
         }
 

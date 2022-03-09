@@ -74,7 +74,7 @@ class WorkerTaskManager {
      * @param {URL} workerUrl The URL to be used for the Worker. Worker must provide logic to handle "init" and "execute" messages.
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTaskTypeWithUrl(taskTypeName: string, moduleWorker: boolean, workerUrl: URL) {
+    registerTask(taskTypeName: string, moduleWorker: boolean, workerUrl: URL) {
         const allowedToRegister = !this.supportsTaskType(taskTypeName);
         if (allowedToRegister) {
             const workerTypeDefinition = new WorkerTypeDefinition(taskTypeName, this.maxParallelExecutions, this.verbose);
@@ -301,7 +301,7 @@ class WorkerTypeDefinition {
      * @param {PayloadType} payload
      * @param {Transferable[]} transferables
      */
-    async initWorkers(payload: PayloadType, transferables?: Transferable[]) {
+    async initWorkers(payload: PayloadType, transferables?: Transferable[]): Promise<void> {
         const promises = [];
         for (const taskWorker of this.workers.instances) {
 
@@ -429,21 +429,8 @@ type PayloadType = {
     name: string | 'unknown';
     type?: string | 'unknown';
     workerId?: number;
+    // TODO: params should be data
     params?: Record<string, unknown>;
-    buffers?: Map<string, ArrayBufferLike>;
-    progress?: number;
-}
-
-interface Payload extends PayloadType {
-
-    addBuffer(name: string, buffer: ArrayBuffer): void;
-
-    getBuffer(name: string): ArrayBufferLike | undefined;
-
-    reconstructBuffers(input: Map<string, ArrayBufferLike>, cloneBuffers?: boolean): void;
-
-    fillTransferables(input: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean): void;
-
 }
 
 interface WorkerTaskManagerWorker {
@@ -480,4 +467,4 @@ class WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
     }
 }
 
-export { WorkerTaskManager, PayloadType, Payload, WorkerTaskManagerWorker, WorkerTaskManagerDefaultWorker };
+export { WorkerTaskManager, PayloadType, WorkerTaskManagerWorker, WorkerTaskManagerDefaultWorker };
