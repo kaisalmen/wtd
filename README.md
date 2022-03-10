@@ -1,6 +1,8 @@
 # three-wtm
 **WorkerTaskManager for three.js**
 
+***IMPORTANT: Outdated, needs to be upadted for 2.0.0***
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
 
@@ -80,7 +82,7 @@ await this.workerTaskManager.initTaskType(taskName, { name: taskName })
 This is the same block required for a worker loaded from a URL. The worker code resides in an extra file an contains the required `init` and `execute` functions. If the argument is true, the worker is treated as module worker:
 ```javascript
 const taskNameModule = 'ModuleWorker';
-this.workerTaskManager.registerTaskTypeWithUrl('myModuleTask', true, '/examples/worker/helloWorldWorker.js');
+this.workerTaskManager.registerTask('myModuleTask', true, '/examples/worker/helloWorldWorker.js');
 await this.workerTaskManager.initTaskType(taskNameModule, {})
     .then( () => this.workerTaskManager.enqueueForExecution( taskName, {}, null))
     .then( data => processData(data) )

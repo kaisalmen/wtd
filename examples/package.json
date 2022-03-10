@@ -1,0 +1,27 @@
+{
+  "name": "three-wtm-examples",
+  "version": "2.0.0-dev",
+  "type": "module",
+  "main": "./dist/index.es.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "dev": "vite",
+    "lint": "eslint src",
+    "build": "npm run clean && tsc",
+    "serve": "tsc && vite preview"
+  },
+  "dependencies": {
+    "three-wtm": "../packages/three-wtm/index.js"
+  }
+}
