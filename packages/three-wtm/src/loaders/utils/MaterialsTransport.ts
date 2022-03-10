@@ -18,10 +18,6 @@ export class MaterialsTransportPayload extends DataTransportPayload implements M
     multiMaterialNames: Map<string, string> = new Map();
     cloneInstructions: MaterialCloneInstructions[] = [];
 
-    constructor(cmd?: string, id?: number) {
-        super(cmd, id);
-    }
-
 }
 
 /**
@@ -45,7 +41,7 @@ export class MaterialsTransportPayloadUtils {
      * @return {MaterialsTransport}
      */
     static unpackMaterialsTransportPayload(payload: MaterialsTransportPayload, transportObject: MaterialsTransportPayload) {
-        for (const [k, v] of Object.entries(transportObject.multiMaterialNames)) {
+        for (const [k, v] of transportObject.multiMaterialNames.entries()) {
             payload.multiMaterialNames.set(k, v);
         }
         for (const cloneInstruction of transportObject.cloneInstructions) {
@@ -54,7 +50,7 @@ export class MaterialsTransportPayloadUtils {
         payload.cloneInstructions = transportObject.cloneInstructions;
 
         const materialLoader = new MaterialLoader();
-        for (const [k, v] of Object.entries(transportObject.materialsJson)) {
+        for (const [k, v] of transportObject.materialsJson.entries()) {
             payload.materials.set(k, materialLoader.parse(v));
         }
     }
@@ -64,7 +60,7 @@ export class MaterialsTransportPayloadUtils {
      * @param {Map<string, Material>} materials
      */
     static setMaterials(payload: MaterialsTransportPayload, materials: Map<string, Material>): void {
-        for (const [k, v] of Object.entries(materials)) {
+        for (const [k, v] of materials.entries()) {
             payload.materials.set(k, v);
         }
     }
@@ -74,7 +70,7 @@ export class MaterialsTransportPayloadUtils {
      */
     static cleanMaterials(payload: MaterialsTransportPayload): void {
         const clonedMaterials = new Map();
-        for (const material of Object.values(payload.materials)) {
+        for (const material of payload.materials.values()) {
             if (typeof material.clone === 'function') {
                 const clonedMaterial = material.clone();
                 clonedMaterials.set(clonedMaterial.name, MaterialsTransportPayloadUtils.cleanMaterial(clonedMaterial));
@@ -98,7 +94,7 @@ export class MaterialsTransportPayloadUtils {
      * @return {boolean}
      */
     static hasMultiMaterial(payload: MaterialsTransportPayload) {
-        return (Object.keys(payload.multiMaterialNames).length > 0);
+        return payload.multiMaterialNames.size > 0;
     }
 
     /**
@@ -106,7 +102,7 @@ export class MaterialsTransportPayloadUtils {
      * @return {Material|null}
      */
     static getSingleMaterial(payload: MaterialsTransportPayload) {
-        return (Object.keys(payload.materials).length > 0) ? payload.materials.values().next().value as Material : undefined;
+        return payload.materials.size > 0 ? payload.materials.values().next().value as Material : undefined;
     }
 
     /**
@@ -118,7 +114,7 @@ export class MaterialsTransportPayloadUtils {
      * @return {Material|Material[]}
      */
     static processMaterialTransport(payload: MaterialsTransportPayload, materials: Map<string, Material>, log?: boolean) {
-        if (Object.keys(materials).length === 0) return;
+        if (materials.size === 0) return;
 
         for (const cloneInstruction of payload.cloneInstructions) {
             MaterialUtils.cloneMaterial(materials, cloneInstruction, log);
@@ -126,7 +122,7 @@ export class MaterialsTransportPayloadUtils {
         if (MaterialsTransportPayloadUtils.hasMultiMaterial(payload)) {
             // multi-material
             const outputMaterials: Record<string, Material | undefined> = {};
-            for (const [k, v] of Object.entries(payload.multiMaterialNames)) {
+            for (const [k, v] of payload.multiMaterialNames.entries()) {
                 const mat = materials.get(v);
                 outputMaterials[k] = mat ? mat : undefined;
             }

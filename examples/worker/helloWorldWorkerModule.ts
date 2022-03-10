@@ -20,7 +20,7 @@ export class HelloWorldWorker extends WorkerTaskManagerDefaultWorker implements 
             vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
         }
 
-        const mtp = new MeshTransportPayload('execComplete', payload.id);
+        const mtp = new MeshTransportPayload('execComplete', payload.id, payload.name);
         MeshTransportPayloadUtils.setBufferGeometry(mtp, bufferGeometry, 0);
         const packed = MeshTransportPayloadUtils.packMeshTransportPayload(mtp, false);
         self.postMessage(packed.payload, packed.transferables);

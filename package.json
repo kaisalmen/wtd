@@ -1,39 +1,39 @@
 {
-	"name": "three-wtm-workspace",
-	"description": "WorkerTaskManager for three.js",
-	"author": "kaisalmen",
+  "name": "three-wtm-workspace",
+  "description": "WorkerTaskManager for three.js",
+  "author": "kaisalmen",
   "private": "true",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/kaisalmen/three-wtm.git"
-	},
-	"bugs": {
-		"url": "https://github.com/kaisalmen/three-wtm/issues"
-	},
-	"scripts": {
-		"test": "echo \\\"Error: no libs specified\\\" && exit 1",
-		"clean": "rimraf dist",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaisalmen/three-wtm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kaisalmen/three-wtm/issues"
+  },
+  "scripts": {
+    "test": "echo \\\"Error: no libs specified\\\" && exit 1",
+    "clean": "rimraf dist",
     "dev": "vite -c vite.config.examples.ts",
     "lint": "eslint src && eslint examples",
     "def": "dev/runTscDeclaration.sh",
     "doc": "jsdoc -c jsdoc.json",
     "build-examples": "npm run build --workspace examples",
     "build-lib": "npm run build --workspace packages/three-wtm",
-		"prerelease": "npm run build && npm run def && npm run doc && npm pack",
-		"prepare": ""
-	},
-	"keywords": [],
-	"homepage": "https://github.com/kaisalmen/three-wtm#README",
-	"devDependencies": {
+    "prerelease": "npm run build && npm run def && npm run doc && npm pack",
+    "prepare": ""
+  },
+  "keywords": [],
+  "homepage": "https://github.com/kaisalmen/three-wtm#README",
+  "devDependencies": {
     "@types/node": "^16.11.7",
-		"vite": "^2.8.4",
-		"eslint": "^8.9.0",
-    "@typescript-eslint/eslint-plugin": "^5.12.1",
-		"editorconfig": "^0.15.3",
-		"rimraf": "^3.0.2",
-		"typescript": "^4.5.5"
-	},
+    "vite": "^2.8.6",
+    "eslint": "^8.10.0",
+    "@typescript-eslint/eslint-plugin": "^5.14.0",
+    "editorconfig": "^0.15.3",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.2"
+  },
   "workspaces": [
     "examples",
     "packages/three-wtm"

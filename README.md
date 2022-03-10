@@ -1,6 +1,8 @@
 # three-wtm
 **WorkerTaskManager for three.js**
 
+***IMPORTANT: Outdated, needs to be upadted for 2.0.0***
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
 

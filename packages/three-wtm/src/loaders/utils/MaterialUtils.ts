@@ -50,7 +50,7 @@ class MaterialUtils {
     /**
      * Transforms the named materials object to an object with named jsonified materials.
      *
-     * @param {Map<string, Material>>}
+     * @param {Map<string, Material>}
      * @returns {Map<string, unknown>} Map of Materials in JSON representation
      */
     static getMaterialsJSON(materialsObject: Map<string, Material>): Map<string, unknown> {

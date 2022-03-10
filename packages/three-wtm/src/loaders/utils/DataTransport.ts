@@ -7,18 +7,23 @@ type DataTransportPayloadType = PayloadType & {
 
 export class DataTransportPayload implements DataTransportPayloadType {
 
-    name = 'unknown';
+    name = 'unnamed';
     type = 'DataTransportPayload';
-    cmd: string;
+    cmd = 'unknown';
     id: number;
     workerId?: number | undefined = 0;
     params?: Record<string, unknown> = {};
     buffers: Map<string, ArrayBufferLike> = new Map();
     progress = 0;
 
-    constructor(cmd?: string, id?: number) {
-        this.cmd = (cmd !== undefined) ? cmd : 'unknown';
-        this.id = (id !== undefined) ? id : 0;
+    constructor(cmd?: string, id?: number, name?: string) {
+        if (cmd) {
+            this.cmd = cmd;
+        }
+        this.id = id ?? 0;
+        if (name) {
+            this.name = name;
+        }
     }
 
 }
@@ -47,7 +52,7 @@ export class DataTransportPayloadUtils {
     }
 
     static unpackDataTransportPayload(payload: DataTransportPayload, cloneBuffers: boolean) {
-        for (const [name, buffer] of payload.buffers) {
+        for (const [name, buffer] of payload.buffers.entries()) {
             payload.buffers.set(name, cloneBuffers ? buffer.slice(0) : buffer);
         }
     }

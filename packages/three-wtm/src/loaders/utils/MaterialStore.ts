@@ -53,7 +53,7 @@ class MaterialStore {
      */
     addMaterials(newMaterials: Map<string, Material>, forceOverrideExisting: boolean) {
         if (newMaterials === undefined || newMaterials === null) newMaterials = new Map();
-        if (Object.keys(newMaterials).length > 0) {
+        if (newMaterials.size > 0) {
             for (const entry of newMaterials.entries()) {
                 MaterialUtils.addMaterial(this.materials, entry[1], entry[0], forceOverrideExisting === true);
             }
@@ -63,9 +63,9 @@ class MaterialStore {
     /**
      * Returns the mapping object of material name and corresponding material.
      *
-     * @returns {Object} Map of {@link Material}
+     * @returns {Map<string, Material>}
      */
-    getMaterials() {
+    getMaterials(): Map<string, Material> {
         return this.materials;
     }
 

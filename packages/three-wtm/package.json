@@ -16,13 +16,19 @@
     "src"
   ],
   "tsup": {
-    "entry": ["src/index.ts"],
+    "entry": [
+      "src/index.ts"
+    ],
     "splitting": false,
     "sourcemap": true,
     "dts": true,
-    "format": ["esm"],
+    "format": [
+      "esm"
+    ],
     "target": "esnext",
-    "external": ["three"]
+    "external": [
+      "three"
+    ]
   },
   "scripts": {
     "clean": "rimraf ./dist",
@@ -32,11 +38,11 @@
     "serve": "tsc && vite preview"
   },
   "dependencies": {
-		"three": "^0.137.5",
-    "@types/three": "^0.137.0"
-	},
+    "three": "^0.138.3",
+    "@types/three": "^0.138.0"
+  },
   "devDependencies": {
     "jsdoc": "^3.6.10",
-    "tsup": "^5.11.13"
+    "tsup": "^5.12.0"
   }
 }

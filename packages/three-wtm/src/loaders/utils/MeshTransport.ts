@@ -19,10 +19,6 @@ export class MeshTransportPayload extends DataTransportPayload implements MeshTr
     meshName: string | undefined;
     materialsTransportPayload: MaterialsTransportPayload = new MaterialsTransportPayload();
 
-    constructor(cmd?: string, id?: number) {
-        super(cmd, id);
-    }
-
 }
 
 export class MeshTransportPayloadUtils {

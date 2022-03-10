@@ -104,10 +104,9 @@ class WorkerTaskManagerExample {
     /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
     async initContent() {
         const awaiting: Array<Promise<void>> = [];
-
         const helloWorldWorker = new DataTransportPayload('init', 0);
         helloWorldWorker.name = 'HelloWorldWorker';
-        this.workerTaskManager.registerTask(helloWorldWorker.name, true, new URL('../worker/helloWorldWorkerStandard', import.meta.url));
+        this.workerTaskManager.registerTask(helloWorldWorker.name, true, new URL('../worker/helloWorldWorkerMOdule', import.meta.url));
         this.tasksToUse.push(helloWorldWorker);
         awaiting.push(this.workerTaskManager.initTaskType(helloWorldWorker.name, helloWorldWorker));
 
@@ -130,6 +129,7 @@ class WorkerTaskManagerExample {
                 MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoaderWorker, false);
                 awaiting.push(this.workerTaskManager.initTaskType(objLoaderWorker.name, objLoaderWorker));
             });
+
         return await Promise.all(awaiting);
     }
 
@@ -142,7 +142,7 @@ class WorkerTaskManagerExample {
         let taskToUseIndex = 0;
         const executions = [];
 
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < 1024; i++) {
             const payload = new DataTransportPayload('execute', globalCount);
             const payloadType = this.tasksToUse[taskToUseIndex];
             payload.name = `${payloadType.name}_${globalCount}`;
@@ -150,10 +150,10 @@ class WorkerTaskManagerExample {
             const packed = DataTransportPayloadUtils.packDataTransportPayload(payload, false);
 
             const promise = this.workerTaskManager.enqueueForExecution(payloadType.name, packed.payload,
-                (e: PayloadType) => this._processMessage(e), packed.transferables)
+                (e: PayloadType) => this.processMessage(e), packed.transferables)
                 .then((e: unknown) => {
                     const data = e as PayloadType;
-                    this._processMessage(data);
+                    this.processMessage(data);
                 })
                 .catch((e: unknown) => console.error(e));
             executions.push(promise);
@@ -175,27 +175,19 @@ class WorkerTaskManagerExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    _processMessage(payload: PayloadType) {
+    private processMessage(payload: PayloadType) {
         switch (payload.cmd) {
             case 'assetAvailable':
+                if (payload.type === 'MeshTransportPayload') {
+                    this.buildMesh(payload as MeshTransportPayload);
+                }
+                break;
+
             case 'execComplete':
                 if (payload.type === 'MeshTransportPayload') {
-                    const mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload as MeshTransportPayload, false);
-                    let material = MaterialsTransportPayloadUtils.processMaterialTransport(mtp.materialsTransportPayload, this.materialStore.getMaterials(), true);
-                    if (!material) {
-                        const randArray = new Uint8Array(3);
-                        window.crypto.getRandomValues(randArray);
-                        const color = new THREE.Color(randArray[0] / 255, randArray[1] / 255, randArray[2] / 255);
-                        material = new THREE.MeshPhongMaterial({ color: color });
-                    }
-                    if (mtp.bufferGeometry) {
-                        const mesh = new THREE.Mesh(mtp.bufferGeometry as THREE.BufferGeometry, material as THREE.Material);
-                        this._addMesh(mesh, mtp.id);
-                    }
+                    this.buildMesh(payload as MeshTransportPayload);
                 }
-                else if (payload.type === 'DataTransportPayload') {
-                    console.log(`execComplete: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
-                }
+                console.log(`execComplete: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
                 break;
 
             default:
@@ -204,8 +196,23 @@ class WorkerTaskManagerExample {
         }
     }
 
+    private buildMesh(payload: MeshTransportPayload) {
+        const mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload, false);
+        let material = MaterialsTransportPayloadUtils.processMaterialTransport(mtp.materialsTransportPayload, this.materialStore.getMaterials(), true);
+        if (!material) {
+            const randArray = new Uint8Array(3);
+            window.crypto.getRandomValues(randArray);
+            const color = new THREE.Color(randArray[0] / 255, randArray[1] / 255, randArray[2] / 255);
+            material = new THREE.MeshPhongMaterial({ color: color });
+        }
+        if (mtp.bufferGeometry) {
+            const mesh = new THREE.Mesh(mtp.bufferGeometry as THREE.BufferGeometry, material as THREE.Material);
+            this.addMesh(mesh, mtp.id);
+        }
+    }
+
     /** Add mesh at random position, but keep sub-meshes of an object together, therefore we need */
-    _addMesh(mesh: THREE.Mesh, id: number) {
+    private addMesh(mesh: THREE.Mesh, id: number) {
         let pos = this.objectsUsed.get(id);
         if (!pos) {
             // sphere positions
