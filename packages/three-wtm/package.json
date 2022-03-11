@@ -31,9 +31,10 @@
     ]
   },
   "scripts": {
-    "clean": "rimraf ./dist",
+    "clean": "shx rm -fr ./dist",
     "dev": "vite",
-    "lint": "eslint src",
+    "doc": "jsdoc -c jsdoc.json",
+    "lint": "npx eslint src",
     "build": "npm run clean && tsup",
     "serve": "tsc && vite preview"
   },

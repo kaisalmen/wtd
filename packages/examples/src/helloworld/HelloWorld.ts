@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, PayloadType, MeshTransportPayload, MeshTransportPayloadUtils } from 'three-wtm';
+import { WorkerTaskManager, PayloadType, MeshTransportPayload, MeshTransportPayloadUtils, DataTransportPayload } from 'three-wtm';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -29,7 +29,7 @@ class WorkerTaskManagerHelloWorldExample {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(2).setVerbose(true);
+    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(1).setVerbose(true);
 
     constructor(elementToBindTo: HTMLElement | null) {
         if (elementToBindTo === null) throw Error('Bad element HTML given as canvas.');
@@ -65,39 +65,24 @@ class WorkerTaskManagerHelloWorldExample {
     /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
     async initContent() {
         const awaitInit = [];
-        const workerStandardPC = { name: 'WorkerStandard', id: 0, cmd: 'init' } as PayloadType;
-        this.workerTaskManager.registerTask(workerStandardPC.name, false, new URL('../worker/helloWorldWorkerStandard', import.meta.url));
+        const workerStandardPC = new DataTransportPayload('init', 0, 'WorkerStandard');
+        this.workerTaskManager.registerTask(workerStandardPC.name, false, new URL('../../dist/helloWorldWorkerStandard', import.meta.url));
         awaitInit.push(this.workerTaskManager.initTaskType(workerStandardPC.name, workerStandardPC));
 
         this.workerTaskManager.enqueueForExecution(workerStandardPC.name, workerStandardPC)
             .then((e: unknown) => {
-                const data = e as PayloadType;
-                if (data.cmd === 'execComplete') {
-                    console.log(`${workerStandardPC.name}: execComplete`);
-                }
+                this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 });
             })
             .catch((e: unknown) => console.error(e));
 
-        const workerModulePC = { name: 'WorkerModule', id: 0, cmd: 'init' } as PayloadType;
+        const workerModulePC = new DataTransportPayload('init', 0, 'WorkerModule');
         this.workerTaskManager.registerTask(workerModulePC.name, true, new URL('../worker/helloWorldWorkerModule', import.meta.url));
         awaitInit.push(this.workerTaskManager.initTaskType(workerModulePC.name, workerModulePC));
         await Promise.all(awaitInit);
 
         this.workerTaskManager.enqueueForExecution(workerModulePC.name, workerModulePC)
             .then((e: unknown) => {
-                const data = e as MeshTransportPayload;
-                if (data.cmd === 'execComplete') {
-                    console.log(`${workerModulePC.name}: execComplete`);
-
-                    const mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(data, false);
-                    if (mtp.bufferGeometry) {
-                        const mesh = new THREE.Mesh(
-                            mtp.bufferGeometry as THREE.BufferGeometry,
-                            new THREE.MeshPhongMaterial()
-                        );
-                        this.scene.add(mesh);
-                    }
-                }
+                this.processMessage(e as MeshTransportPayload, { x: 100, y: 0, z: 0 });
             })
             .catch((e: unknown) => console.error(e));
     }
@@ -107,11 +92,22 @@ class WorkerTaskManagerHelloWorldExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    _processMessage(payload: PayloadType) {
+    private processMessage(payload: MeshTransportPayload, pos: { x: number, y: number, z: number }) {
+        let mtp;
         switch (payload.cmd) {
-            case 'assetAvailable':
             case 'execComplete':
+                console.log(`${payload.name}: execComplete`);
+                mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload, false);
+                if (mtp.bufferGeometry) {
+                    const mesh = new THREE.Mesh(
+                        mtp.bufferGeometry as THREE.BufferGeometry,
+                        new THREE.MeshPhongMaterial()
+                    );
+                    mesh.position.set(pos.x, pos.y, pos.z);
+                    this.scene.add(mesh);
+                }
                 break;
+
             default:
                 console.error(payload.id + ': Received unknown command: ' + payload.cmd);
                 break;

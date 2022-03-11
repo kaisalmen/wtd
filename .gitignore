@@ -1,7 +1,5 @@
 .idea
-
-build
-dist
-
-node_modules
 *.tgz
+
+dist
+node_modules

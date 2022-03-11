@@ -4,19 +4,11 @@ services:
   wtmdev:
     image: docker.pkg.github.com/kaisalmen/three-wtm/devbox:latest
     build:
-      dockerfile: dev/Dockerfile
+      dockerfile: Dockerfile
       context: .
     ports:
       - target: 8080
         published: 8080
-        protocol: tcp
-        mode: host
-      - target: 8081
-        published: 8081
-        protocol: tcp
-        mode: host
-      - target: 8082
-        published: 8082
         protocol: tcp
         mode: host
     volumes:

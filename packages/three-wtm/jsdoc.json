@@ -1,18 +1,13 @@
 {
   "source": {
     "include": [
-      "src/loaders/utils/MaterialStore.js",
-      "src/loaders/utils/MaterialUtils.js",
-      "src/loaders/utils/TransportUtils.js",
-      "src/loaders/workerTaskManager/WorkerTaskManager.js",
-      "src/loaders/workerTaskManager/worker/defaultRouting.js"
     ]
   },
   "tags": {
     "allowUnknownTags": true
   },
   "opts": {
-    "destination": "./build/docs"
+    "destination": "./dist/docs"
   },
   "plugins": [
     "plugins/markdown"

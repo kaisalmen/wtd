@@ -16,15 +16,16 @@ export default defineConfig({
             ],
             input: {
                 main: path.resolve(__dirname, 'index.html'),
-                helloworld: path.resolve(__dirname, 'helloworld/index.html'),
-                transferables: path.resolve(__dirname, 'transferables/index.html'),
-                threejsobj: path.resolve(__dirname, 'examples/threejsobj/index.html')
+                helloworld: path.resolve(__dirname, 'helloworld.html'),
+                transferables: path.resolve(__dirname, 'transferables.html'),
+                threejsobj: path.resolve(__dirname, 'threejs.html')
             },
             plugins: [
             ]
         }
     },
     server: {
-        port: 8080
+        port: 8080,
+        host: '0.0.0.0'
     }
 });

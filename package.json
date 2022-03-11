@@ -12,15 +12,13 @@
     "url": "https://github.com/kaisalmen/three-wtm/issues"
   },
   "scripts": {
+    "clean": "npm run clean --workspaces",
+    "lint": "npm run lint --workspaces",
+    "doc": "npm run doc --workspace packages/three-wtm",
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspace packages/examples",
+    "prerelease": "npm run build && npm run doc",
     "test": "echo \\\"Error: no libs specified\\\" && exit 1",
-    "clean": "rimraf dist",
-    "dev": "vite -c vite.config.examples.ts",
-    "lint": "eslint src && eslint examples",
-    "def": "dev/runTscDeclaration.sh",
-    "doc": "jsdoc -c jsdoc.json",
-    "build-examples": "npm run build --workspace examples",
-    "build-lib": "npm run build --workspace packages/three-wtm",
-    "prerelease": "npm run build && npm run def && npm run doc && npm pack",
     "prepare": ""
   },
   "keywords": [],
@@ -28,14 +26,14 @@
   "devDependencies": {
     "@types/node": "^16.11.7",
     "vite": "^2.8.6",
+    "typescript": "^4.6.2",
     "eslint": "^8.10.0",
     "@typescript-eslint/eslint-plugin": "^5.14.0",
     "editorconfig": "^0.15.3",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.6.2"
+    "shx": "^0.3.4"
   },
   "workspaces": [
-    "examples",
-    "packages/three-wtm"
+    "packages/three-wtm",
+    "packages/examples"
   ]
 }
