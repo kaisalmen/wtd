@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * Register one to many tasks type to the WorkerTaskManager. Then init and enqueue a worker based execution by passing
  * configuration and buffers. The WorkerTaskManager allows to execute a maximum number of executions in parallel.
@@ -123,11 +123,11 @@ class WorkerTaskManager {
      *
      * @param {string} taskTypeName The name of the registered task type.
      * @param {PayloadType} payload Configuration properties as serializable string.
-     * @param {Function} assetAvailableFunction Invoke this function if an asset become intermediately available
+     * @param {(data: unknown) => void} assetAvailableFunction Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, payload: PayloadType, assetAvailableFunction?: Function, transferables?: Transferable[]) {
+    async enqueueForExecution(taskTypeName: string, payload: PayloadType, assetAvailableFunction?: (data: PayloadType) => void, transferables?: Transferable[]) {
         const localPromise = new Promise((resolveUser, rejectUser) => {
             this.storedExecutions.push(new StoredExecution(taskTypeName, payload, resolveUser, rejectUser, assetAvailableFunction, transferables));
             this.depleteExecutions();
@@ -152,7 +152,7 @@ class WorkerTaskManager {
                         taskWorker.onmessage = message => {
                             // allow intermediate asset provision before flagging execComplete
                             if (message.data.cmd === 'assetAvailable') {
-                                if (storedExecution.assetAvailableFunction instanceof Function) {
+                                if (typeof storedExecution.assetAvailableFunction === 'function') {
                                     storedExecution.assetAvailableFunction(message.data);
                                 }
                             } else {
@@ -170,7 +170,7 @@ class WorkerTaskManager {
                         this.actualExecutionCount--;
                         this.depleteExecutions();
                     }).catch((e) => {
-                        storedExecution.reject('Execution error: ' + e);
+                        storedExecution.reject(new Error('Execution error: ' + e));
                     });
                 }
                 else {
@@ -378,12 +378,16 @@ class StoredExecution {
 
     taskTypeName: string;
     payload: PayloadType;
-    resolve: Function;
-    reject: Function;
-    assetAvailableFunction?: Function;
+    resolve: (data: unknown) => void;
+    reject: (error: Error) => void;
+    assetAvailableFunction?: (data: PayloadType) => void;
     transferables?: Transferable[];
 
-    constructor(taskTypeName: string, payload: PayloadType, resolve: Function, reject: Function, assetAvailableFunction?: Function, transferables?: Transferable[]) {
+    constructor(taskTypeName: string, payload: PayloadType,
+        resolve: (data: unknown) => void,
+        reject: (error: Error) => void,
+        assetAvailableFunction?: (data: PayloadType) => void,
+        transferables?: Transferable[]) {
         this.taskTypeName = taskTypeName;
         this.payload = payload;
         this.resolve = resolve;

@@ -150,7 +150,7 @@ class WorkerTaskManagerExample {
             const packed = DataTransportPayloadUtils.packDataTransportPayload(payload, false);
 
             const promise = this.workerTaskManager.enqueueForExecution(payloadType.name, packed.payload,
-                (e: PayloadType) => this.processMessage(e), packed.transferables)
+                (e: PayloadType) => this.processMessage(e as PayloadType), packed.transferables)
                 .then((e: unknown) => {
                     const data = e as PayloadType;
                     this.processMessage(data);

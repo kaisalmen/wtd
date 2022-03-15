@@ -1,6 +1,6 @@
 import { Material, MaterialLoader, Texture } from 'three';
 import { MaterialCloneInstructions, MaterialUtils } from './MaterialUtils';
-import { PayloadType } from '../..';
+import { PayloadType } from './WorkerTaskManager';
 import { DataTransportPayload, DataTransportPayloadUtils } from './DataTransport';
 
 export type MaterialsTransportPayloadType = PayloadType & {

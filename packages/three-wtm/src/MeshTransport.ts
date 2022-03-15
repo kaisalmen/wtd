@@ -1,5 +1,5 @@
 import { Box3, BufferAttribute, BufferGeometry, InterleavedBufferAttribute, Mesh, Sphere } from 'three';
-import { PayloadType } from '../workerTaskManager/WorkerTaskManager';
+import { PayloadType } from './WorkerTaskManager';
 import { DataTransportPayload, DataTransportPayloadUtils } from './DataTransport';
 import { MaterialsTransportPayload, MaterialsTransportPayloadUtils } from './MaterialsTransport';
 

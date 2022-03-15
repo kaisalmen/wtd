@@ -3,27 +3,27 @@ import {
     PayloadType,
     WorkerTaskManagerWorker,
     WorkerTaskManagerDefaultWorker
-} from './loaders/workerTaskManager/WorkerTaskManager';
+} from './WorkerTaskManager';
 import {
     MaterialUtils,
     MaterialCloneInstructions
-} from './loaders/utils/MaterialUtils';
-import { MaterialStore } from './loaders/utils/MaterialStore';
+} from './MaterialUtils';
+import { MaterialStore } from './MaterialStore';
 import {
     DataTransportPayload,
     DataTransportPayloadUtils,
     ObjectManipulator
-} from './loaders/utils/DataTransport';
+} from './DataTransport';
 import {
     MaterialsTransportPayloadType,
     MaterialsTransportPayload,
     MaterialsTransportPayloadUtils
-} from './loaders/utils/MaterialsTransport';
+} from './MaterialsTransport';
 import {
     MeshTransportPayloadType,
     MeshTransportPayload,
     MeshTransportPayloadUtils
-} from './loaders/utils/MeshTransport';
+} from './MeshTransport';
 
 export {
     WorkerTaskManager,

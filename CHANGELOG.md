@@ -1,7 +1,12 @@
 # Changelog
 
-## 2.0.0-dev
+## 2.0.0-next.0
+
+- Completely transform the source code to TypeScript
 - Switch from snowpack to vitejs
+- Clean-up and uncluttering
+  - Remove all code related to worker online assembly and minification workarounds
+- Fully rely on module workers. Use vite config to generate standard workers from module workers at build time
 
 ## 1.1.0
 - Added the possibility to load a non-module worker from a URL. Triggered by https://github.com/kaisalmen/WWOBJLoader/issues/60

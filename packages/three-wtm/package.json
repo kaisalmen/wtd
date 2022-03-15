@@ -1,6 +1,6 @@
 {
   "name": "three-wtm",
-  "version": "2.0.0-dev",
+  "version": "2.0.0-next-0",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -15,27 +15,12 @@
     "dist",
     "src"
   ],
-  "tsup": {
-    "entry": [
-      "src/index.ts"
-    ],
-    "splitting": false,
-    "sourcemap": true,
-    "dts": true,
-    "format": [
-      "esm"
-    ],
-    "target": "esnext",
-    "external": [
-      "three"
-    ]
-  },
   "scripts": {
     "clean": "shx rm -fr ./dist",
     "dev": "vite",
     "doc": "jsdoc -c jsdoc.json",
     "lint": "npx eslint src",
-    "build": "npm run clean && tsup",
+    "build": "npm run clean && tsc",
     "serve": "tsc && vite preview"
   },
   "dependencies": {
@@ -43,7 +28,6 @@
     "@types/three": "^0.138.0"
   },
   "devDependencies": {
-    "jsdoc": "^3.6.10",
-    "tsup": "^5.12.0"
+    "jsdoc": "^3.6.10"
   }
 }

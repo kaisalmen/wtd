@@ -1,7 +1,3 @@
-/**
- * Development repository: https://github.com/kaisalmen/three-wtm
- */
-
 import {
     MeshStandardMaterial,
     LineBasicMaterial,
