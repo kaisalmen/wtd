@@ -6,22 +6,12 @@ declare const self: DedicatedWorkerGlobalScope;
 
 class OBJLoaderWorker extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
 
-    private localData: {
-        objLoader: OBJLoader | undefined,
-        materials: Map<string, Material>,
-        buffer: ArrayBufferLike | undefined,
-        objectId: number
+    private localData = {
+        objLoader: undefined as OBJLoader | undefined,
+        materials: new Map() as Map<string, Material>,
+        buffer: undefined as ArrayBufferLike | undefined,
+        objectId: 0
     };
-
-    constructor() {
-        super();
-        this.localData = {
-            objLoader: undefined,
-            buffer: undefined,
-            materials: new Map(),
-            objectId: 0
-        };
-    }
 
     init(payload: DataTransportPayload) {
         console.log(`OBJLoaderWorker#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);

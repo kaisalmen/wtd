@@ -113,7 +113,7 @@ class WorkerTaskManagerExample {
         const objLoaderWorker = new MaterialsTransportPayload('init', 0);
         objLoaderWorker.name = 'OBJLoaderdWorker';
         objLoaderWorker.params = { filename: '../models/female02_vertex_colors.obj' };
-        this.workerTaskManager.registerTask(objLoaderWorker.name, true, new URL('../worker/tmOBJLoader', import.meta.url));
+        this.workerTaskManager.registerTask(objLoaderWorker.name, true, new URL('../worker/OBJLoaderWorker', import.meta.url));
         this.tasksToUse.push(objLoaderWorker);
 
         const loadObj = async function(filenameObj: string) {
