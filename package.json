@@ -1,7 +1,10 @@
 {
   "name": "three-wtm-workspace",
   "description": "WorkerTaskManager for three.js",
-  "author": "kaisalmen",
+  "author": {
+    "name": "kaisalmen",
+    "url": "https://www.kaisalmen.de"
+  },
   "private": "true",
   "license": "MIT",
   "repository": {

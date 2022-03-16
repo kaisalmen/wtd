@@ -1,6 +1,10 @@
 {
   "name": "three-wtm-examples",
-  "version": "2.0.0-next-0",
+  "author": {
+    "name": "kaisalmen",
+    "url": "https://www.kaisalmen.de"
+  },
+  "version": "2.0.0-next.1",
   "type": "module",
   "private": "true",
   "scripts": {
