@@ -55,7 +55,7 @@ class OBJLoaderWorker extends WorkerTaskManagerDefaultWorker implements WorkerTa
                 const materialTP = new MaterialsTransportPayload('assetAvailable', payload.id);
                 const material = mesh.material;
                 if (material instanceof Material) {
-                    MaterialUtils.addMaterial(materialTP.materials, material, material.name, false, false);
+                    MaterialUtils.addMaterial(materialTP.materials, material.name, material, false, false);
                 }
                 const meshTP = new MeshTransportPayload('assetAvailable', payload.id);
                 MeshTransportPayloadUtils.setMesh(meshTP, mesh, 0);

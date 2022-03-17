@@ -24,7 +24,7 @@ class MaterialUtils {
      * @param {boolean} force
      * @param {boolean} [log] Log messages to the console
      */
-    static addMaterial(materialsObject: Map<string, Material>, material: Material, materialName: string,
+    static addMaterial(materialsObject: Map<string, Material>, materialName: string, material: Material,
         force: boolean, log?: boolean) {
         let existingMaterial;
         // ensure materialName is set
@@ -78,7 +78,7 @@ class MaterialUtils {
             if (materialOrg) {
                 const material = materialOrg.clone();
                 Object.assign(material, materialCloneInstruction.materialProperties);
-                MaterialUtils.addMaterial(materials, material, materialCloneInstruction.materialProperties.name, true, log);
+                MaterialUtils.addMaterial(materials, materialCloneInstruction.materialProperties.name, material, true, log);
                 return material;
             }
             else {

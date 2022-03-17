@@ -46,8 +46,7 @@ export class DataTransportPayloadUtils {
 
     static fillTransferables(input: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean) {
         for (const buffer of input) {
-            const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
-            output.push((potentialClone as Uint8Array).buffer);
+            output.push(cloneBuffers ? buffer.slice(0) : buffer);
         }
     }
 

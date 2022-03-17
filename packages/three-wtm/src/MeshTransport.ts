@@ -67,7 +67,7 @@ export class MeshTransportPayloadUtils {
      *
      * @param {boolean} cloneBuffers Clone buffers if their content shall stay in the current context.
      */
-    static packGeometryBuffers(cloneBuffers: boolean, bufferGeometry: BufferGeometry | undefined, buffers: Map<string, ArrayBuffer>) {
+    static packGeometryBuffers(cloneBuffers: boolean, bufferGeometry: BufferGeometry | undefined, buffers: Map<string, ArrayBufferLike>) {
         // fast-fail
         if (!(bufferGeometry instanceof BufferGeometry)) return;
 
@@ -89,7 +89,7 @@ export class MeshTransportPayloadUtils {
     }
 
     static addAttributeToBuffers(name: string, input: BufferAttribute | InterleavedBufferAttribute | null | undefined,
-        cloneBuffer: boolean, buffers: Map<string, ArrayBuffer>): void {
+        cloneBuffer: boolean, buffers: Map<string, ArrayBufferLike>): void {
         if (input && input !== null) {
             const arrayLike = (cloneBuffer ? Array.from(input.array).slice(0) : input.array) as Uint8Array;
             buffers.set(name, arrayLike);

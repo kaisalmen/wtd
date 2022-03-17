@@ -48,13 +48,21 @@ class MaterialStore {
      * @param {boolean} forceOverrideExisting boolean Override existing material
      */
     addMaterials(newMaterials: Map<string, Material>, forceOverrideExisting: boolean) {
-        if (newMaterials === undefined || newMaterials === null) newMaterials = new Map();
-        if (newMaterials.size > 0) {
+        if (newMaterials && newMaterials !== null && newMaterials.size > 0) {
             for (const entry of newMaterials.entries()) {
-                MaterialUtils.addMaterial(this.materials, entry[1], entry[0], forceOverrideExisting === true);
+                MaterialUtils.addMaterial(this.materials, entry[0], entry[1], forceOverrideExisting === true);
             }
         }
     }
+
+    addMaterialsFromObject(newMaterials: Record<string, Material>, forceOverrideExisting: boolean) {
+        if (newMaterials && newMaterials !== null && Object.keys(newMaterials).length > 0) {
+            for (const [k, v] of Object.entries(newMaterials)) {
+                MaterialUtils.addMaterial(this.materials, k, v, forceOverrideExisting === true);
+            }
+        }
+    }
+
 
     /**
      * Returns the mapping object of material name and corresponding material.
