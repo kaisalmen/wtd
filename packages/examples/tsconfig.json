@@ -1,10 +1,11 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "./dist",
-    "declarationDir": "./dist",
+    "rootDir": "src",
+    "outDir": "dist",
+    "declarationDir": "dist"
   },
+  "references": [{"path": "../three-wtm"}],
   "include": [
     "src/**/*.ts"
   ],

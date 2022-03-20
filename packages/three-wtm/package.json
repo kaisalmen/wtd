@@ -16,11 +16,13 @@
     "src"
   ],
   "scripts": {
-    "clean": "shx rm -fr ./dist",
+    "clean": "shx rm -fr ./dist && shx rm -fr tsconfig.tsbuildinfo",
     "dev": "vite",
     "doc": "jsdoc -c jsdoc.json",
     "lint": "npx eslint src",
-    "build": "npm run clean && tsc",
+    "compile": "tsc -b",
+    "watch": "tsc -w",
+    "build": "npm run clean && npm run compile",
     "serve": "tsc && vite preview"
   },
   "dependencies": {

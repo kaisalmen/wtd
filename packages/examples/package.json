@@ -8,11 +8,12 @@
   "type": "module",
   "private": "true",
   "scripts": {
-    "clean": "shx rm -fr ./dist",
+    "clean": "shx rm -fr ./dist && shx rm -fr tsconfig.tsbuildinfo",
     "dev": "npm run build-worker && vite",
     "lint": "npx eslint src",
+    "compile": "tsc -b",
     "build-worker": "npx shx rm -f ./dist/helloWorldWorkerStandard.js && vite -c vite.config.worker.ts build",
-    "build": "npm run clean && npm run build-worker && tsc",
+    "build": "npm run clean && npm run build-worker && npm run compile",
     "serve": "tsc && vite preview"
   },
   "dependencies": {

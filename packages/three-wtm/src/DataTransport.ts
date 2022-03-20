@@ -44,9 +44,25 @@ export class DataTransportPayloadUtils {
         };
     }
 
-    static fillTransferables(input: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean) {
-        for (const buffer of input) {
-            output.push(cloneBuffers ? buffer.slice(0) : buffer);
+    static fillTransferables(buffers: IterableIterator<ArrayBufferLike>, output: Transferable[], cloneBuffers: boolean) {
+        for (const buffer of buffers) {
+            const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
+
+            const outputBuffer = (potentialClone as Uint8Array).buffer;
+            if (outputBuffer) {
+                output.push(outputBuffer);
+            }
+            else {
+                output.push(potentialClone);
+            }
+            /*
+                        if (Object.prototype.hasOwnProperty.call(buffer, 'buffer')) {
+                            output.push();
+                        }
+                        else {
+                            output.push(potentialClone);
+                        }
+            */
         }
     }
 

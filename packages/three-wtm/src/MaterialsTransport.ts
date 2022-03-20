@@ -6,7 +6,7 @@ import { DataTransportPayload, DataTransportPayloadUtils } from './DataTransport
 export type MaterialsTransportPayloadType = PayloadType & {
     materials: Map<string, Material>;
     materialsJson: Map<string, unknown>;
-    multiMaterialNames: Map<string, string>;
+    multiMaterialNames: Map<number, string>;
     cloneInstructions: MaterialCloneInstructions[];
 };
 
@@ -15,7 +15,7 @@ export class MaterialsTransportPayload extends DataTransportPayload implements M
     type = 'MaterialsTransportPayload';
     materials: Map<string, Material> = new Map();
     materialsJson: Map<string, unknown> = new Map();
-    multiMaterialNames: Map<string, string> = new Map();
+    multiMaterialNames: Map<number, string> = new Map();
     cloneInstructions: MaterialCloneInstructions[] = [];
 
 }
@@ -121,7 +121,7 @@ export class MaterialsTransportPayloadUtils {
         }
         if (MaterialsTransportPayloadUtils.hasMultiMaterial(payload)) {
             // multi-material
-            const outputMaterials: Record<string, Material | undefined> = {};
+            const outputMaterials: Material[] | undefined[] = [];
             for (const [k, v] of payload.multiMaterialNames.entries()) {
                 const mat = materials.get(v);
                 outputMaterials[k] = mat ? mat : undefined;

@@ -33,7 +33,8 @@
     "eslint": "^8.11.0",
     "@typescript-eslint/eslint-plugin": "^5.15.0",
     "editorconfig": "^0.15.3",
-    "shx": "^0.3.4"
+    "shx": "^0.3.4",
+    "npm": "^8.5.5"
   },
   "workspaces": [
     "packages/three-wtm",

@@ -106,7 +106,7 @@ class WorkerTaskManagerExample {
         const awaiting: Array<Promise<void>> = [];
         const helloWorldWorker = new DataTransportPayload('init', 0);
         helloWorldWorker.name = 'HelloWorldWorker';
-        this.workerTaskManager.registerTask(helloWorldWorker.name, true, new URL('../worker/helloWorldWorkerMOdule', import.meta.url));
+        this.workerTaskManager.registerTask(helloWorldWorker.name, true, new URL('../worker/helloWorldWorkerModule', import.meta.url));
         this.tasksToUse.push(helloWorldWorker);
         awaiting.push(this.workerTaskManager.initTaskType(helloWorldWorker.name, helloWorldWorker));
 

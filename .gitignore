@@ -1,5 +1,7 @@
 .idea
-*.tgz
 
 dist
 node_modules
+
+tsconfig.tsbuildinfo
+*.tgz
