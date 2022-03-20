@@ -30,7 +30,8 @@
     "@types/three": "^0.138.0"
   },
   "devDependencies": {
-    "jsdoc": "^3.6.10"
+    "jsdoc": "^3.6.10",
+    "npm": "^8.5.5"
   },
   "repository": {
     "type": "git",
