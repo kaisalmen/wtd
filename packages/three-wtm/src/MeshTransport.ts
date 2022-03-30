@@ -137,7 +137,7 @@ export class MeshTransportPayloadUtils {
         if (transferredGeometry.index !== null) {
             const indexAttr = transferredGeometry.index as BufferAttribute;
             if (indexAttr) {
-                const indexBuffer = cloneBuffers ? Array.from(indexAttr.array).slice(0) : indexAttr.array;
+                const indexBuffer = cloneBuffers ? (indexAttr.array as number[]).slice(0) : indexAttr.array;
                 bufferGeometry.setIndex(new BufferAttribute(indexBuffer, indexAttr.itemSize, indexAttr.normalized));
             }
         }
