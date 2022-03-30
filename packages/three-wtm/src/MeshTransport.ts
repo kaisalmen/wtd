@@ -112,10 +112,16 @@ export class MeshTransportPayloadUtils {
      * @param {boolean} cloneBuffers
      */
     static reconstructBuffer(cloneBuffers: boolean, transferredGeometry: BufferGeometry | Record<string, unknown>): BufferGeometry {
-        // fast-fail: We already have a bufferGeometry
-        if (transferredGeometry instanceof BufferGeometry) return transferredGeometry;
-
         const bufferGeometry = new BufferGeometry();
+
+        // fast-fail: transferredGeometry is either rubbish or already a bufferGeometry
+        if (!transferredGeometry) {
+            return bufferGeometry;
+        }
+        else if (transferredGeometry instanceof BufferGeometry) {
+            return transferredGeometry;
+        }
+
         if (transferredGeometry.attributes) {
             const attr = transferredGeometry.attributes as Record<string, BufferAttribute | InterleavedBufferAttribute>;
             MeshTransportPayloadUtils.assignAttributeFromTransfered(bufferGeometry, attr.position, 'position', cloneBuffers);
@@ -155,11 +161,11 @@ export class MeshTransportPayloadUtils {
         return bufferGeometry;
     }
 
-    static assignAttributeFromTransfered(bufferGeometry: BufferGeometry, attr: BufferAttribute | InterleavedBufferAttribute | undefined,
+    static assignAttributeFromTransfered(bufferGeometry: BufferGeometry, input: BufferAttribute | InterleavedBufferAttribute | undefined,
         attrName: string, cloneBuffer: boolean): void {
-        if (attr) {
-            const arrayLike = (cloneBuffer ? Array.from(attr.array).slice(0) : attr.array) as number[];
-            bufferGeometry.setAttribute(attrName, new BufferAttribute(arrayLike, attr.itemSize, attr.normalized));
+        if (input) {
+            const arrayLike = cloneBuffer ? (input.array as number[]).slice(0) : input.array;
+            bufferGeometry.setAttribute(attrName, new BufferAttribute(arrayLike, input.itemSize, input.normalized));
         }
     }
 }

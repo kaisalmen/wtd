@@ -315,7 +315,10 @@ class WorkerTypeDefinition {
                 payload.workerId = taskWorker.getId();
                 if (transferables) {
                     // ensure all transferables are copies to all workers on init!
-                    const transferablesToWorker = transferables.slice(0, transferables.length);
+                    const transferablesToWorker = [];
+                    for (const transferable of transferables) {
+                        transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
+                    }
                     taskWorker.postMessage(payload, transferablesToWorker);
                 }
                 else {

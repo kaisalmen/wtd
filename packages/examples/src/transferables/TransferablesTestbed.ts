@@ -15,7 +15,8 @@ type ExampleTask = {
     execute: boolean;
     id: number;
     name: string;
-    module: URL;
+    sendGeometry: boolean;
+    moduleURL: URL;
     segments: number;
 }
 
@@ -56,28 +57,32 @@ class TransferablesTestbed {
             execute: true,
             id: 1,
             name: 'transferableWorkerTest1',
-            module: new URL('../worker/transferableWorkerTest1', import.meta.url),
+            sendGeometry: false,
+            moduleURL: new URL('../worker/transferableWorkerTest1', import.meta.url),
             segments: 0
         });
         this.tasks.push({
             execute: true,
             id: 2,
             name: 'transferableWorkerTest2',
-            module: new URL('../worker/transferableWorkerTest2', import.meta.url),
+            sendGeometry: false,
+            moduleURL: new URL('../worker/transferableWorkerTest2', import.meta.url),
             segments: 0
         });
         this.tasks.push({
             execute: true,
             id: 3,
             name: 'transferableWorkerTest3',
-            module: new URL('../worker/transferableWorkerTest3', import.meta.url),
+            sendGeometry: true,
+            moduleURL: new URL('../worker/transferableWorkerTest3', import.meta.url),
             segments: 2048
         });
         this.tasks.push({
             execute: true,
             id: 4,
             name: 'transferableWorkerTest4',
-            module: new URL('../worker/transferableWorkerTest4', import.meta.url),
+            sendGeometry: false,
+            moduleURL: new URL('../worker/transferableWorkerTest4', import.meta.url),
             segments: 2048
         });
 
@@ -149,15 +154,24 @@ class TransferablesTestbed {
     }
 
     _initTask(task: ExampleTask) {
-        this.workerTaskManager.registerTask(task.name, true, task.module);
-        const payload = new DataTransportPayload('init', task.id);
-        payload.name = task.name;
-        return this.workerTaskManager.initTaskType(task.name, payload);
+        this.workerTaskManager.registerTask(task.name, true, task.moduleURL);
+        if (task.sendGeometry) {
+            const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
+            torus.name = 'torus';
+            const payloadToSend = new MeshTransportPayload('init', task.id, task.name);
+            MeshTransportPayloadUtils.setBufferGeometry(payloadToSend, torus, 0);
+
+            const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
+            return this.workerTaskManager.initTaskType(task.name, packed.payload, packed.transferables);
+        }
+        else {
+            const payload = new DataTransportPayload('init', task.id, task.name);
+            return this.workerTaskManager.initTaskType(task.name, payload);
+        }
     }
 
     async executeWorker(task: ExampleTask) {
-        const payload = new DataTransportPayload('execute', task.id);
-        payload.name = task.name;
+        const payload = new DataTransportPayload('execute', task.id, task.name);
         payload.params = {
             name: task.name,
             segments: task.segments

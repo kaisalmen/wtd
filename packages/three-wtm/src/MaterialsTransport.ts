@@ -111,10 +111,12 @@ export class MaterialsTransportPayloadUtils {
      * @param {Map<string, Material>} materials
      * @param {boolean} log
      *
-     * @return {Material|Material[]}
+     * @return {Material|Material[]|undefined}
      */
     static processMaterialTransport(payload: MaterialsTransportPayload, materials: Map<string, Material>, log?: boolean) {
-        if (materials.size === 0) return;
+        if (!payload) {
+            return undefined;
+        }
 
         for (const cloneInstruction of payload.cloneInstructions) {
             MaterialUtils.cloneMaterial(materials, cloneInstruction, log);
