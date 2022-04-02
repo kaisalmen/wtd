@@ -28,13 +28,12 @@
   "homepage": "https://github.com/kaisalmen/three-wtm#README",
   "devDependencies": {
     "@types/node": "^16.11.7",
-    "vite": "^2.8.6",
-    "typescript": "^4.6.2",
-    "eslint": "^8.11.0",
-    "@typescript-eslint/eslint-plugin": "^5.15.0",
+    "vite": "^2.9.1",
+    "typescript": "^4.6.3",
+    "eslint": "^8.12.0",
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
     "editorconfig": "^0.15.3",
-    "shx": "^0.3.4",
-    "npm": "^8.5.5"
+    "shx": "^0.3.4"
   },
   "workspaces": [
     "packages/three-wtm",

@@ -1,4 +1,10 @@
 
+export type WorkerRegistration = {
+    module: boolean;
+    blob: boolean;
+    url: URL | string | undefined;
+}
+
 /**
  * Register one to many tasks type to the WorkerTaskManager. Then init and enqueue a worker based execution by passing
  * configuration and buffers. The WorkerTaskManager allows to execute a maximum number of executions in parallel.
@@ -74,11 +80,10 @@ class WorkerTaskManager {
      * @param {URL} workerUrl The URL to be used for the Worker. Worker must provide logic to handle "init" and "execute" messages.
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTask(taskTypeName: string, moduleWorker: boolean, workerUrl: URL) {
+    registerTask(taskTypeName: string, workerRegistration: WorkerRegistration) {
         const allowedToRegister = !this.supportsTaskType(taskTypeName);
         if (allowedToRegister) {
-            const workerTypeDefinition = new WorkerTypeDefinition(taskTypeName, this.maxParallelExecutions, this.verbose);
-            workerTypeDefinition.setWorkerUrl(moduleWorker, workerUrl);
+            const workerTypeDefinition = new WorkerTypeDefinition(taskTypeName, workerRegistration, this.maxParallelExecutions, this.verbose);
             this.taskTypes.set(taskTypeName, workerTypeDefinition);
         }
         return allowedToRegister;
@@ -97,12 +102,10 @@ class WorkerTaskManager {
 
             if (!workerTypeDefinition.getStatus().initStarted) {
                 workerTypeDefinition.getStatus().initStarted = true;
-                if (workerTypeDefinition.haveWorkerUrl()) {
-                    await workerTypeDefinition.createWorkerFromUrl(workerTypeDefinition.isWorkerModule())
-                        .then(() => workerTypeDefinition.initWorkers(payload, transferables))
-                        .then(() => workerTypeDefinition.getStatus().initComplete = true)
-                        .catch(e => console.error(e));
-                }
+                await workerTypeDefinition.createWorkers()
+                    .then(() => workerTypeDefinition.initWorkers(payload, transferables))
+                    .then(() => workerTypeDefinition.getStatus().initComplete = true)
+                    .catch(e => console.error(e));
             }
             else {
                 while (!((workerTypeDefinition as WorkerTypeDefinition).getStatus().initComplete)) {
@@ -213,8 +216,11 @@ class WorkerTypeDefinition {
     private taskTypeName: string;
     private verbose: boolean;
 
-    private moduleWorker = false;
-    private workerUrl: URL | undefined = undefined;
+    private workerRegistration: WorkerRegistration = {
+        module: true,
+        blob: false,
+        url: undefined
+    };
 
     private workers: Workers;
     private status: Status;
@@ -226,8 +232,9 @@ class WorkerTypeDefinition {
      * @param {Number} maximumCount Maximum worker count
      * @param {boolean} [verbose] Set if logging should be verbose
      */
-    constructor(taskTypeName: string, maximumCount: number, verbose: boolean) {
+    constructor(taskTypeName: string, workerRegistration: WorkerRegistration, maximumCount: number, verbose: boolean) {
         this.taskTypeName = taskTypeName;
+        this.workerRegistration = workerRegistration;
         this.verbose = verbose === true;
 
         this.workers = {
@@ -248,47 +255,20 @@ class WorkerTypeDefinition {
     getStatus(): Status {
         return this.status;
     }
-    /**
-     * Set the url of the module worker.
-     *
-     * @param {boolean} moduleWorker If the worker is a module or a standard worker
-     * @param {URL} workerUrl The URL is created from this string.
-     */
-    setWorkerUrl(moduleWorker: boolean, workerUrl: URL) {
-        this.moduleWorker = moduleWorker;
-        this.workerUrl = workerUrl;
-    }
-
-    /**
-     * Is it a module worker?
-     *
-     * @return {boolean} True or false
-     */
-    isWorkerModule() {
-        return (this.moduleWorker && this.haveWorkerUrl());
-    }
-
-    /**
-     * If a URL for a worker was provided
-     *
-     * @returns {boolean} True or false
-     */
-    haveWorkerUrl() {
-        return (this.workerUrl !== null);
-    }
 
     /**
      * Creates module workers.
      *
      */
-    async createWorkerFromUrl(module: boolean) {
-        if (this.workerUrl) {
+    async createWorkers() {
+        if (this.workerRegistration.url) {
             for (let worker, i = 0; i < this.workers.instances.length; i++) {
-                if (module) {
-                    worker = new TaskWorker(i, this.workerUrl.href, { type: 'module' });
+                if (this.workerRegistration.blob) {
+                    worker = new TaskWorker(i, this.workerRegistration.url);
                 }
                 else {
-                    worker = new TaskWorker(i, this.workerUrl.href);
+                    const workerOptions = (this.workerRegistration.module ? { type: 'module' } : { type: 'classic' }) as WorkerOptions;
+                    worker = new TaskWorker(i, (this.workerRegistration.url as URL).href, workerOptions);
                 }
                 this.workers.instances[i] = worker;
             }
@@ -413,9 +393,9 @@ class TaskWorker extends Worker {
      *
      * @param {number} id Numerical id of the task.
      * @param {string} scriptURL
-     * @param {object} [options]
+     * @param {WorkerOptions} [options]
      */
-    constructor(id: number, scriptURL: string | URL, options?: WorkerOptions | undefined) {
+    constructor(id: number, scriptURL: string | URL, options?: WorkerOptions) {
         super(scriptURL, options);
         this.id = id;
     }

@@ -66,7 +66,11 @@ class WorkerTaskManagerHelloWorldExample {
     async initContent() {
         const awaitInit = [];
         const workerStandardPC = new DataTransportPayload('init', 0, 'WorkerStandard');
-        this.workerTaskManager.registerTask(workerStandardPC.name, false, new URL('../../dist/helloWorldWorkerStandard', import.meta.url));
+        this.workerTaskManager.registerTask(workerStandardPC.name, {
+            module: true,
+            blob: false,
+            url: new URL('../../dist/helloWorldWorkerStandard', import.meta.url)
+        });
         awaitInit.push(this.workerTaskManager.initTaskType(workerStandardPC.name, workerStandardPC));
 
         this.workerTaskManager.enqueueForExecution(workerStandardPC.name, workerStandardPC)
@@ -76,7 +80,11 @@ class WorkerTaskManagerHelloWorldExample {
             .catch((e: unknown) => console.error(e));
 
         const workerModulePC = new DataTransportPayload('init', 0, 'WorkerModule');
-        this.workerTaskManager.registerTask(workerModulePC.name, true, new URL('../worker/helloWorldWorkerModule', import.meta.url));
+        this.workerTaskManager.registerTask(workerModulePC.name, {
+            module: true,
+            blob: false,
+            url: new URL('../worker/helloWorldWorkerModule', import.meta.url)
+        });
         awaitInit.push(this.workerTaskManager.initTaskType(workerModulePC.name, workerModulePC));
         await Promise.all(awaitInit);
 

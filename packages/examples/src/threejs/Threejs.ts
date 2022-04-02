@@ -106,14 +106,22 @@ class WorkerTaskManagerExample {
         const awaiting: Array<Promise<void>> = [];
         const helloWorldWorker = new DataTransportPayload('init', 0);
         helloWorldWorker.name = 'HelloWorldWorker';
-        this.workerTaskManager.registerTask(helloWorldWorker.name, true, new URL('../worker/helloWorldWorkerModule', import.meta.url));
+        this.workerTaskManager.registerTask(helloWorldWorker.name, {
+            module: true,
+            blob: false,
+            url: new URL('../worker/helloWorldWorkerModule', import.meta.url)
+        });
         this.tasksToUse.push(helloWorldWorker);
         awaiting.push(this.workerTaskManager.initTaskType(helloWorldWorker.name, helloWorldWorker));
 
         const objLoaderWorker = new MaterialsTransportPayload('init', 0);
         objLoaderWorker.name = 'OBJLoaderdWorker';
         objLoaderWorker.params = { filename: '../models/female02_vertex_colors.obj' };
-        this.workerTaskManager.registerTask(objLoaderWorker.name, true, new URL('../worker/OBJLoaderWorker', import.meta.url));
+        this.workerTaskManager.registerTask(objLoaderWorker.name, {
+            module: true,
+            blob: false,
+            url: new URL('../worker/OBJLoaderWorker', import.meta.url)
+        });
         this.tasksToUse.push(objLoaderWorker);
 
         const loadObj = async function(filenameObj: string) {

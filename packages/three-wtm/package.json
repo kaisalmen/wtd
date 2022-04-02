@@ -26,12 +26,11 @@
     "serve": "tsc && vite preview"
   },
   "dependencies": {
-    "three": "^0.138.3",
-    "@types/three": "^0.138.0"
+    "three": "^0.139.2",
+    "@types/three": "^0.139.0"
   },
   "devDependencies": {
-    "jsdoc": "^3.6.10",
-    "npm": "^8.5.5"
+    "jsdoc": "^3.6.10"
   },
   "repository": {
     "type": "git",

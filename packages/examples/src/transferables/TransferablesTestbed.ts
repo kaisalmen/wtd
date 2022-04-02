@@ -154,7 +154,11 @@ class TransferablesTestbed {
     }
 
     _initTask(task: ExampleTask) {
-        this.workerTaskManager.registerTask(task.name, true, task.moduleURL);
+        this.workerTaskManager.registerTask(task.name, {
+            module: true,
+            blob: false,
+            url: task.moduleURL
+        });
         if (task.sendGeometry) {
             const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
             torus.name = 'torus';
