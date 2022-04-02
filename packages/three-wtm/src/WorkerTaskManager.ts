@@ -211,7 +211,7 @@ type Status = {
 /**
  * Defines a worker type: functions, dependencies and runtime information once it was created.
  */
-class WorkerTypeDefinition {
+export class WorkerTypeDefinition {
 
     private taskTypeName: string;
     private verbose: boolean;
@@ -246,6 +246,11 @@ class WorkerTypeDefinition {
             initStarted: false,
             initComplete: false
         };
+    }
+
+    static createWorkerBlob(code: string[]) {
+        const simpleWorkerBlob = new Blob(code, { type: 'application/javascript' });
+        return window.URL.createObjectURL(simpleWorkerBlob);
     }
 
     getTaskType() {
