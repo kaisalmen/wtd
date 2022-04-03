@@ -1,4 +1,3 @@
-
 export type WorkerRegistration = {
     module: boolean;
     blob: boolean;
@@ -17,7 +16,7 @@ class WorkerTaskManager {
     private verbose: boolean;
     private maxParallelExecutions: number;
     private actualExecutionCount: number;
-    private storedExecutions: StoredExecution[];
+    private workerExecutionPlans: WorkerExecutionPlan[];
 
     /**
      * Creates a new WorkerTaskManager instance.
@@ -29,7 +28,7 @@ class WorkerTaskManager {
         this.verbose = false;
         this.maxParallelExecutions = maxParallelExecutions ? maxParallelExecutions : 4;
         this.actualExecutionCount = 0;
-        this.storedExecutions = [];
+        this.workerExecutionPlans = [];
     }
 
     /**
@@ -76,8 +75,7 @@ class WorkerTaskManager {
      * Registers functionality for a new task type based on module file.
      *
      * @param {string} taskTypeName The name to be used for registration.
-     * @param {boolean} moduleWorker If the worker is a module or a standard worker
-     * @param {URL} workerUrl The URL to be used for the Worker. Worker must provide logic to handle "init" and "execute" messages.
+     * @param {WorkerRegistration} workerRegistration
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
     registerTask(taskTypeName: string, workerRegistration: WorkerRegistration) {
@@ -97,27 +95,14 @@ class WorkerTaskManager {
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      */
     async initTaskType(taskTypeName: string, payload: PayloadType, transferables?: Transferable[]) {
-        const workerTypeDefinition = this.taskTypes.get(taskTypeName);
-        if (workerTypeDefinition) {
-
-            if (!workerTypeDefinition.getStatus().initStarted) {
-                workerTypeDefinition.getStatus().initStarted = true;
-                await workerTypeDefinition.createWorkers()
-                    .then(() => workerTypeDefinition.initWorkers(payload, transferables))
-                    .then(() => workerTypeDefinition.getStatus().initComplete = true)
-                    .catch(e => console.error(e));
+        return new Promise<void>((resolveWorker, rejectWorker) => {
+            const workerTypeDefinition = this.taskTypes.get(taskTypeName);
+            if (workerTypeDefinition) {
+                workerTypeDefinition.init(resolveWorker, rejectWorker, payload, transferables);
             }
             else {
-                while (!((workerTypeDefinition as WorkerTypeDefinition).getStatus().initComplete)) {
-                    await this.wait(10);
-                }
+                rejectWorker();
             }
-        }
-    }
-
-    private async wait(milliseconds: number) {
-        return new Promise(resolve => {
-            setTimeout(resolve, milliseconds);
         });
     }
 
@@ -126,54 +111,62 @@ class WorkerTaskManager {
      *
      * @param {string} taskTypeName The name of the registered task type.
      * @param {PayloadType} payload Configuration properties as serializable string.
-     * @param {(data: unknown) => void} assetAvailableFunction Invoke this function if an asset become intermediately available
+     * @param {(data: PayloadType) => void} onComplete Invoke this function if everything is completed
+     * @param {(data: PayloadType) => void} onIntermediate Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, payload: PayloadType, assetAvailableFunction?: (data: PayloadType) => void, transferables?: Transferable[]) {
-        const localPromise = new Promise((resolveUser, rejectUser) => {
-            this.storedExecutions.push(new StoredExecution(taskTypeName, payload, resolveUser, rejectUser, assetAvailableFunction, transferables));
-            this.depleteExecutions();
+    async enqueueForExecution(taskTypeName: string, payload: PayloadType, onComplete: (data: PayloadType) => void,
+        onIntermediate?: (data: PayloadType) => void, transferables?: Transferable[]) {
+        const plan = {
+            taskTypeName: taskTypeName,
+            payload: payload,
+            onComplete: onComplete,
+            onIntermediate: onIntermediate,
+            transferables: transferables
+        };
+        return this.enqueueWorkerExecutionPlan(plan);
+    }
+
+    async enqueueWorkerExecutionPlan(plan: WorkerExecutionPlan) {
+        const promise = this.buildWorkerExecutionPlanPromise(plan);
+        this.workerExecutionPlans.push(plan);
+        this.depleteExecutions();
+        return promise;
+    }
+
+    private buildWorkerExecutionPlanPromise(plan: WorkerExecutionPlan) {
+        return new Promise<void>((resolve, reject) => {
+            plan.promiseFunctions = {
+                resolve: resolve,
+                reject: reject
+            };
         });
-        return localPromise;
     }
 
     private depleteExecutions() {
         let counter = 0;
-        while (this.actualExecutionCount < this.maxParallelExecutions && counter < this.storedExecutions.length) {
+        while (this.actualExecutionCount < this.maxParallelExecutions && counter < this.workerExecutionPlans.length) {
 
             // TODO: storedExecutions and results from worker seem to get mixed up???
-            const storedExecution = this.storedExecutions[counter];
-            const workerTypeDefinition = this.taskTypes.get(storedExecution.taskTypeName);
+            const plan = this.workerExecutionPlans[counter];
+            const workerTypeDefinition = this.taskTypes.get(plan.taskTypeName);
             if (workerTypeDefinition) {
                 const taskWorker = workerTypeDefinition.getAvailableTask();
                 if (taskWorker) {
-                    this.storedExecutions.splice(counter, 1);
+                    this.workerExecutionPlans.splice(counter, 1);
                     this.actualExecutionCount++;
-
-                    const promiseWorker = new Promise((resolveWorker, rejectWorker) => {
-                        taskWorker.onmessage = message => {
-                            // allow intermediate asset provision before flagging execComplete
-                            if (message.data.cmd === 'assetAvailable') {
-                                if (typeof storedExecution.assetAvailableFunction === 'function') {
-                                    storedExecution.assetAvailableFunction(message.data);
-                                }
-                            } else {
-                                resolveWorker(message);
-                            }
-                        };
-                        taskWorker.onerror = rejectWorker;
-                        storedExecution.payload.cmd = 'execute';
-                        storedExecution.payload.workerId = taskWorker.getId();
-                        taskWorker.postMessage(storedExecution.payload, storedExecution.transferables!);
-                    });
+                    const promiseWorker = workerTypeDefinition.execute(taskWorker, plan);
                     promiseWorker.then((message: unknown) => {
                         workerTypeDefinition.returnAvailableTask(taskWorker);
-                        storedExecution.resolve((message as MessageEvent).data);
+                        plan.onComplete((message as MessageEvent).data);
+                        plan.promiseFunctions?.resolve();
                         this.actualExecutionCount--;
                         this.depleteExecutions();
                     }).catch((e) => {
-                        storedExecution.reject(new Error('Execution error: ' + e));
+                        plan.promiseFunctions?.reject(new Error('Execution error: ' + e));
+                        this.actualExecutionCount--;
+                        this.depleteExecutions();
                     });
                 }
                 else {
@@ -203,11 +196,6 @@ type Workers = {
     available: TaskWorker[]
 }
 
-type Status = {
-    initStarted: boolean,
-    initComplete: boolean
-}
-
 /**
  * Defines a worker type: functions, dependencies and runtime information once it was created.
  */
@@ -223,7 +211,6 @@ export class WorkerTypeDefinition {
     };
 
     private workers: Workers;
-    private status: Status;
 
     /**
      * Creates a new instance of {@link WorkerTypeDefinition}.
@@ -241,11 +228,6 @@ export class WorkerTypeDefinition {
             instances: new Array(maximumCount),
             available: []
         };
-
-        this.status = {
-            initStarted: false,
-            initComplete: false
-        };
     }
 
     static createWorkerBlob(code: string[]) {
@@ -253,69 +235,97 @@ export class WorkerTypeDefinition {
         return window.URL.createObjectURL(simpleWorkerBlob);
     }
 
-    getTaskType() {
-        return this.taskTypeName;
+    static async wait(milliseconds: number) {
+        return new Promise(resolve => {
+            setTimeout(resolve, milliseconds);
+        });
     }
 
-    getStatus(): Status {
-        return this.status;
+    async init(resolveWorker: (value: void | PromiseLike<void>) => void, rejectWorker: (reason?: unknown) => void,
+        payload: PayloadType, transferables?: Transferable[]) {
+        this.createWorkers();
+        if (this.verbose) {
+            console.log(`Task: ${this.taskTypeName}: Waiting for completion of initialization of all workers.`);
+        }
+
+        const promises = [];
+        for (const taskWorker of this.workers.instances) {
+            promises.push(this.initWorker(taskWorker, payload, transferables));
+        }
+        await Promise.all(promises)
+            .then(() => {
+                if (this.verbose) {
+                    console.log(`Task: ${this.taskTypeName}: All workers are initialized.`);
+                }
+                this.workers.available = this.workers.instances;
+                resolveWorker();
+            })
+            .catch((error: unknown) => {
+                rejectWorker(`Error: ${this.taskTypeName}: Not all workers were initialized: ${error}`);
+            });
     }
 
-    /**
-     * Creates module workers.
-     *
-     */
-    async createWorkers() {
+    private createWorkers() {
         if (this.workerRegistration.url) {
             for (let worker, i = 0; i < this.workers.instances.length; i++) {
                 if (this.workerRegistration.blob) {
-                    worker = new TaskWorker(i, this.workerRegistration.url);
+                    worker = {
+                        workerId: i,
+                        worker: new Worker(this.workerRegistration.url)
+                    };
                 }
                 else {
                     const workerOptions = (this.workerRegistration.module ? { type: 'module' } : { type: 'classic' }) as WorkerOptions;
-                    worker = new TaskWorker(i, (this.workerRegistration.url as URL).href, workerOptions);
+                    worker = {
+                        workerId: i,
+                        worker: new Worker((this.workerRegistration.url as URL).href, workerOptions)
+                    }
                 }
                 this.workers.instances[i] = worker;
             }
         }
     }
 
-    /**
-     * Initialises all workers with common configuration data.
-     *
-     * @param {PayloadType} payload
-     * @param {Transferable[]} transferables
-     */
-    async initWorkers(payload: PayloadType, transferables?: Transferable[]): Promise<void> {
-        const promises = [];
-        for (const taskWorker of this.workers.instances) {
+    private initWorker(taskWorker: TaskWorker, payload: PayloadType, transferables?: Transferable[]) {
+        return new Promise<void>((resolveWorker, rejectWorker) => {
+            taskWorker.worker.onmessage = message => {
+                if (this.verbose) console.log(`Init Complete: ${payload.type}: ${message.data.id}`);
+                resolveWorker();
+            };
+            taskWorker.worker.onerror = rejectWorker;
+            payload.cmd = 'init';
+            payload.workerId = taskWorker.workerId;
+            if (transferables) {
+                // ensure all transferables are copies to all workers on init!
+                const transferablesToWorker = [];
+                for (const transferable of transferables) {
+                    transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
+                }
+                taskWorker.worker.postMessage(payload, transferablesToWorker);
+            }
+            else {
+                taskWorker.worker.postMessage(payload);
+            }
+        });
+    }
 
-            const taskWorkerPromise = new Promise((resolveWorker, rejectWorker) => {
-                taskWorker.onmessage = message => {
-                    if (this.verbose) console.log(`Init Complete: ${payload.type}: ${message.data.id}`);
-                    resolveWorker(message);
-                };
-                taskWorker.onerror = rejectWorker;
-                payload.cmd = 'init';
-                payload.workerId = taskWorker.getId();
-                if (transferables) {
-                    // ensure all transferables are copies to all workers on init!
-                    const transferablesToWorker = [];
-                    for (const transferable of transferables) {
-                        transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
+    execute(taskWorker: TaskWorker, plan: WorkerExecutionPlan) {
+        return new Promise((resolveWorker, rejectWorker) => {
+            taskWorker.worker.onmessage = message => {
+                // allow intermediate asset provision before flagging execComplete
+                if (message.data.cmd === 'intermediate') {
+                    if (typeof plan.onIntermediate === 'function') {
+                        plan.onIntermediate(message.data);
                     }
-                    taskWorker.postMessage(payload, transferablesToWorker);
+                } else {
+                    resolveWorker(message);
                 }
-                else {
-                    taskWorker.postMessage(payload);
-                }
-            });
-            promises.push(taskWorkerPromise);
-        }
-
-        if (this.verbose) console.log('Task: ' + this.getTaskType() + ': Waiting for completion of initialization of all workers.');
-        await Promise.all(promises);
-        this.workers.available = this.workers.instances;
+            };
+            taskWorker.worker.onerror = rejectWorker;
+            plan.payload.cmd = 'execute';
+            plan.payload.workerId = taskWorker.workerId;
+            taskWorker.worker.postMessage(plan.payload, plan.transferables!);
+        });
     }
 
     /**
@@ -353,66 +363,27 @@ export class WorkerTypeDefinition {
      */
     dispose() {
         for (const taskWorker of this.workers.instances) {
-            taskWorker.terminate();
+            taskWorker.worker.terminate();
         }
     }
 
 }
 
-/**
- * Contains all things required for later executions of Worker.
- */
-class StoredExecution {
-
+export type WorkerExecutionPlan = {
     taskTypeName: string;
     payload: PayloadType;
-    resolve: (data: unknown) => void;
-    reject: (error: Error) => void;
-    assetAvailableFunction?: (data: PayloadType) => void;
+    onComplete: (data: PayloadType) => void;
+    onIntermediate?: (data: PayloadType) => void;
     transferables?: Transferable[];
-
-    constructor(taskTypeName: string, payload: PayloadType,
-        resolve: (data: unknown) => void,
-        reject: (error: Error) => void,
-        assetAvailableFunction?: (data: PayloadType) => void,
-        transferables?: Transferable[]) {
-        this.taskTypeName = taskTypeName;
-        this.payload = payload;
-        this.resolve = resolve;
-        this.reject = reject;
-        this.assetAvailableFunction = assetAvailableFunction;
-        this.transferables = transferables;
-    }
-
+    promiseFunctions?: {
+        resolve: (value: void | PromiseLike<void>) => void | undefined,
+        reject: (reason?: unknown) => void | undefined
+    };
 }
 
-/**
- * Extends the {@link Worker} with an id.
- */
-class TaskWorker extends Worker {
-
-    id: number;
-
-    /**
-     * Creates a new instance.
-     *
-     * @param {number} id Numerical id of the task.
-     * @param {string} scriptURL
-     * @param {WorkerOptions} [options]
-     */
-    constructor(id: number, scriptURL: string | URL, options?: WorkerOptions) {
-        super(scriptURL, options);
-        this.id = id;
-    }
-
-    /**
-     * Returns the id.
-     * @return {number}
-     */
-    getId() {
-        return this.id;
-    }
-
+type TaskWorker = {
+    workerId: number;
+    worker: Worker;
 }
 
 type PayloadType = {

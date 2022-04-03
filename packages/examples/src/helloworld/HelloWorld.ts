@@ -73,11 +73,11 @@ class WorkerTaskManagerHelloWorldExample {
         });
         awaitInit.push(this.workerTaskManager.initTaskType(workerStandardPC.name, workerStandardPC));
 
-        this.workerTaskManager.enqueueForExecution(workerStandardPC.name, workerStandardPC)
-            .then((e: unknown) => {
-                this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 });
-            })
-            .catch((e: unknown) => console.error(e));
+        this.workerTaskManager.enqueueWorkerExecutionPlan({
+            taskTypeName: workerStandardPC.name,
+            payload: workerStandardPC,
+            onComplete: (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 }); }
+        });
 
         const workerModulePC = new DataTransportPayload('init', 0, 'WorkerModule');
         this.workerTaskManager.registerTask(workerModulePC.name, {
@@ -88,11 +88,9 @@ class WorkerTaskManagerHelloWorldExample {
         awaitInit.push(this.workerTaskManager.initTaskType(workerModulePC.name, workerModulePC));
         await Promise.all(awaitInit);
 
-        this.workerTaskManager.enqueueForExecution(workerModulePC.name, workerModulePC)
-            .then((e: unknown) => {
-                this.processMessage(e as MeshTransportPayload, { x: 100, y: 0, z: 0 });
-            })
-            .catch((e: unknown) => console.error(e));
+        this.workerTaskManager.enqueueForExecution(workerModulePC.name, workerModulePC,
+            (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 100, y: 0, z: 0 }); }
+        );
     }
 
     /**

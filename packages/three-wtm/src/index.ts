@@ -1,5 +1,6 @@
 import {
     WorkerTypeDefinition,
+    WorkerExecutionPlan,
     WorkerTaskManager,
     PayloadType,
     WorkerTaskManagerWorker,
@@ -29,6 +30,7 @@ import {
 export {
     WorkerTaskManager,
     WorkerTypeDefinition,
+    WorkerExecutionPlan,
     PayloadType,
     WorkerTaskManagerWorker,
     WorkerTaskManagerDefaultWorker,

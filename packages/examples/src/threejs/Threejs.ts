@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
-import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, DataTransportPayloadUtils, MeshTransportPayloadUtils, MaterialsTransportPayloadUtils, MaterialStore, MaterialsTransportPayload } from 'three-wtm';
+import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, DataTransportPayloadUtils, MeshTransportPayloadUtils, MaterialsTransportPayloadUtils, MaterialStore, MaterialsTransportPayload, WorkerTypeDefinition } from 'three-wtm';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -103,6 +103,7 @@ class WorkerTaskManagerExample {
 
     /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
     async initContent() {
+        console.time('Init tasks');
         const awaiting: Array<Promise<void>> = [];
         const helloWorldWorker = new DataTransportPayload('init', 0);
         helloWorldWorker.name = 'HelloWorldWorker';
@@ -129,16 +130,25 @@ class WorkerTaskManagerExample {
             fileLoader.setResponseType('arraybuffer');
             return await fileLoader.loadAsync(filenameObj);
         };
-        await loadObj(objLoaderWorker.params?.filename as string)
-            .then((buffer: string | ArrayBuffer) => {
-                objLoaderWorker.buffers.set('modelData', buffer as ArrayBufferLike);
+
+        let bufferExt: ArrayBufferLike;
+        awaiting.push(loadObj(objLoaderWorker.params?.filename as string)
+            .then(async (buffer: string | ArrayBuffer) => {
+                bufferExt = buffer as ArrayBufferLike;
+            }));
+        await Promise.all(awaiting)
+            .then(async () => {
+                console.log('Loaded OBJ');
+                objLoaderWorker.buffers.set('modelData', bufferExt);
                 objLoaderWorker.materials = this.materialStore.getMaterials();
                 MaterialsTransportPayloadUtils.cleanMaterials(objLoaderWorker);
                 MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoaderWorker, false);
-                awaiting.push(this.workerTaskManager.initTaskType(objLoaderWorker.name, objLoaderWorker));
+                await this.workerTaskManager.initTaskType(objLoaderWorker.name, objLoaderWorker)
+                    .then(() => {
+                        console.timeEnd('Init tasks');
+                        this.executeWorkers();
+                    });
             });
-
-        return await Promise.all(awaiting);
     }
 
     /** Once all tasks are initialized a 100 tasks are enqueued for execution by WorkerTaskManager. */
@@ -157,14 +167,14 @@ class WorkerTaskManagerExample {
             payload.params = payloadType.params;
             const packed = DataTransportPayloadUtils.packDataTransportPayload(payload, false);
 
-            const promise = this.workerTaskManager.enqueueForExecution(payloadType.name, packed.payload,
-                (e: PayloadType) => this.processMessage(e as PayloadType), packed.transferables)
-                .then((e: unknown) => {
-                    const data = e as PayloadType;
-                    this.processMessage(data);
-                })
-                .catch((e: unknown) => console.error(e));
-            executions.push(promise);
+            const voidPromise = this.workerTaskManager.enqueueWorkerExecutionPlan({
+                taskTypeName: payloadType.name,
+                payload: payload,
+                onComplete: (e: unknown) => { this.processMessage(e as PayloadType); },
+                onIntermediate: (e: unknown) => { this.processMessage(e as PayloadType); },
+                transferables: packed.transferables
+            });
+            executions.push(voidPromise);
 
             globalCount++;
             taskToUseIndex++;
@@ -185,7 +195,7 @@ class WorkerTaskManagerExample {
      */
     private processMessage(payload: PayloadType) {
         switch (payload.cmd) {
-            case 'assetAvailable':
+            case 'intermediate':
                 if (payload.type === 'MeshTransportPayload') {
                     this.buildMesh(payload as MeshTransportPayload);
                 }
@@ -250,8 +260,4 @@ const requestRender = function() {
 };
 requestRender();
 
-console.time('Init tasks');
-app.initContent().then(() => {
-    console.timeEnd('Init tasks');
-    app.executeWorkers();
-}).catch(x => alert(x));
+app.initContent();

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, MeshTransportPayloadUtils } from 'three-wtm';
+import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, MeshTransportPayloadUtils, StoredExecution } from 'three-wtm';
 
 type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -174,20 +174,17 @@ class TransferablesTestbed {
         }
     }
 
-    async executeWorker(task: ExampleTask) {
+    executeWorker(task: ExampleTask) {
         const payload = new DataTransportPayload('execute', task.id, task.name);
         payload.params = {
             name: task.name,
             segments: task.segments
         };
-        const promiseExec = this.workerTaskManager.enqueueForExecution(task.name, payload)
-            .then((e: unknown) => {
-                const data = e as PayloadType;
-                this._processMessage(data);
-            })
-            .catch((e: unknown) => console.error(e));
-
-        await promiseExec;
+        return this.workerTaskManager.enqueueWorkerExecutionPlan({
+            payload: payload,
+            taskTypeName: task.name,
+            onComplete: (e: unknown) => { this._processMessage(e as PayloadType); }
+        });
     }
 
     _processMessage(payload: PayloadType) {
@@ -228,12 +225,16 @@ class TransferablesTestbed {
     }
 
     async run() {
+        const awaiting = [];
         for (const task of this.tasks) {
             if (task.execute) {
                 console.time(task.name);
-                await this.executeWorker(task);
+                awaiting.push(this.executeWorker(task));
                 console.timeEnd(task.name);
             }
+        }
+        if (awaiting.length > 0) {
+            await Promise.all(awaiting);
         }
     }
 
@@ -254,6 +255,6 @@ requestRender();
 
 console.time('All tasks have been initialized');
 app.initContent().then(() => {
-    app.run();
     console.timeEnd('All tasks have been initialized');
+    app.run();
 }).catch(x => alert(x));
