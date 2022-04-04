@@ -1,6 +1,6 @@
 {
   "name": "three-wtm",
-  "version": "2.0.0-next.1",
+  "version": "2.0.0-next.2",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

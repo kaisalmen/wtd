@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
-import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, DataTransportPayloadUtils, MeshTransportPayloadUtils, MaterialsTransportPayloadUtils, MaterialStore, MaterialsTransportPayload, WorkerTypeDefinition } from 'three-wtm';
+import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, DataTransportPayloadUtils, MeshTransportPayloadUtils, MaterialsTransportPayloadUtils, MaterialStore, MaterialsTransportPayload } from 'three-wtm';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;

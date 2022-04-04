@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, MeshTransportPayloadUtils, StoredExecution } from 'three-wtm';
+import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, MeshTransportPayloadUtils } from 'three-wtm';
 
 type CameraDefaults = {
     posCamera: THREE.Vector3;
