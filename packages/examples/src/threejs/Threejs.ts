@@ -104,7 +104,7 @@ class WorkerTaskManagerExample {
     /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
     async initContent() {
         console.time('Init tasks');
-        const awaiting: Array<Promise<void>> = [];
+        const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
         const helloWorldWorker = new DataTransportPayload('init', 0);
         helloWorldWorker.name = 'HelloWorldWorker';
         this.workerTaskManager.registerTask(helloWorldWorker.name, {

@@ -148,12 +148,14 @@ class TransferablesTestbed {
      * @return {Promise<any>}
      */
     async initContent() {
+        const awaiting = [];
         for (const task of this.tasks) {
-            await this._initTask(task);
+            awaiting.push(this.initTask(task));
         }
+        return awaiting;
     }
 
-    _initTask(task: ExampleTask) {
+    private initTask(task: ExampleTask) {
         this.workerTaskManager.registerTask(task.name, {
             module: true,
             blob: false,
@@ -183,7 +185,9 @@ class TransferablesTestbed {
         return this.workerTaskManager.enqueueWorkerExecutionPlan({
             payload: payload,
             taskTypeName: task.name,
-            onComplete: (e: unknown) => { this._processMessage(e as PayloadType); }
+            onComplete: (e: unknown) => {
+                this._processMessage(e as PayloadType);
+            }
         });
     }
 
@@ -234,7 +238,9 @@ class TransferablesTestbed {
             }
         }
         if (awaiting.length > 0) {
-            await Promise.all(awaiting);
+            await Promise.all(awaiting).then(() => {
+                console.log('Executions have been completed');
+            });
         }
     }
 
@@ -254,7 +260,7 @@ const requestRender = function() {
 requestRender();
 
 console.time('All tasks have been initialized');
-app.initContent().then(() => {
-    console.timeEnd('All tasks have been initialized');
+await app.initContent().then((x) => {
+    console.timeEnd('All tasks have been initialized: ' + x);
     app.run();
 }).catch(x => alert(x));
