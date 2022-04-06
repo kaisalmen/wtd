@@ -75,7 +75,7 @@ class TransferablesTestbed {
             name: 'transferableWorkerTest3',
             sendGeometry: true,
             moduleURL: new URL('../worker/transferableWorkerTest3', import.meta.url),
-            segments: 2048
+            segments: 1024
         });
         this.tasks.push({
             execute: true,
@@ -83,7 +83,7 @@ class TransferablesTestbed {
             name: 'transferableWorkerTest4',
             sendGeometry: false,
             moduleURL: new URL('../worker/transferableWorkerTest4', import.meta.url),
-            segments: 2048
+            segments: 1024
         });
 
         this.renderer = new THREE.WebGLRenderer({
@@ -142,12 +142,20 @@ class TransferablesTestbed {
         this.renderer.render(this.scene, this.camera);
     }
 
+    async run() {
+        console.time('All tasks have been initialized');
+        await Promise.all(app.initTasks()).then(() => {
+            console.timeEnd('All tasks have been initialized');
+            app.executeTasks();
+        }).catch(x => alert(x));
+    }
+
     /**
      * Registers any selected task at the {@link WorkerTaskManager} and initializes them.
      *
      * @return {Promise<any>}
      */
-    async initContent() {
+    private initTasks() {
         const awaiting = [];
         for (const task of this.tasks) {
             awaiting.push(this.initTask(task));
@@ -176,7 +184,21 @@ class TransferablesTestbed {
         }
     }
 
-    executeWorker(task: ExampleTask) {
+    private async executeTasks() {
+        console.time('Execute tasks');
+        const awaiting = [];
+        for (const task of this.tasks) {
+            if (task.execute) {
+                awaiting.push(this.executeWorker(task));
+            }
+        }
+        await Promise.all(awaiting).then(() => {
+            console.timeEnd('Execute tasks');
+            console.log('All worker executions have been completed');
+        });
+    }
+
+    private executeWorker(task: ExampleTask) {
         const payload = new DataTransportPayload('execute', task.id, task.name);
         payload.params = {
             name: task.name,
@@ -186,12 +208,12 @@ class TransferablesTestbed {
             payload: payload,
             taskTypeName: task.name,
             onComplete: (e: unknown) => {
-                this._processMessage(e as PayloadType);
+                this.processMessage(e as PayloadType);
             }
         });
     }
 
-    _processMessage(payload: PayloadType) {
+    private processMessage(payload: PayloadType) {
         switch (payload.cmd) {
             case 'execComplete':
                 console.log(`TransferableTestbed#execComplete: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
@@ -227,23 +249,6 @@ class TransferablesTestbed {
                 break;
         }
     }
-
-    async run() {
-        const awaiting = [];
-        for (const task of this.tasks) {
-            if (task.execute) {
-                console.time(task.name);
-                awaiting.push(this.executeWorker(task));
-                console.timeEnd(task.name);
-            }
-        }
-        if (awaiting.length > 0) {
-            await Promise.all(awaiting).then(() => {
-                console.log('Executions have been completed');
-            });
-        }
-    }
-
 }
 
 const app = new TransferablesTestbed(document.getElementById('example'));
@@ -259,8 +264,4 @@ const requestRender = function() {
 };
 requestRender();
 
-console.time('All tasks have been initialized');
-await app.initContent().then((x) => {
-    console.timeEnd('All tasks have been initialized: ' + x);
-    app.run();
-}).catch(x => alert(x));
+app.run();

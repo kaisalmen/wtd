@@ -101,8 +101,12 @@ class WorkerTaskManagerExample {
         this.renderer.render(this.scene, this.camera);
     }
 
+    run() {
+        this.initTasks();
+    }
+
     /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
-    async initContent() {
+    private async initTasks() {
         console.time('Init tasks');
         const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
         const helloWorldWorker = new DataTransportPayload('init', 0);
@@ -128,7 +132,7 @@ class WorkerTaskManagerExample {
         const loadObj = async function(filenameObj: string) {
             const fileLoader = new THREE.FileLoader();
             fileLoader.setResponseType('arraybuffer');
-            return await fileLoader.loadAsync(filenameObj);
+            return fileLoader.loadAsync(filenameObj);
         };
 
         let bufferExt: ArrayBufferLike;
@@ -146,33 +150,30 @@ class WorkerTaskManagerExample {
                 await this.workerTaskManager.initTaskType(objLoaderWorker.name, objLoaderWorker)
                     .then(() => {
                         console.timeEnd('Init tasks');
-                        this.executeWorkers();
+                        this.executeTasks();
                     });
             });
     }
 
-    /** Once all tasks are initialized a 100 tasks are enqueued for execution by WorkerTaskManager. */
-    async executeWorkers() {
+    /** Once all tasks are initialized a 1024 tasks are enqueued for execution by WorkerTaskManager. */
+    private async executeTasks() {
         if (this.tasksToUse.length === 0) throw new Error('No Tasks have been selected. Aborting...');
 
-        console.time('start');
+        console.time('Execute tasks');
         let globalCount = 0;
         let taskToUseIndex = 0;
         const executions = [];
 
         for (let i = 0; i < 1024; i++) {
-            const payload = new DataTransportPayload('execute', globalCount);
             const payloadType = this.tasksToUse[taskToUseIndex];
-            payload.name = `${payloadType.name}_${globalCount}`;
+            const payload = new DataTransportPayload('execute', globalCount, `${payloadType.name}_${globalCount}`);
             payload.params = payloadType.params;
-            const packed = DataTransportPayloadUtils.packDataTransportPayload(payload, false);
 
             const voidPromise = this.workerTaskManager.enqueueWorkerExecutionPlan({
                 taskTypeName: payloadType.name,
                 payload: payload,
                 onComplete: (e: unknown) => { this.processMessage(e as PayloadType); },
-                onIntermediate: (e: unknown) => { this.processMessage(e as PayloadType); },
-                transferables: packed.transferables
+                onIntermediate: (e: unknown) => { this.processMessage(e as PayloadType); }
             });
             executions.push(voidPromise);
 
@@ -183,7 +184,8 @@ class WorkerTaskManagerExample {
             }
         }
         await Promise.all(executions).then(() => {
-            console.timeEnd('start');
+            console.timeEnd('Execute tasks');
+            console.log('All worker executions have been completed');
             this.workerTaskManager.dispose();
         });
     }
@@ -260,4 +262,4 @@ const requestRender = function() {
 };
 requestRender();
 
-app.initContent();
+app.run();

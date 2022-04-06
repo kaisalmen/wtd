@@ -62,10 +62,17 @@ class WorkerTaskManagerHelloWorldExample {
         this.scene.add(helper);
     }
 
-    /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
-    async initContent() {
-        const awaitInit = [];
+    async run() {
         const workerStandardPC = new DataTransportPayload('init', 0, 'WorkerStandard');
+        const workerModulePC = new DataTransportPayload('init', 0, 'WorkerModule');
+        await Promise.all(this.initTasks(workerStandardPC, workerModulePC)).then(() => {
+            this.executeTasks(workerStandardPC, workerModulePC);
+        });
+    }
+
+    /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
+    private initTasks(workerStandardPC: DataTransportPayload, workerModulePC: DataTransportPayload) {
+        const awaitInit = [];
         this.workerTaskManager.registerTask(workerStandardPC.name, {
             module: true,
             blob: false,
@@ -73,24 +80,33 @@ class WorkerTaskManagerHelloWorldExample {
         });
         awaitInit.push(this.workerTaskManager.initTaskType(workerStandardPC.name, workerStandardPC));
 
-        this.workerTaskManager.enqueueWorkerExecutionPlan({
-            taskTypeName: workerStandardPC.name,
-            payload: workerStandardPC,
-            onComplete: (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 }); }
-        });
-
-        const workerModulePC = new DataTransportPayload('init', 0, 'WorkerModule');
         this.workerTaskManager.registerTask(workerModulePC.name, {
             module: true,
             blob: false,
             url: new URL('../worker/helloWorldWorkerModule', import.meta.url)
         });
         awaitInit.push(this.workerTaskManager.initTaskType(workerModulePC.name, workerModulePC));
-        await Promise.all(awaitInit);
 
-        this.workerTaskManager.enqueueForExecution(workerModulePC.name, workerModulePC,
+        return awaitInit;
+    }
+
+    private async executeTasks(workerStandardPC: DataTransportPayload, workerModulePC: DataTransportPayload) {
+        console.time('Execute tasks');
+        const awaitExec = [];
+        awaitExec.push(this.workerTaskManager.enqueueWorkerExecutionPlan({
+            taskTypeName: workerStandardPC.name,
+            payload: workerStandardPC,
+            onComplete: (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 }); }
+        }));
+
+        awaitExec.push(this.workerTaskManager.enqueueForExecution(workerModulePC.name, workerModulePC,
             (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 100, y: 0, z: 0 }); }
-        );
+        ));
+
+        await Promise.all(awaitExec).then(() => {
+            console.timeEnd('Execute tasks');
+            console.log('All worker executions have been completed');
+        });
     }
 
     /**
@@ -156,7 +172,6 @@ const app = new WorkerTaskManagerHelloWorldExample(document.getElementById('exam
 window.addEventListener('resize', () => app.resizeDisplayGL(), false);
 
 console.log('Starting initialisation phase...');
-app.initContent();
 app.resizeDisplayGL();
 
 const requestRender = function() {
@@ -164,3 +179,5 @@ const requestRender = function() {
     app.render();
 };
 requestRender();
+
+app.run();
