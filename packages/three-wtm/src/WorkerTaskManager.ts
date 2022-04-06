@@ -8,6 +8,7 @@ type WorkerTaskRuntimeDesc = {
     workerStories: Map<number, WorkerTypeDefinition>;
     readonly maxParallelExecutions: number;
 }
+
 /**
  * Register one to many tasks type to the WorkerTaskManager. Then init and enqueue a worker based execution by passing
  * configuration and buffers. The WorkerTaskManager allows to execute a maximum number of executions in parallel.
@@ -19,7 +20,7 @@ class WorkerTaskManager {
     private taskTypes: Map<string, WorkerTaskRuntimeDesc>;
     private verbose: boolean;
     private defaultMaxParallelExecutions: number;
-    private workerExecutionPlans: WorkerExecutionPlan[];
+    private workerExecutionPlans: Map<string, WorkerExecutionPlan[]>;
 
     /**
      * Creates a new WorkerTaskManager instance.
@@ -30,7 +31,7 @@ class WorkerTaskManager {
         this.taskTypes = new Map();
         this.verbose = false;
         this.defaultMaxParallelExecutions = defaultMaxParallelExecutions ?? 4;
-        this.workerExecutionPlans = [];
+        this.workerExecutionPlans = new Map();
     }
 
     /**
@@ -42,6 +43,14 @@ class WorkerTaskManager {
     setVerbose(verbose: boolean) {
         this.verbose = verbose;
         return this;
+    }
+
+    getDefaultMaxParallelExecutions() {
+        return this.defaultMaxParallelExecutions;
+    }
+
+    setDefaultMaxParallelExecutions(defaultMaxParallelExecutions: number) {
+        this.defaultMaxParallelExecutions = defaultMaxParallelExecutions;
     }
 
     /**
@@ -91,6 +100,7 @@ class WorkerTaskManager {
             for (const workerStory of workerTaskRuntimeDesc.workerStories.values()) {
                 executions.push(workerStory.initWorker(payload, transferables));
             }
+            this.workerExecutionPlans.set(taskTypeName, []);
         }
         else {
             executions.push(new Promise((_resolve, reject) => {
@@ -124,8 +134,9 @@ class WorkerTaskManager {
 
     async enqueueWorkerExecutionPlan(plan: WorkerExecutionPlan) {
         const promise = this.buildWorkerExecutionPlanPromise(plan);
-        this.workerExecutionPlans.push(plan);
-        this.depleteWorkerExecutionPlans();
+        const planForType = this.workerExecutionPlans.get(plan.taskTypeName);
+        planForType?.push(plan);
+        this.depleteWorkerExecutionPlans(plan.taskTypeName);
         return promise;
     }
 
@@ -138,12 +149,15 @@ class WorkerTaskManager {
         });
     }
 
-    private depleteWorkerExecutionPlans() {
-        if (this.workerExecutionPlans.length === 0) {
-            console.log('No more WorkerExecutionPlans in the queue.');
+    private depleteWorkerExecutionPlans(taskTypeName: string) {
+        const planForType = this.workerExecutionPlans.get(taskTypeName);
+        if (planForType?.length === 0) {
+            if (this.verbose) {
+                console.log(`No more WorkerExecutionPlans in the queue for: ${taskTypeName}`);
+            }
             return;
         }
-        const plan = this.workerExecutionPlans.shift();
+        const plan = planForType?.shift();
         if (plan) {
             const workerTaskRuntimeDesc = this.taskTypes.get(plan.taskTypeName);
             const workerStory = this.getUnusedWorkerStory(workerTaskRuntimeDesc);
@@ -151,14 +165,14 @@ class WorkerTaskManager {
                 const promiseWorker = workerStory.executeWorker(plan);
                 promiseWorker.then((message: unknown) => {
                     plan.promiseFunctions?.resolve(message);
-                    this.depleteWorkerExecutionPlans();
+                    this.depleteWorkerExecutionPlans(taskTypeName);
                 }).catch((e) => {
                     plan.promiseFunctions?.reject(new Error('Execution error: ' + e));
-                    this.depleteWorkerExecutionPlans();
+                    this.depleteWorkerExecutionPlans(taskTypeName);
                 });
             }
             else {
-                this.workerExecutionPlans.unshift(plan);
+                planForType?.unshift(plan);
             }
         }
     }
