@@ -2,7 +2,16 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
-import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, DataTransportPayloadUtils, MeshTransportPayloadUtils, MaterialsTransportPayloadUtils, MaterialStore, MaterialsTransportPayload } from 'three-wtm';
+import {
+    WorkerTaskManager,
+    PayloadType,
+    MeshTransportPayload,
+    DataTransportPayload,
+    MeshTransportPayloadUtils,
+    MaterialsTransportPayloadUtils,
+    MaterialStore,
+    MaterialsTransportPayload
+} from 'three-wtm';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -43,7 +52,10 @@ class WorkerTaskManagerExample {
     private materialStore = new MaterialStore(true);
 
     constructor(elementToBindTo: HTMLElement | null) {
-        if (elementToBindTo === null) throw Error('Bad element HTML given as canvas.');
+        if (elementToBindTo === null) {
+            throw Error('Bad element HTML given as canvas.');
+        }
+
         this.canvas = elementToBindTo;
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
@@ -121,7 +133,7 @@ class WorkerTaskManagerExample {
 
         const objLoaderWorker = new MaterialsTransportPayload('init', 0);
         objLoaderWorker.name = 'OBJLoaderdWorker';
-        objLoaderWorker.params = { filename: '../models/female02_vertex_colors.obj' };
+        objLoaderWorker.params = { filename: '../models/obj/female02/female02_vertex_colors.obj' };
         this.workerTaskManager.registerTask(objLoaderWorker.name, {
             module: true,
             blob: false,

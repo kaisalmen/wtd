@@ -32,7 +32,10 @@ class WorkerTaskManagerHelloWorldExample {
     private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(1).setVerbose(true);
 
     constructor(elementToBindTo: HTMLElement | null) {
-        if (elementToBindTo === null) throw Error('Bad element HTML given as canvas.');
+        if (elementToBindTo === null) {
+            throw Error('Bad element HTML given as canvas.');
+        }
+
         this.canvas = elementToBindTo;
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,

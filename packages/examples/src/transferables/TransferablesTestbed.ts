@@ -39,7 +39,10 @@ class TransferablesTestbed {
     private tasks: ExampleTask[] = [];
 
     constructor(elementToBindTo: HTMLElement | null) {
-        if (elementToBindTo === null) throw Error('Bad element HTML given as canvas.');
+        if (elementToBindTo === null) {
+            throw Error('Bad element HTML given as canvas.');
+        }
+
         this.canvas = elementToBindTo;
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,

@@ -123,10 +123,12 @@ export class MaterialsTransportPayloadUtils {
         }
         if (MaterialsTransportPayloadUtils.hasMultiMaterial(payload)) {
             // multi-material
-            const outputMaterials: Material[] | undefined[] = [];
+            const outputMaterials: Material[] = [];
             for (const [k, v] of payload.multiMaterialNames.entries()) {
                 const mat = materials.get(v);
-                outputMaterials[k] = mat ? mat : undefined;
+                if (mat) {
+                    outputMaterials[k] = mat;
+                }
             }
             return outputMaterials;
         }
