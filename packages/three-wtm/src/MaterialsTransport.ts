@@ -40,14 +40,12 @@ export class MaterialsTransportPayloadUtils {
      * @param {MaterialsTransportDef} transportObject
      * @return {MaterialsTransport}
      */
-    static unpackMaterialsTransportPayload(payload: MaterialsTransportPayload, transportObject: MaterialsTransportPayload) {
+    static unpackMaterialsTransportPayload(payload: MaterialsTransportPayload, transportObject: MaterialsTransportPayload, cloneBuffers: boolean) {
+        DataTransportPayloadUtils.unpackDataTransportPayload(payload, cloneBuffers);
+
         for (const [k, v] of transportObject.multiMaterialNames.entries()) {
             payload.multiMaterialNames.set(k, v);
         }
-        for (const cloneInstruction of transportObject.cloneInstructions) {
-            payload.cloneInstructions.push(cloneInstruction);
-        }
-        payload.cloneInstructions = transportObject.cloneInstructions;
 
         const materialLoader = new MaterialLoader();
         for (const [k, v] of transportObject.materialsJson.entries()) {

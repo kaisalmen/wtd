@@ -102,7 +102,7 @@ export class MeshTransportPayloadUtils {
 
         if (payload.materialsTransportPayload) {
             mtp.materialsTransportPayload = Object.assign(new MaterialsTransportPayload(), payload.materialsTransportPayload);
-            MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(mtp.materialsTransportPayload, payload.materialsTransportPayload);
+            MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(mtp.materialsTransportPayload, payload.materialsTransportPayload, cloneBuffers);
         }
         return mtp;
     }

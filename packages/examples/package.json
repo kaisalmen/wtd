@@ -8,17 +8,18 @@
   "type": "module",
   "private": "true",
   "scripts": {
+    "prepare": "npx shx mkdir -p ./src/worker/imported && npx shx cp -f ./node_modules/wwobjloader2/src/worker/OBJLoader2Worker.js ./src/worker/imported",
     "clean": "shx rm -fr ./dist && shx rm -fr tsconfig.tsbuildinfo",
     "dev": "npm run build-worker && vite",
     "lint": "npx eslint src",
     "compile": "tsc -b",
-    "build-worker": "npx shx rm -f ./dist/helloWorldWorkerStandard.js && vite -c vite.config.worker.ts build",
-    "build": "npm run clean && npm run build-worker && npm run compile",
+    "build:worker": "npx shx rm -f ./dist/helloWorldWorkerStandard.js && vite -c vite.config.worker.ts build",
+    "build": "npm run clean && npm run build:worker && npm run compile",
     "serve": "tsc && vite preview"
   },
   "dependencies": {
     "three-wtm": "../packages/three-wtm/index.js",
-    "wwobjloader2": "../../../WWOBJLoaderpackages/objloader2",
+    "wwobjloader2": "../../../WWOBJLoader/packages/objloader2",
     "lil-gui": "^0.16.1"
   }
 }

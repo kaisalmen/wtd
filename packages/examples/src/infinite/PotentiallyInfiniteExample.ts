@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
-//import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
 import { Controller, GUI } from 'lil-gui';
 import {
@@ -13,7 +13,8 @@ import {
     MeshTransportPayload,
     MeshTransportPayloadUtils,
     MaterialsTransportPayloadUtils,
-    PayloadType
+    PayloadType,
+    MaterialsTransportPayload
 } from 'three-wtm';
 
 export type CameraDefaults = {
@@ -33,8 +34,9 @@ type TaskDescription = {
     workerUrl: URL | string;
     workerCount: number;
     modelName?: string;
-    filenameObj?: string;
-    filenameMtl?: string;
+    filenameObj?: URL;
+    filenameMtl?: URL;
+    buffer?: string | ArrayBuffer;
     materialStore?: MaterialStore;
 };
 
@@ -74,7 +76,52 @@ class PotentiallyInfiniteExample {
     private controls: TrackballControls;
     private workerTaskManager: WorkerTaskManager = new WorkerTaskManager();
 
-    public taskDescriptions = new Map<string, TaskDescription>();
+    // configure all task that shall be usable on register to the WorkerTaskManager
+    taskSimpleBlobWorker = {
+        id: 0,
+        name: 'simpleBlobWorker',
+        use: false,
+        module: true,
+        blob: true,
+        workerUrl: WorkerTypeDefinition.createWorkerBlob([`${SimpleBlobWorker.toString()}
+
+        worker = new SimpleBlobWorker();
+        self.onmessage = message => worker.comRouting(message);
+        `]),
+        workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
+    } as TaskDescription;
+    taskInfiniteWorkerInternalGeometry = {
+        id: 1,
+        name: 'infiniteWorkerInternalGeometry',
+        use: false,
+        module: true,
+        blob: false,
+        workerUrl: new URL('../worker/infiniteWorkerInternalGeometry', import.meta.url),
+        workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
+    } as TaskDescription;
+    taskInfiniteWorkerExternalGeometry = {
+        id: 2,
+        name: 'infiniteWorkerExternalGeometry',
+        use: false,
+        module: true,
+        blob: false,
+        workerUrl: new URL('../worker/infiniteWorkerExternalGeometry', import.meta.url),
+        workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
+    } as TaskDescription;
+    taskObjLoader2Worker = {
+        id: 3,
+        name: 'objLoader2Worker',
+        modelName: 'female02',
+        use: true,
+        module: true,
+        blob: false,
+        workerUrl: new URL('../worker/imported/OBJLoader2Worker.js', import.meta.url),
+        workerCount: 1,
+        filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
+        filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),
+        materialStore: new MaterialStore(true)
+    } as TaskDescription;
+
     private tasksToUse: TaskDescription[] = [];
     private executions: Array<Promise<unknown>> = [];
     private objectsUsed = new Map<number, { name: string, pos: THREE.Vector3 }>();
@@ -142,69 +189,6 @@ class PotentiallyInfiniteExample {
         this.workerTaskManager = new WorkerTaskManager();
         this.workerTaskManager.setVerbose(false);
 
-        const simpleWorkerDefinition = `${SimpleBlobWorker.toString()}
-
-        worker = new SimpleBlobWorker();
-        self.onmessage = message => worker.comRouting(message);
-        `;
-        const simpleWorkerBlobURL = WorkerTypeDefinition.createWorkerBlob([simpleWorkerDefinition]);
-
-        // configure all task that shall be usable on register to the WorkerTaskManager
-        this.taskDescriptions.clear();
-        this.taskDescriptions.set('simpleBlobWorker', {
-            id: 0,
-            name: 'simpleBlobWorker',
-            use: true,
-            module: true,
-            blob: true,
-            workerUrl: simpleWorkerBlobURL,
-            workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
-        });
-        this.taskDescriptions.set('infiniteWorkerInternalGeometry', {
-            id: 1,
-            name: 'infiniteWorkerInternalGeometry',
-            use: true,
-            module: true,
-            blob: false,
-            workerUrl: new URL('../worker/infiniteWorkerInternalGeometry', import.meta.url),
-            workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
-        });
-        this.taskDescriptions.set('infiniteWorkerExternalGeometry', {
-            id: 2,
-            name: 'infiniteWorkerExternalGeometry',
-            use: true,
-            module: true,
-            blob: false,
-            workerUrl: new URL('../worker/infiniteWorkerExternalGeometry', import.meta.url),
-            workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
-        });
-        this.taskDescriptions.set('tmOBJLoader2Module', {
-            id: 3,
-            name: 'tmOBJLoader2Module',
-            modelName: 'female02',
-            use: false,
-            module: true,
-            blob: false,
-            workerUrl: new URL('wwobjloader2/OBJLoader2Worker', import.meta.url),
-            workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions(),
-            filenameMtl: '../models/obj/main/female02/female02.mtl',
-            filenameObj: '../models/obj/main/female02/female02.obj',
-            materialStore: new MaterialStore(true)
-        });
-        this.taskDescriptions.set('tmOBJLoader2Standard', {
-            id: 4,
-            name: 'tmOBJLoader2Standard',
-            modelName: 'male02',
-            use: false,
-            module: false,
-            blob: false,
-            workerUrl: new URL('wwobjloader2/OBJLoader2WorkerStandard', import.meta.url),
-            workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions(),
-            filenameMtl: '../models/obj/main/male02/male02.mtl',
-            filenameObj: '../models/obj/main/male02/male02.obj',
-            materialStore: new MaterialStore(true),
-        });
-
         this.tasksToUse = [];
         this.executions = [];
         this.objectsUsed = new Map();
@@ -264,12 +248,8 @@ class PotentiallyInfiniteExample {
         this.renderer.render(this.scene, this.camera);
     }
 
-    async run() {
-        console.time('All tasks have been initialized');
-        app.initContent().then(() => {
-            console.timeEnd('All tasks have been initialized');
-            app.executeWorkers();
-        }).catch(x => alert(x));
+    run() {
+        this.initContent();
     }
 
     /**
@@ -280,11 +260,12 @@ class PotentiallyInfiniteExample {
      * @return {Promise<any>}
      */
     async initContent() {
+        console.time('All tasks have been initialized');
         const awaiting = [];
         this.tasksToUse = [];
 
-        let taskDescr = this.taskDescriptions.get('simpleBlobWorker');
-        if (taskDescr && taskDescr.use) {
+        let taskDescr = this.taskSimpleBlobWorker;
+        if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
             this.workerTaskManager.registerTask(taskDescr.name, {
                 module: taskDescr.module,
@@ -294,8 +275,9 @@ class PotentiallyInfiniteExample {
             const payload = new DataTransportPayload('init', taskDescr.id, taskDescr.name);
             awaiting.push(this.workerTaskManager.initTaskType(taskDescr.name, payload));
         }
-        taskDescr = this.taskDescriptions.get('infiniteWorkerInternalGeometry');
-        if (taskDescr && taskDescr.use) {
+
+        taskDescr = this.taskInfiniteWorkerInternalGeometry;
+        if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
             this.workerTaskManager.registerTask(taskDescr.name, {
                 module: taskDescr.module,
@@ -309,8 +291,9 @@ class PotentiallyInfiniteExample {
             };
             awaiting.push(this.workerTaskManager.initTaskType(taskDescr.name, payload));
         }
-        taskDescr = this.taskDescriptions.get('infiniteWorkerExternalGeometry');
-        if (taskDescr && taskDescr.use) {
+
+        taskDescr = this.taskInfiniteWorkerExternalGeometry;
+        if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
             this.workerTaskManager.registerTask(taskDescr.name, {
                 module: taskDescr.module,
@@ -325,63 +308,58 @@ class PotentiallyInfiniteExample {
             const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
             awaiting.push(this.workerTaskManager.initTaskType(taskDescr.name, packed.payload, packed.transferables));
         }
-        /*
-            taskDescr = this.taskDescriptions.get( 'tmOBJLoader2Module' );
-            if ( taskDescr.use ) {
-                this.tasksToUse.push( taskDescr );
-                this.workerTaskManager.registerTaskTypeModule( taskDescr.name, taskDescr.module );
-                await this.loadObjMtl( taskDescr )
-                    .then( buffer => {
-                        const mt = new MaterialsTransport()
-                            .addBuffer( 'modelData', buffer )
-                            .setMaterials( taskDescr.materialStore.getMaterials() )
-                            .cleanMaterials()
-                            .package( false );
-                        awaiting.push( this.workerTaskManager.initTaskType( taskDescr.name, mt.getMain(), mt.getTransferables() ).catch( e => console.error( e ) ) );
-                    } );
-            }
-            taskDescr = this.taskDescriptions.get( 'tmOBJLoader2Standard' );
-            if ( taskDescr.use ) {
-                this.tasksToUse.push( taskDescr );
-                this.workerTaskManager.registerTaskType( taskDescr.name, taskDescr.funcInit, taskDescr.funcExec, null, false, taskDescr.dependencies );
-                await this.loadObjMtl( taskDescr )
-                    .then( buffer => {
-                        const mt = new MaterialsTransport()
-                            .addBuffer( 'modelData', buffer )
-                            .setMaterials( taskDescr.materialStore.getMaterials() )
-                            .cleanMaterials()
-                            .package( false );
-                        awaiting.push( this.workerTaskManager.initTaskType( taskDescr.name, mt.getMain(), mt.getTransferables() ).catch( e => console.error( e ) ) );
-                    } );
-            }
-        */
+
+        taskDescr = this.taskObjLoader2Worker;
+        if (taskDescr.use) {
+            this.tasksToUse.push(taskDescr);
+            this.workerTaskManager.registerTask(taskDescr.name, {
+                module: taskDescr.module,
+                blob: taskDescr.blob,
+                url: taskDescr.workerUrl
+            }, taskDescr.workerCount);
+
+            const loadMtl = new Promise<MTLLoader.MaterialCreator>(resolve => {
+                const mtlLoader = new MTLLoader();
+                mtlLoader.load(taskDescr!.filenameMtl!.href, resolve);
+            }).then((materialCreator: MTLLoader.MaterialCreator) => {
+                materialCreator.preload();
+                this.taskObjLoader2Worker.materialStore?.addMaterialsFromObject(materialCreator.materials, false);
+            });
+            awaiting.push(loadMtl);
+
+            const fileLoader = new THREE.FileLoader();
+            fileLoader.setResponseType('arraybuffer');
+            const loadObj = fileLoader.loadAsync(taskDescr!.filenameObj!.href as string)
+                .then(async (buffer: string | ArrayBuffer) => {
+                    this.taskObjLoader2Worker.buffer = buffer as ArrayBufferLike;
+                });
+            awaiting.push(loadObj);
+        }
+
         if (awaiting.length > 0) {
-            return await Promise.all(awaiting);
+            await Promise.all(awaiting).then(async () => {
+                if (this.taskObjLoader2Worker.use) {
+                    const objLoader2Payload = new MaterialsTransportPayload('init', 0, 'objLoader2Worker');
+                    objLoader2Payload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
+                    objLoader2Payload.materials = this.taskObjLoader2Worker.materialStore?.getMaterials() as Map<string, THREE.Material>;
+                    MaterialsTransportPayloadUtils.cleanMaterials(objLoader2Payload);
+                    MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoader2Payload, false);
+                    await this.workerTaskManager.initTaskType(objLoader2Payload.name, objLoader2Payload)
+                        .then(() => {
+                            console.timeEnd('All tasks have been initialized');
+                            this.executeWorkers();
+                        });
+                }
+                else {
+                    console.timeEnd('All tasks have been initialized');
+                    this.executeWorkers();
+                }
+            }).catch(e => console.error(e));
         }
         else {
             return new Promise((_resolve, reject) => { reject('No task type has been configured'); });
         }
     }
-
-    /** Only once needed for OBJ/MTL initialization */
-    /*
-            private async loadObjMtl(taskDescr: TaskDescription) {
-                const fileLoader = new THREE.FileLoader();
-                fileLoader.setResponseType('arraybuffer');
-
-                const loadMtl = new Promise<MTLLoader.MaterialCreator>(resolve => {
-                    const mtlLoader = new MTLLoader();
-                    mtlLoader.load(taskDescr?.filenameMtl as string, resolve);
-                });
-                await loadMtl.then((materialCreator: MTLLoader.MaterialCreator) => {
-                    materialCreator.preload();
-                    taskDescr?.materialStore?.addMaterials(materialCreator.materials as unknown as Map<string, THREE.Material>, false);
-
-                    // TODO
-                    fileLoader.loadAsync(taskDescr?.filenameObj as string);
-                });
-            }
-    */
 
     /**
      * Once all tasks are initialized a number of tasks (maxPerLoop) are enqueued.
@@ -448,10 +426,14 @@ class PotentiallyInfiniteExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(taskDescr: TaskDescription, payload: PayloadType) {
+    private processMessage(taskDescr: TaskDescription, payload: PayloadType | Error) {
         let material: THREE.Material | THREE.Material[] | undefined;
         let mTP: MeshTransportPayload;
         let mesh: THREE.Mesh;
+        if (payload instanceof Error) {
+            console.error(payload);
+            return;
+        }
         switch (payload.cmd) {
             case 'initComplete':
                 console.log('Init Completed: ' + payload.id);
@@ -628,10 +610,8 @@ class GUIControls {
     infiniteWorkerInternalGeometryCount = GUIControls.DEFAULT_WORKER_COUNT;
     infiniteWorkerExternalGeometry = true;
     infiniteWorkerExternalGeometryCount = GUIControls.DEFAULT_WORKER_COUNT;
-    tmOBJLoader2Module = true;
-    tmOBJLoader2ModuleCount = GUIControls.DEFAULT_WORKER_COUNT;
-    tmOBJLoader2Standard = true;
-    tmOBJLoader2StandardCount = GUIControls.DEFAULT_WORKER_COUNT;
+    objLoader2Worker = true;
+    objLoader2WorkerCount = GUIControls.DEFAULT_WORKER_COUNT;
     overallExecutionCount = 0;
     numberOfMeshesToKeep = 0;
     maxPerLoop = 0;
@@ -654,11 +634,11 @@ class GUIControls {
         this.controllers.set('simpleBlobWorker', controllerSimpleBlobWorker);
         this.controllers.set('simpleBlobWorkerCount', controllerSimpleBlobWorkerCount);
         controllerSimpleBlobWorker.onChange((value: boolean) => {
-            this.app.taskDescriptions.get('simpleBlobWorker')!.use = value;
+            this.app.taskSimpleBlobWorker.use = value;
             this.flipElement(controllerSimpleBlobWorkerCount, value);
         });
         controllerSimpleBlobWorkerCount.onChange((value: number) => {
-            this.app.taskDescriptions.get('simpleBlobWorker')!.workerCount = value;
+            this.app.taskSimpleBlobWorker.workerCount = value;
         });
 
         const controllerInfiniteWorkerInternalGeometry = gui.add(this, 'infiniteWorkerInternalGeometry').name('Worker Module + three');
@@ -666,11 +646,11 @@ class GUIControls {
         this.controllers.set('infiniteWorkerInternalGeometry', controllerInfiniteWorkerInternalGeometry);
         this.controllers.set('infiniteWorkerInternalGeometryCount', controllerInfiniteWorkerInternalGeometryCount);
         controllerInfiniteWorkerInternalGeometry.onChange((value: boolean) => {
-            this.app.taskDescriptions.get('infiniteWorkerInternalGeometry')!.use = value;
+            this.app.taskInfiniteWorkerInternalGeometry.use = value;
             this.flipElement(controllerInfiniteWorkerInternalGeometryCount, value);
         });
         controllerInfiniteWorkerInternalGeometryCount.onChange((value: number) => {
-            this.app.taskDescriptions.get('infiniteWorkerInternalGeometry')!.workerCount = value;
+            this.app.taskInfiniteWorkerInternalGeometry.workerCount = value;
         });
 
         const controllerInfiniteWorkerExternalGeometry = gui.add(this, 'infiniteWorkerExternalGeometry').name('Worker Module solo');
@@ -678,35 +658,23 @@ class GUIControls {
         this.controllers.set('infiniteWorkerExternalGeometry', controllerInfiniteWorkerExternalGeometry);
         this.controllers.set('infiniteWorkerExternalGeometryCount', controllerInfiniteWorkerExternalGeometryCount);
         controllerInfiniteWorkerExternalGeometry.onChange((value: boolean) => {
-            this.app.taskDescriptions.get('infiniteWorkerExternalGeometry')!.use = value;
+            this.app.taskInfiniteWorkerExternalGeometry.use = value;
             this.flipElement(controllerInfiniteWorkerExternalGeometryCount, value);
         });
         controllerInfiniteWorkerExternalGeometryCount.onChange((value: number) => {
-            this.app.taskDescriptions.get('infiniteWorkerExternalGeometry')!.workerCount = value;
+            this.app.taskInfiniteWorkerExternalGeometry.workerCount = value;
         });
 
-        const controllerTmOBJLoader2Module = gui.add(this, 'tmOBJLoader2Module').name('OBJLoader2Parser Module');
-        const controllerTmOBJLoader2ModuleCount = gui.add(this, 'tmOBJLoader2ModuleCount', 1, 32).step(1).name('Worker Count');
-        this.controllers.set('tmOBJLoader2Module', controllerTmOBJLoader2Module);
-        this.controllers.set('tmOBJLoader2ModuleCount', controllerTmOBJLoader2ModuleCount);
-        controllerTmOBJLoader2Module.onChange((value: boolean) => {
-            this.app.taskDescriptions.get('tmOBJLoader2Module')!.use = value;
-            this.flipElement(controllerTmOBJLoader2ModuleCount, value);
+        const controllerObjLoader2Worker = gui.add(this, 'objLoader2Worker').name('OBJLoader2Parser Module');
+        const controllerObjLoader2WorkerCount = gui.add(this, 'objLoader2WorkerCount', 1, 32).step(1).name('Worker Count');
+        this.controllers.set('objLoader2Worker', controllerObjLoader2Worker);
+        this.controllers.set('objLoader2WorkerCount', controllerObjLoader2WorkerCount);
+        controllerObjLoader2Worker.onChange((value: boolean) => {
+            this.app.taskObjLoader2Worker.use = value;
+            this.flipElement(controllerObjLoader2WorkerCount, value);
         });
-        controllerTmOBJLoader2ModuleCount.onChange((value: number) => {
-            this.app.taskDescriptions.get('tmOBJLoader2Module')!.workerCount = value;
-        });
-
-        const controllerTmOBJLoader2Standard = gui.add(this, 'tmOBJLoader2Standard').name('OBJLoader2Parser Standard');
-        const controllerTmOBJLoader2StandardCount = gui.add(this, 'tmOBJLoader2StandardCount', 1, 32).step(1).name('Worker Count');
-        this.controllers.set('tmOBJLoader2Standard', controllerTmOBJLoader2Standard);
-        this.controllers.set('tmOBJLoader2StandardCount', controllerTmOBJLoader2StandardCount);
-        controllerTmOBJLoader2Standard.onChange((value: boolean) => {
-            this.app.taskDescriptions.get('tmOBJLoader2Standard')!.use = value;
-            this.flipElement(controllerTmOBJLoader2StandardCount, value);
-        });
-        controllerTmOBJLoader2StandardCount.onChange((value: number) => {
-            this.app.taskDescriptions.get('tmOBJLoader2Standard')!.workerCount = value;
+        controllerObjLoader2WorkerCount.onChange((value: number) => {
+            this.app.taskObjLoader2Worker.workerCount = value;
         });
 
         const controllerOverallExecutionCount = gui.add(this, 'overallExecutionCount', 1000, 10000000).step(1000).name('Overall Execution Count');
@@ -767,35 +735,29 @@ class GUIControls {
     }
 
     resetContent() {
-        let taskDescr = this.app.taskDescriptions.get('simpleBlobWorker')!;
+        let taskDescr = this.app.taskSimpleBlobWorker;
         this.simpleBlobWorker = taskDescr.use;
         this.simpleBlobWorkerCount = taskDescr.workerCount;
-        this.resetSingleControl(this.controllers.get('simpleBlobWorker')!, taskDescr.use);
+        this.resetSingleControl(this.controllers.get('simpleBlobWorker')!, true);
         this.resetSingleControl(this.controllers.get('simpleBlobWorkerCount')!, taskDescr.use);
 
-        taskDescr = this.app.taskDescriptions.get('infiniteWorkerInternalGeometry')!;
+        taskDescr = this.app.taskInfiniteWorkerInternalGeometry;
         this.infiniteWorkerInternalGeometry = taskDescr.use;
         this.infiniteWorkerInternalGeometryCount = taskDescr.workerCount;
-        this.resetSingleControl(this.controllers.get('infiniteWorkerInternalGeometry')!, taskDescr.use);
-        this.resetSingleControl(this.controllers.get('infiniteWorkerExternalGeometryCount')!, taskDescr.use);
+        this.resetSingleControl(this.controllers.get('infiniteWorkerInternalGeometry')!, true);
+        this.resetSingleControl(this.controllers.get('infiniteWorkerInternalGeometryCount')!, taskDescr.use);
 
-        taskDescr = this.app.taskDescriptions.get('infiniteWorkerExternalGeometry')!;
+        taskDescr = this.app.taskInfiniteWorkerExternalGeometry;
         this.infiniteWorkerExternalGeometry = taskDescr.use;
         this.infiniteWorkerExternalGeometryCount = taskDescr.workerCount;
-        this.resetSingleControl(this.controllers.get('infiniteWorkerExternalGeometry')!, taskDescr.use);
+        this.resetSingleControl(this.controllers.get('infiniteWorkerExternalGeometry')!, true);
         this.resetSingleControl(this.controllers.get('infiniteWorkerExternalGeometryCount')!, taskDescr.use);
 
-        taskDescr = this.app.taskDescriptions.get('tmOBJLoader2Module')!;
-        this.tmOBJLoader2Module = taskDescr.use;
-        this.tmOBJLoader2ModuleCount = taskDescr.workerCount;
-        this.resetSingleControl(this.controllers.get('tmOBJLoader2Module')!, taskDescr.use);
-        this.resetSingleControl(this.controllers.get('tmOBJLoader2ModuleCount')!, taskDescr.use);
-
-        taskDescr = this.app.taskDescriptions.get('tmOBJLoader2Standard')!;
-        this.tmOBJLoader2Standard = taskDescr.use;
-        this.tmOBJLoader2StandardCount = taskDescr.workerCount;
-        this.resetSingleControl(this.controllers.get('tmOBJLoader2Standard')!, taskDescr.use);
-        this.resetSingleControl(this.controllers.get('tmOBJLoader2StandardCount')!, taskDescr.use);
+        taskDescr = this.app.taskObjLoader2Worker;
+        this.objLoader2Worker = taskDescr.use;
+        this.objLoader2WorkerCount = taskDescr.workerCount;
+        this.resetSingleControl(this.controllers.get('objLoader2Worker')!, true);
+        this.resetSingleControl(this.controllers.get('objLoader2WorkerCount')!, taskDescr.use);
 
         this.overallExecutionCount = this.app.overallExecutionCount;
         this.resetSingleControl(this.controllers.get('overallExecutionCount')!, true);
