@@ -1,16 +1,16 @@
+import { MaterialUtils } from './MaterialUtils.js';
 import {
     MeshStandardMaterial,
     LineBasicMaterial,
     PointsMaterial,
     Material
 } from 'three';
-import { MaterialUtils } from './MaterialUtils.js';
 
 /**
  * Helper class around an object storing materials by name.
  * Optionally, create and store default materials.
  */
-class MaterialStore {
+export class MaterialStore {
 
     private materials: Map<string, Material>;
 
@@ -90,5 +90,3 @@ class MaterialStore {
     }
 
 }
-
-export { MaterialStore };

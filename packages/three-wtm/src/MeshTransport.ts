@@ -1,7 +1,22 @@
-import { Box3, BufferAttribute, BufferGeometry, InterleavedBufferAttribute, Mesh, Sphere } from 'three';
-import { PayloadType } from './WorkerTaskManager';
-import { DataTransportPayload, DataTransportPayloadUtils } from './DataTransport';
-import { MaterialsTransportPayload, MaterialsTransportPayloadUtils } from './MaterialsTransport';
+import {
+    PayloadType
+} from 'wtd';
+import {
+    DataTransportPayload,
+    DataTransportPayloadUtils
+} from 'wtd';
+import {
+    MaterialsTransportPayload,
+    MaterialsTransportPayloadUtils
+} from './MaterialsTransport';
+import {
+    Box3,
+    BufferAttribute,
+    BufferGeometry,
+    InterleavedBufferAttribute,
+    Mesh,
+    Sphere
+} from 'three';
 
 export type MeshTransportPayloadType = PayloadType & {
     geometryType: 0 | 1 | 2;

@@ -1,4 +1,4 @@
-import { PayloadType } from './WorkerTaskManager';
+import { PayloadType } from './WorkerTask';
 
 type DataTransportPayloadType = PayloadType & {
     buffers?: Map<string, ArrayBufferLike>;

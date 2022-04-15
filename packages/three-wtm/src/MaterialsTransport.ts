@@ -1,7 +1,17 @@
-import { Material, MaterialLoader, Texture } from 'three';
-import { MaterialCloneInstructions, MaterialUtils } from './MaterialUtils';
-import { PayloadType } from './WorkerTaskManager';
-import { DataTransportPayload, DataTransportPayloadUtils } from './DataTransport';
+import { PayloadType } from 'wtd';
+import {
+    DataTransportPayload,
+    DataTransportPayloadUtils
+} from 'wtd';
+import {
+    MaterialCloneInstructions,
+    MaterialUtils
+} from './MaterialUtils';
+import {
+    Material,
+    MaterialLoader,
+    Texture
+} from 'three';
 
 export type MaterialsTransportPayloadType = PayloadType & {
     materials: Map<string, Material>;

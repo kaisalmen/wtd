@@ -4,17 +4,19 @@ import {
     MeshPhongMaterial
 } from 'three';
 import {
+    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskDirectorWorker,
+    PayloadType
+} from 'wtd';
+import {
     MaterialUtils,
     MeshTransportPayload,
     MaterialsTransportPayload,
     MaterialsTransportPayloadUtils,
     MeshTransportPayloadUtils,
-    WorkerTaskManagerDefaultWorker,
-    WorkerTaskManagerWorker,
-    PayloadType
 } from 'three-wtm';
 
-class InfiniteWorkerInternalGeometry extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
+class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     init(payload: PayloadType) {
         payload.cmd = 'initComplete';

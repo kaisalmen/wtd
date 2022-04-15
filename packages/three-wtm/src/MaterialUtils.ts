@@ -1,6 +1,6 @@
 import { Material } from 'three';
 
-type MaterialCloneInstructions = {
+export type MaterialCloneInstructions = {
     materialNameOrg: string,
     materialProperties: {
         name: string,
@@ -12,7 +12,7 @@ type MaterialCloneInstructions = {
 /**
  * Static functions useful in the context of handling materials.
  */
-class MaterialUtils {
+export class MaterialUtils {
 
     /**
      * Adds the provided material to the provided materials object if the material does not exists.
@@ -89,5 +89,3 @@ class MaterialUtils {
     }
 
 }
-
-export { MaterialUtils, MaterialCloneInstructions };

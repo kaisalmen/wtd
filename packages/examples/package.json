@@ -18,7 +18,8 @@
     "serve": "tsc && vite preview"
   },
   "dependencies": {
-    "three-wtm": "../packages/three-wtm/index.js",
+    "wtd": "../packages/wtd",
+    "three-wtm": "../packages/three-wtm",
     "wwobjloader2": "../../../WWOBJLoader/packages/objloader2",
     "lil-gui": "^0.16.1"
   }

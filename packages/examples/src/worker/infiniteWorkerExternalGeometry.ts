@@ -3,15 +3,17 @@ import {
 } from 'three';
 import {
     DataTransportPayload,
+    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskDirectorWorker
+} from 'wtd';
+import {
     MeshTransportPayload,
     MeshTransportPayloadUtils,
-    WorkerTaskManagerDefaultWorker,
-    WorkerTaskManagerWorker
 } from 'three-wtm';
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class InfiniteWorkerExternalGeometry extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
+class InfiniteWorkerExternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     private localData = {
         initPayload: undefined as MeshTransportPayload | undefined

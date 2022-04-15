@@ -3,10 +3,12 @@ import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
 import {
-    WorkerTaskManager,
+    WorkerTaskDirector,
     PayloadType,
-    MeshTransportPayload,
     DataTransportPayload,
+} from 'wtd';
+import {
+    MeshTransportPayload,
     MeshTransportPayloadUtils,
     MaterialsTransportPayloadUtils,
     MaterialStore,
@@ -22,7 +24,7 @@ export type CameraDefaults = {
 };
 
 /**
- * The aim of this example is to show two possible ways how to use the {@link WorkerTaskManager}:
+ * The aim of this example is to show two possible ways how to use the {@link WorkerTaskDirector}:
  * - Worker defined inline
  * - Wrapper around OBJLoader, so it can be executed as worker
  *
@@ -30,7 +32,7 @@ export type CameraDefaults = {
  * in a real-world loading scenario, but it is very helpful to demonstrate that workers executed in
  * parallel to main utilizes the CPU.
  */
-class WorkerTaskManagerExample {
+class WorkerTaskDirectorExample {
 
     private renderer: THREE.WebGLRenderer;
     private canvas: HTMLElement;
@@ -45,7 +47,7 @@ class WorkerTaskManagerExample {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(8).setVerbose(true);
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector(8).setVerbose(true);
 
     private objectsUsed: Map<number, THREE.Vector3> = new Map();
     private tasksToUse: PayloadType[] = [];
@@ -117,24 +119,24 @@ class WorkerTaskManagerExample {
         this.initTasks();
     }
 
-    /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
+    /** Registers both workers as tasks at the {@link WorkerTaskDirector} and initializes them.  */
     private async initTasks() {
         console.time('Init tasks');
         const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
         const helloWorldWorker = new DataTransportPayload('init', 0);
         helloWorldWorker.name = 'HelloWorldWorker';
-        this.workerTaskManager.registerTask(helloWorldWorker.name, {
+        this.workerTaskDirector.registerTask(helloWorldWorker.name, {
             module: true,
             blob: false,
             url: new URL('../worker/helloWorldWorkerModule', import.meta.url)
         });
         this.tasksToUse.push(helloWorldWorker);
-        awaiting.push(this.workerTaskManager.initTaskType(helloWorldWorker.name, helloWorldWorker));
+        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldWorker.name, helloWorldWorker));
 
         const objLoaderWorker = new MaterialsTransportPayload('init', 0);
         objLoaderWorker.name = 'OBJLoaderdWorker';
         objLoaderWorker.params = { filename: '../models/obj/female02/female02_vertex_colors.obj' };
-        this.workerTaskManager.registerTask(objLoaderWorker.name, {
+        this.workerTaskDirector.registerTask(objLoaderWorker.name, {
             module: true,
             blob: false,
             url: new URL('../worker/OBJLoaderWorker', import.meta.url)
@@ -159,7 +161,7 @@ class WorkerTaskManagerExample {
                 objLoaderWorker.materials = this.materialStore.getMaterials();
                 MaterialsTransportPayloadUtils.cleanMaterials(objLoaderWorker);
                 MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoaderWorker, false);
-                await this.workerTaskManager.initTaskType(objLoaderWorker.name, objLoaderWorker)
+                await this.workerTaskDirector.initTaskType(objLoaderWorker.name, objLoaderWorker)
                     .then(() => {
                         console.timeEnd('Init tasks');
                         this.executeTasks();
@@ -167,7 +169,7 @@ class WorkerTaskManagerExample {
             });
     }
 
-    /** Once all tasks are initialized a 1024 tasks are enqueued for execution by WorkerTaskManager. */
+    /** Once all tasks are initialized a 1024 tasks are enqueued for execution by WorkerTaskDirector. */
     private async executeTasks() {
         if (this.tasksToUse.length === 0) throw new Error('No Tasks have been selected. Aborting...');
 
@@ -181,7 +183,7 @@ class WorkerTaskManagerExample {
             const payload = new DataTransportPayload('execute', globalCount, `${payloadType.name}_${globalCount}`);
             payload.params = payloadType.params;
 
-            const voidPromise = this.workerTaskManager.enqueueWorkerExecutionPlan({
+            const voidPromise = this.workerTaskDirector.enqueueWorkerExecutionPlan({
                 taskTypeName: payloadType.name,
                 payload: payload,
                 onComplete: (e: unknown) => { this.processMessage(e as PayloadType); },
@@ -198,12 +200,12 @@ class WorkerTaskManagerExample {
         await Promise.all(executions).then(() => {
             console.timeEnd('Execute tasks');
             console.log('All worker executions have been completed');
-            this.workerTaskManager.dispose();
+            this.workerTaskDirector.dispose();
         });
     }
 
     /**
-     * This method is invoked when {@link WorkerTaskManager} received a message from a worker.
+     * This method is invoked when {@link WorkerTaskDirector} received a message from a worker.
      * @param {object} payload Message received from worker
      * @private
      */
@@ -261,7 +263,7 @@ class WorkerTaskManagerExample {
     }
 }
 
-const app = new WorkerTaskManagerExample(document.getElementById('example'));
+const app = new WorkerTaskDirectorExample(document.getElementById('example'));
 
 window.addEventListener('resize', () => app.resizeDisplayGL(), false);
 

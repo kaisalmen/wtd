@@ -1,7 +1,14 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, MeshTransportPayload, MeshTransportPayloadUtils, DataTransportPayload } from 'three-wtm';
+import {
+    WorkerTaskDirector,
+    DataTransportPayload
+} from 'wtd';
+import {
+    MeshTransportPayload,
+    MeshTransportPayloadUtils,
+} from 'three-wtm';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -14,7 +21,7 @@ export type CameraDefaults = {
 /**
  * Hello World example showing standard and module worker using three
  */
-class WorkerTaskManagerHelloWorldExample {
+class WorkerTaskDirectorHelloWorldExample {
 
     private renderer: THREE.WebGLRenderer;
     private canvas: HTMLElement;
@@ -29,7 +36,7 @@ class WorkerTaskManagerHelloWorldExample {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(1).setVerbose(true);
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector(1).setVerbose(true);
 
     constructor(elementToBindTo: HTMLElement | null) {
         if (elementToBindTo === null) {
@@ -73,22 +80,22 @@ class WorkerTaskManagerHelloWorldExample {
         });
     }
 
-    /** Registers both workers as tasks at the {@link WorkerTaskManager} and initializes them.  */
+    /** Registers both workers as tasks at the {@link WorkerTaskDirector} and initializes them.  */
     private initTasks(workerStandardPC: DataTransportPayload, workerModulePC: DataTransportPayload) {
         const awaitInit = [];
-        this.workerTaskManager.registerTask(workerStandardPC.name, {
+        this.workerTaskDirector.registerTask(workerStandardPC.name, {
             module: true,
             blob: false,
             url: new URL('../../dist/helloWorldWorkerStandard', import.meta.url)
         });
-        awaitInit.push(this.workerTaskManager.initTaskType(workerStandardPC.name, workerStandardPC));
+        awaitInit.push(this.workerTaskDirector.initTaskType(workerStandardPC.name, workerStandardPC));
 
-        this.workerTaskManager.registerTask(workerModulePC.name, {
+        this.workerTaskDirector.registerTask(workerModulePC.name, {
             module: true,
             blob: false,
             url: new URL('../worker/helloWorldWorkerModule', import.meta.url)
         });
-        awaitInit.push(this.workerTaskManager.initTaskType(workerModulePC.name, workerModulePC));
+        awaitInit.push(this.workerTaskDirector.initTaskType(workerModulePC.name, workerModulePC));
 
         return awaitInit;
     }
@@ -96,13 +103,13 @@ class WorkerTaskManagerHelloWorldExample {
     private async executeTasks(workerStandardPC: DataTransportPayload, workerModulePC: DataTransportPayload) {
         console.time('Execute tasks');
         const awaitExec = [];
-        awaitExec.push(this.workerTaskManager.enqueueWorkerExecutionPlan({
+        awaitExec.push(this.workerTaskDirector.enqueueWorkerExecutionPlan({
             taskTypeName: workerStandardPC.name,
             payload: workerStandardPC,
             onComplete: (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 }); }
         }));
 
-        awaitExec.push(this.workerTaskManager.enqueueForExecution(workerModulePC.name, workerModulePC,
+        awaitExec.push(this.workerTaskDirector.enqueueForExecution(workerModulePC.name, workerModulePC,
             (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 100, y: 0, z: 0 }); }
         ));
 
@@ -113,7 +120,7 @@ class WorkerTaskManagerHelloWorldExample {
     }
 
     /**
-     * This method is invoked when {@link WorkerTaskManager} received a message from a worker.
+     * This method is invoked when {@link WorkerTaskDirector} received a message from a worker.
      * @param {object} payload Message received from worker
      * @private
      */
@@ -170,7 +177,7 @@ class WorkerTaskManagerHelloWorldExample {
 
 }
 
-const app = new WorkerTaskManagerHelloWorldExample(document.getElementById('example'));
+const app = new WorkerTaskDirectorHelloWorldExample(document.getElementById('example'));
 
 window.addEventListener('resize', () => app.resizeDisplayGL(), false);
 

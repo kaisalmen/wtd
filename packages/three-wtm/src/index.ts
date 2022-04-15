@@ -1,21 +1,10 @@
 import {
-    WorkerTypeDefinition,
-    WorkerExecutionPlan,
-    WorkerTaskManager,
-    PayloadType,
-    WorkerTaskManagerWorker,
-    WorkerTaskManagerDefaultWorker
-} from './WorkerTaskManager';
-import {
     MaterialUtils,
     MaterialCloneInstructions
 } from './MaterialUtils';
-import { MaterialStore } from './MaterialStore';
 import {
-    DataTransportPayload,
-    DataTransportPayloadUtils,
-    ObjectManipulator
-} from './DataTransport';
+    MaterialStore
+} from './MaterialStore';
 import {
     MaterialsTransportPayloadType,
     MaterialsTransportPayload,
@@ -28,15 +17,6 @@ import {
 } from './MeshTransport';
 
 export {
-    WorkerTaskManager,
-    WorkerTypeDefinition,
-    WorkerExecutionPlan,
-    PayloadType,
-    WorkerTaskManagerWorker,
-    WorkerTaskManagerDefaultWorker,
-    DataTransportPayload,
-    DataTransportPayloadUtils,
-    ObjectManipulator,
     MaterialUtils,
     MaterialCloneInstructions,
     MaterialStore,

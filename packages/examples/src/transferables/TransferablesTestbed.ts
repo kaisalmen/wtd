@@ -1,7 +1,15 @@
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
-import { WorkerTaskManager, PayloadType, MeshTransportPayload, DataTransportPayload, MeshTransportPayloadUtils } from 'three-wtm';
+import {
+    DataTransportPayload,
+    PayloadType,
+    WorkerTaskDirector
+} from 'wtd';
+import {
+    MeshTransportPayload,
+    MeshTransportPayloadUtils
+} from 'three-wtm';
 
 type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -35,7 +43,7 @@ class TransferablesTestbed {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager(1).setVerbose(true);
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector(1).setVerbose(true);
     private tasks: ExampleTask[] = [];
 
     constructor(elementToBindTo: HTMLElement | null) {
@@ -154,7 +162,7 @@ class TransferablesTestbed {
     }
 
     /**
-     * Registers any selected task at the {@link WorkerTaskManager} and initializes them.
+     * Registers any selected task at the {@link WorkerTaskDirector} and initializes them.
      *
      * @return {Promise<any>}
      */
@@ -167,7 +175,7 @@ class TransferablesTestbed {
     }
 
     private initTask(task: ExampleTask) {
-        this.workerTaskManager.registerTask(task.name, {
+        this.workerTaskDirector.registerTask(task.name, {
             module: true,
             blob: false,
             url: task.moduleURL
@@ -179,11 +187,11 @@ class TransferablesTestbed {
             MeshTransportPayloadUtils.setBufferGeometry(payloadToSend, torus, 0);
 
             const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
-            return this.workerTaskManager.initTaskType(task.name, packed.payload, packed.transferables);
+            return this.workerTaskDirector.initTaskType(task.name, packed.payload, packed.transferables);
         }
         else {
             const payload = new DataTransportPayload('init', task.id, task.name);
-            return this.workerTaskManager.initTaskType(task.name, payload);
+            return this.workerTaskDirector.initTaskType(task.name, payload);
         }
     }
 
@@ -207,7 +215,7 @@ class TransferablesTestbed {
             name: task.name,
             segments: task.segments
         };
-        return this.workerTaskManager.enqueueWorkerExecutionPlan({
+        return this.workerTaskDirector.enqueueWorkerExecutionPlan({
             payload: payload,
             taskTypeName: task.name,
             onComplete: (e: unknown) => {

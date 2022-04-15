@@ -1,9 +1,18 @@
-import { DataTransportPayload, DataTransportPayloadUtils, MeshTransportPayload, MeshTransportPayloadUtils, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
 import { BufferGeometry } from 'three';
+import {
+    WorkerTaskDirectorWorker,
+    WorkerTaskDirectorDefaultWorker,
+    DataTransportPayload,
+    DataTransportPayloadUtils
+} from 'wtd';
+import {
+    MeshTransportPayload,
+    MeshTransportPayloadUtils
+} from 'three-wtm';
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class TransferableWorkerTest3 extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
+class TransferableWorkerTest3 extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     private context = {
         initPayload: undefined as MeshTransportPayload | undefined

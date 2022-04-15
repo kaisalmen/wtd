@@ -4,16 +4,21 @@ import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
-import { Controller, GUI } from 'lil-gui';
 import {
-    WorkerTypeDefinition,
-    WorkerTaskManager,
+    Controller,
+    GUI
+} from 'lil-gui';
+import {
+    WorkerTask,
+    WorkerTaskDirector,
+    PayloadType,
     DataTransportPayload,
+} from 'wtd';
+import {
     MaterialStore,
     MeshTransportPayload,
     MeshTransportPayloadUtils,
     MaterialsTransportPayloadUtils,
-    PayloadType,
     MaterialsTransportPayload
 } from 'three-wtm';
 
@@ -41,7 +46,7 @@ type TaskDescription = {
 };
 
 /**
- * The aim of this example is to show all possible ways how to use the {@link WorkerTaskManager}:
+ * The aim of this example is to show all possible ways how to use the {@link WorkerTaskDirector}:
  * - Standard Workers with dependency loading
  * - Module Workers with and without additional dependencies
  * - It also allows to use OBJLoader in wrapper (tmOBJLoader.js with and without modules.
@@ -74,39 +79,39 @@ class PotentiallyInfiniteExample {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskManager: WorkerTaskManager = new WorkerTaskManager();
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector();
 
-    // configure all task that shall be usable on register to the WorkerTaskManager
+    // configure all task that shall be usable on register to the WorkerTaskDirector
     taskSimpleBlobWorker = {
         id: 0,
         name: 'simpleBlobWorker',
-        use: false,
+        use: true,
         module: true,
         blob: true,
-        workerUrl: WorkerTypeDefinition.createWorkerBlob([`${SimpleBlobWorker.toString()}
+        workerUrl: WorkerTask.createWorkerBlob([`${SimpleBlobWorker.toString()}
 
         worker = new SimpleBlobWorker();
         self.onmessage = message => worker.comRouting(message);
         `]),
-        workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
+        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions()
     } as TaskDescription;
     taskInfiniteWorkerInternalGeometry = {
         id: 1,
         name: 'infiniteWorkerInternalGeometry',
-        use: false,
+        use: true,
         module: true,
         blob: false,
         workerUrl: new URL('../worker/infiniteWorkerInternalGeometry', import.meta.url),
-        workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
+        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions()
     } as TaskDescription;
     taskInfiniteWorkerExternalGeometry = {
         id: 2,
         name: 'infiniteWorkerExternalGeometry',
-        use: false,
+        use: true,
         module: true,
         blob: false,
         workerUrl: new URL('../worker/infiniteWorkerExternalGeometry', import.meta.url),
-        workerCount: this.workerTaskManager.getDefaultMaxParallelExecutions()
+        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions()
     } as TaskDescription;
     taskObjLoader2Worker = {
         id: 3,
@@ -116,7 +121,7 @@ class PotentiallyInfiniteExample {
         module: true,
         blob: false,
         workerUrl: new URL('../worker/imported/OBJLoader2Worker.js', import.meta.url),
-        workerCount: 1,
+        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions(),
         filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
         filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),
         materialStore: new MaterialStore(true)
@@ -186,8 +191,8 @@ class PotentiallyInfiniteExample {
     }
 
     resetAppContext() {
-        this.workerTaskManager = new WorkerTaskManager();
-        this.workerTaskManager.setVerbose(false);
+        this.workerTaskDirector = new WorkerTaskDirector();
+        this.workerTaskDirector.setVerbose(false);
 
         this.tasksToUse = [];
         this.executions = [];
@@ -253,7 +258,7 @@ class PotentiallyInfiniteExample {
     }
 
     /**
-     * Registers any selected task at the {@link WorkerTaskManager} and initializes them.
+     * Registers any selected task at the {@link WorkerTaskDirector} and initializes them.
      * The initialization varies. Some need task only pass dummy params others need
      * to init and send buffers to the workers
      *
@@ -267,19 +272,19 @@ class PotentiallyInfiniteExample {
         let taskDescr = this.taskSimpleBlobWorker;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskManager.registerTask(taskDescr.name, {
+            this.workerTaskDirector.registerTask(taskDescr.name, {
                 module: taskDescr.module,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
             const payload = new DataTransportPayload('init', taskDescr.id, taskDescr.name);
-            awaiting.push(this.workerTaskManager.initTaskType(taskDescr.name, payload));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, payload));
         }
 
         taskDescr = this.taskInfiniteWorkerInternalGeometry;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskManager.registerTask(taskDescr.name, {
+            this.workerTaskDirector.registerTask(taskDescr.name, {
                 module: taskDescr.module,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
@@ -289,13 +294,13 @@ class PotentiallyInfiniteExample {
             payload.params = {
                 param1: 'param1value'
             };
-            awaiting.push(this.workerTaskManager.initTaskType(taskDescr.name, payload));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, payload));
         }
 
         taskDescr = this.taskInfiniteWorkerExternalGeometry;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskManager.registerTask(taskDescr.name, {
+            this.workerTaskDirector.registerTask(taskDescr.name, {
                 module: taskDescr.module,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
@@ -306,13 +311,13 @@ class PotentiallyInfiniteExample {
             const payloadToSend = new MeshTransportPayload('init', taskDescr.id, taskDescr.name);
             MeshTransportPayloadUtils.setBufferGeometry(payloadToSend, torus, 0);
             const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
-            awaiting.push(this.workerTaskManager.initTaskType(taskDescr.name, packed.payload, packed.transferables));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, packed.payload, packed.transferables));
         }
 
         taskDescr = this.taskObjLoader2Worker;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskManager.registerTask(taskDescr.name, {
+            this.workerTaskDirector.registerTask(taskDescr.name, {
                 module: taskDescr.module,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
@@ -344,7 +349,7 @@ class PotentiallyInfiniteExample {
                     objLoader2Payload.materials = this.taskObjLoader2Worker.materialStore?.getMaterials() as Map<string, THREE.Material>;
                     MaterialsTransportPayloadUtils.cleanMaterials(objLoader2Payload);
                     MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoader2Payload, false);
-                    await this.workerTaskManager.initTaskType(objLoader2Payload.name, objLoader2Payload)
+                    await this.workerTaskDirector.initTaskType(objLoader2Payload.name, objLoader2Payload)
                         .then(() => {
                             console.timeEnd('All tasks have been initialized');
                             this.executeWorkers();
@@ -386,7 +391,7 @@ class PotentiallyInfiniteExample {
                 tb.params = {
                     modelName: taskDescr.name
                 };
-                const promise = this.workerTaskManager.enqueueForExecution(taskDescr.name, tb,
+                const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, tb,
                     data => this.processMessage(taskDescr, data),
                     data => this.processMessage(taskDescr, data));
                 this.executions.push(promise);
@@ -398,7 +403,7 @@ class PotentiallyInfiniteExample {
                 console.timeEnd('Completed ' + (this.maxPerLoop + j * this.maxPerLoop));
             });
         }
-        this.workerTaskManager.dispose();
+        this.workerTaskDirector.dispose();
         console.timeEnd('start');
     }
 
@@ -421,7 +426,7 @@ class PotentiallyInfiniteExample {
     }
 
     /**
-     * This method is invoked when {@link WorkerTaskManager} received a message from a worker.
+     * This method is invoked when {@link WorkerTaskDirector} received a message from a worker.
      * @param {object} taskDescr
      * @param {object} payload Message received from worker
      * @private

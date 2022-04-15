@@ -1,9 +1,17 @@
 import { SphereBufferGeometry } from 'three';
-import { WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker, PayloadType, MeshTransportPayloadUtils, MeshTransportPayload } from 'three-wtm';
+import {
+    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskDirectorWorker,
+    PayloadType,
+} from 'wtd';
+import {
+    MeshTransportPayloadUtils,
+    MeshTransportPayload
+} from 'three-wtm';
 
 declare const self: DedicatedWorkerGlobalScope;
 
-export class HelloWorldWorker extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
+export class HelloWorldWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     init(payload: PayloadType) {
         console.log(`HelloWorldWorker#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);

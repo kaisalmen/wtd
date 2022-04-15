@@ -37,6 +37,7 @@
     "shx": "^0.3.4"
   },
   "workspaces": [
+    "packages/wtd",
     "packages/three-wtm",
     "packages/examples"
   ]

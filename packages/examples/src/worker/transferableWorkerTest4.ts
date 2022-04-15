@@ -1,9 +1,17 @@
 import { TorusKnotBufferGeometry } from 'three';
-import { DataTransportPayload, MeshTransportPayload, MeshTransportPayloadUtils, WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker } from 'three-wtm';
+import {
+    DataTransportPayload,
+    WorkerTaskDirectorWorker,
+    WorkerTaskDirectorDefaultWorker
+} from 'wtd';
+import {
+    MeshTransportPayload,
+    MeshTransportPayloadUtils
+} from 'three-wtm';
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class TransferableWorkerTest4 extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
+class TransferableWorkerTest4 extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     init(payload: DataTransportPayload) {
         console.log(`TransferableWorkerTest4#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);

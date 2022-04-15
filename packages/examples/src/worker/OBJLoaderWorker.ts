@@ -1,10 +1,22 @@
 import { Mesh, Material } from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { WorkerTaskManagerDefaultWorker, WorkerTaskManagerWorker, DataTransportPayload, MeshTransportPayloadUtils, DataTransportPayloadUtils, MaterialsTransportPayloadUtils, MaterialsTransportPayload, MaterialUtils, MeshTransportPayload } from 'three-wtm';
+import {
+    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskDirectorWorker,
+    DataTransportPayload,
+    DataTransportPayloadUtils
+} from 'wtd';
+import {
+    MaterialUtils,
+    MeshTransportPayload,
+    MaterialsTransportPayload,
+    MaterialsTransportPayloadUtils,
+    MeshTransportPayloadUtils,
+} from 'three-wtm';
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class OBJLoaderWorker extends WorkerTaskManagerDefaultWorker implements WorkerTaskManagerWorker {
+class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     private localData = {
         objLoader: undefined as OBJLoader | undefined,
@@ -19,7 +31,7 @@ class OBJLoaderWorker extends WorkerTaskManagerDefaultWorker implements WorkerTa
             this.localData.buffer = payload.buffers?.get('modelData');
 
             const materialsTransportPayload = Object.assign(new MaterialsTransportPayload(), payload as MaterialsTransportPayload);
-            MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(materialsTransportPayload, payload as MaterialsTransportPayload);
+            MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(materialsTransportPayload, payload as MaterialsTransportPayload, true);
             this.localData.materials = materialsTransportPayload.materials;
 
             payload.cmd = 'initComplete';
