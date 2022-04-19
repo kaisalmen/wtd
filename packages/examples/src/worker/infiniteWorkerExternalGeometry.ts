@@ -5,11 +5,11 @@ import {
     DataTransportPayload,
     WorkerTaskDirectorDefaultWorker,
     WorkerTaskDirectorWorker
-} from 'wtd';
+} from 'wtd-core';
 import {
     MeshTransportPayload,
     MeshTransportPayloadUtils,
-} from 'three-wtm';
+} from 'wtd-three-ext';
 
 declare const self: DedicatedWorkerGlobalScope;
 

@@ -1,8 +1,8 @@
-import { PayloadType } from 'wtd';
+import { PayloadType } from 'wtd-core';
 import {
     DataTransportPayload,
     DataTransportPayloadUtils
-} from 'wtd';
+} from 'wtd-core';
 import {
     MaterialCloneInstructions,
     MaterialUtils

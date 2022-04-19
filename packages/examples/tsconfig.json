@@ -5,7 +5,12 @@
     "outDir": "dist",
     "declarationDir": "dist"
   },
-  "references": [{"path": "../three-wtm"}],
+  "references": [{
+    "path": "../wtd-core",
+  },
+  {
+    "path": "../wtd-three-ext"
+  }],
   "include": [
     "src/**/*.ts"
   ],

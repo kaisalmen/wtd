@@ -5,11 +5,11 @@ import {
     DataTransportPayload,
     PayloadType,
     WorkerTaskDirector
-} from 'wtd';
+} from 'wtd-core';
 import {
     MeshTransportPayload,
     MeshTransportPayloadUtils
-} from 'three-wtm';
+} from 'wtd-three-ext';
 
 type CameraDefaults = {
     posCamera: THREE.Vector3;

@@ -4,11 +4,11 @@ import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls
 import {
     WorkerTaskDirector,
     DataTransportPayload
-} from 'wtd';
+} from 'wtd-core';
 import {
     MeshTransportPayload,
     MeshTransportPayloadUtils,
-} from 'three-wtm';
+} from 'wtd-three-ext';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;

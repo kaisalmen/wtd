@@ -1,10 +1,10 @@
 import {
     PayloadType
-} from 'wtd';
+} from 'wtd-core';
 import {
     DataTransportPayload,
     DataTransportPayloadUtils
-} from 'wtd';
+} from 'wtd-core';
 import {
     MaterialsTransportPayload,
     MaterialsTransportPayloadUtils

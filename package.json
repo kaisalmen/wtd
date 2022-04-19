@@ -1,5 +1,5 @@
 {
-  "name": "three-wtm-workspace",
+  "name": "wtd-workspace",
   "description": "WorkerTaskManager for three.js",
   "author": {
     "name": "kaisalmen",
@@ -37,8 +37,8 @@
     "shx": "^0.3.4"
   },
   "workspaces": [
-    "packages/wtd",
-    "packages/three-wtm",
+    "packages/wtd-core",
+    "packages/wtd-three-ext",
     "packages/examples"
   ]
 }

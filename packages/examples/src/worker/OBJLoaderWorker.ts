@@ -5,14 +5,14 @@ import {
     WorkerTaskDirectorWorker,
     DataTransportPayload,
     DataTransportPayloadUtils
-} from 'wtd';
+} from 'wtd-core';
 import {
     MaterialUtils,
     MeshTransportPayload,
     MaterialsTransportPayload,
     MaterialsTransportPayloadUtils,
     MeshTransportPayloadUtils,
-} from 'three-wtm';
+} from 'wtd-three-ext';
 
 declare const self: DedicatedWorkerGlobalScope;
 

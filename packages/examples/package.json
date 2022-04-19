@@ -1,10 +1,6 @@
 {
-  "name": "three-wtm-examples",
-  "author": {
-    "name": "kaisalmen",
-    "url": "https://www.kaisalmen.de"
-  },
-  "version": "2.0.0-next.3",
+  "name": "wtd-examples",
+  "version": "2.0.0-beta.0",
   "type": "module",
   "private": "true",
   "scripts": {
@@ -18,9 +14,20 @@
     "serve": "tsc && vite preview"
   },
   "dependencies": {
-    "wtd": "../packages/wtd",
-    "three-wtm": "../packages/three-wtm",
+    "wtd-core": "../packages/wtd-core",
+    "wtd-three-ext": "../packages/wtd-three-ext",
     "wwobjloader2": "../../../WWOBJLoader/packages/objloader2",
     "lil-gui": "^0.16.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kaisalmen/three-wtm",
+    "directory": "packages/three-wtm"
+  },
+  "homepage": "https://github.com/kaisalmen/three-wtm/blob/main/packages/examples/README.md",
+  "bugs": "https://github.com/kaisalmen/three-wtm/issues",
+  "author": {
+    "name": "kaisalmen",
+    "url": "https://www.kaisalmen.de"
   }
 }

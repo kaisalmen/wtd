@@ -7,14 +7,14 @@ import {
     WorkerTaskDirectorDefaultWorker,
     WorkerTaskDirectorWorker,
     PayloadType
-} from 'wtd';
+} from 'wtd-core';
 import {
     MaterialUtils,
     MeshTransportPayload,
     MaterialsTransportPayload,
     MaterialsTransportPayloadUtils,
     MeshTransportPayloadUtils,
-} from 'three-wtm';
+} from 'wtd-three-ext';
 
 class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 

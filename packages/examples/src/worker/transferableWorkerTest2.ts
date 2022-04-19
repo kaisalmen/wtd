@@ -3,7 +3,7 @@ import {
     WorkerTaskDirectorDefaultWorker,
     DataTransportPayload,
     DataTransportPayloadUtils
-} from 'wtd';
+} from 'wtd-core';
 
 declare const self: DedicatedWorkerGlobalScope;
 

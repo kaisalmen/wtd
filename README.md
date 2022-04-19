@@ -1,15 +1,21 @@
-# three-wtm
-**WorkerTaskManager for three.js**
+# three-wtm (Repo name will come soon)
 
-***IMPORTANT: Outdated, needs to be upadted for 2.0.0***
+**Worker Task Director Core Library, Extensions for three.js and examples**
+
+***IMPORTANT: README is currently WIP for v2.0.0 release.***
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
 
 # Overview
-The `WorkerTaskManager` allows to register tasks expressed by an initialization, and an execution function with an optional comRounting function to be run in a web worker. It creates one to a maximum number of workers that can be used for execution. Multiple execution requests can be handled in parallel of the main task, If all workers are currently occupied the requested are enqueued, and the returned promise is fulfilled once a worker becomes available again.
+The Worker Task Director Core Library (`wtd-core`) provides means to register different module workers as different tasks and executing with variying data to a configurably number in parallel. Execution is handled asynchronuously (Promises/await) on the main JavaScript thread and the execution itself is done in parallel in each worker.
+
+Workers require an optional initialization function and an execution function, but the library ensures communication/data flow and transferable handling.
 
 The orginal idea of a "TaskManager" was proposed by in Don McCurdy here: https://github.com/mrdoob/three.js/issues/18234 It evolved via https://github.com/mrdoob/three.js/pull/19650 into this repository.
+With version v2.0.0 the core and the three.js extensions (`wtd-three-ext`) where separated into different npm packages.
+
+***The following content is outdated and needs to be re-written***
 
 ## Features
 

@@ -1,5 +1,5 @@
 {
-  "name": "three-wtm",
+  "name": "wtd-core",
   "version": "2.0.0-beta.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,18 +17,13 @@
   ],
   "scripts": {
     "clean": "shx rm -fr ./dist && shx rm -fr tsconfig.tsbuildinfo",
-    "dev": "vite",
     "doc": "jsdoc -c jsdoc.json",
     "lint": "npx eslint src",
     "compile": "tsc -b",
     "watch": "tsc -w",
-    "build": "npm run clean && npm run compile",
-    "serve": "tsc && vite preview"
+    "build": "npm run clean && npm run compile"
   },
   "dependencies": {
-    "wtd": "../wtd",
-    "three": "^0.139.2",
-    "@types/three": "^0.139.0"
   },
   "devDependencies": {
     "jsdoc": "^3.6.10"
@@ -38,7 +33,7 @@
     "url": "https://github.com/kaisalmen/three-wtm",
     "directory": "packages/three-wtm"
   },
-  "homepage": "https://github.com/kaisalmen/three-wtm/blob/main/packages/three-wtm/README.md",
+  "homepage": "https://github.com/kaisalmen/three-wtm/blob/main/packages/wtd-core/README.md",
   "bugs": "https://github.com/kaisalmen/three-wtm/issues",
   "author": {
     "name": "kaisalmen",
