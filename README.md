@@ -1,4 +1,4 @@
-# three-wtm (Repo name will come soon)
+# three-wtm (Repo name will change soon)
 
 **Worker Task Director Core Library, Extensions for three.js and examples**
 
