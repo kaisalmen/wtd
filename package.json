@@ -22,8 +22,7 @@
     "build:lib": "npm run build --workspace packages/three-wtm",
     "dev": "npm run dev --workspace packages/examples",
     "prerelease": "npm run build && npm run doc",
-    "test": "echo \\\"Error: no libs specified\\\" && exit 1",
-    "prepare": ""
+    "test": "echo \\\"Error: no libs specified\\\" && exit 1"
   },
   "keywords": [],
   "homepage": "https://github.com/kaisalmen/three-wtm#README",
