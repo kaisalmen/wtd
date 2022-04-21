@@ -1,37 +1,32 @@
 # three-wtm (Repo name will change soon)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
+
 **Worker Task Director Core Library, Extensions for three.js and examples**
 
 ***IMPORTANT: README is currently WIP for v2.0.0 release.***
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
-
 # Overview
-The Worker Task Director Core Library (`wtd-core`) provides means to register different module workers as different tasks and executing with variying data to a configurably number in parallel. Execution is handled asynchronuously (Promises/await) on the main JavaScript thread and the execution itself is done in parallel in each worker.
 
-Workers require an optional initialization function and an execution function, but the library ensures communication/data flow and transferable handling.
+The Worker Task Director Core Library [wtd-core](./packages/wtd-core) provides means to use module workers as tasks, instantiate them a configurable number of times and execute them with variying data in parallel. Execution is handled asynchronuously (Promises/await) on the main JavaScript thread and the execution itself is done in parallel in each worker.
 
-The orginal idea of a "TaskManager" was proposed by in Don McCurdy here: https://github.com/mrdoob/three.js/issues/18234 It evolved via https://github.com/mrdoob/three.js/pull/19650 into this repository.
-With version v2.0.0 the core and the three.js extensions (`wtd-three-ext`) where separated into different npm packages.
+Workers require an execution function and an optional initialization function. The library ensures communication between mnain and workers and helps to handle transferables.
 
-***The following content is outdated and needs to be re-written***
+The orginal idea of a "TaskManager" was proposed by in Don McCurdy here [three.js issue 18234](https://github.com/mrdoob/three.js/issues/18234) It evolved via [three.js PR 19650](https://github.com/mrdoob/three.js/pull/19650) into this repository.
+With version v2.0.0 the core library [wtd-core](./packages/wtd-core) and the three.js extensions [wtd-three-ext](./packages/wtd-three-ext) where separated into different npm packages.
 
-## Features
+# Features
 
-- `WorkerTaskManager` supports standard workers:
-  - Code for standard workers can be created from module code on main or just provided as file obeying the standard worker.
-  - exec and init functions can be declared in module and then be packaged in standard worker if needed. I used this to define the worker code once and support both code paths
-  - Loading of dependencies for standard workers is available
-  - Main-Execution fallback is available
-- `WorkerTaskManager` supports module workers:
-  - Dependencies are declared regularly and therefore no extra functionality is needed
-- Code is written in ES6+ notation and uses ES6+ features and class notation is used.
-- `WorkerTaskManager` has an execution queue allowing to queue more task than can be currently handled
-  OBJLoader2
-- `WorkerTaskManager` is used by [wwobjloader2](https://github.com/kaisalmen/WWOBJLoader) and it is potentially added to three.js itself.
-- Example shows [webgl_loader_workertaskmanager.html](public/examples/webgl_loader_workertaskmanager.html) how an existing `OBJLoader` can be wrapped in a worker.
-- Additional utility functions are available allowing to transfer BufferGeometry, Material (meta-information) and Mesh bi-driectionally between Main and workers. All "transferables" shall be treated as such.
+- Package `wtd-core` has no dependencies. Additional functions for [three.js](https://threejs.org/) have been moved to the new package `wtd-three-ext` (***new in 2.0.0***) which requires three as dependency.
+- `WorkerTaskDirector` supports standard and module workers to be loaded via URL. Standard workers can be loaded from a Blob as well. This is generally not supported for module workers.
+- All worker code construction code and minification problem prevention code has been removed. Standard workers can be created/bundled from module workers with `Vite` if a browser without module worker support is a target.
+- Dependency handling is realized via regular module import
+- `WorkerTaskManager` has an execution queue allowing to queue more task than can be currently executed.
+- The worker interface is specified by `WorkerTaskDirectorWorker` and is implemented by default by `WorkerTaskDirectorDefaultWorker`. Extending this class is the easiest way to integrate a worker. (***new in 2.0.0***)
+- The amount of workers that are created for each task can now be configured. This is shown in the [Potentially Infinite Example](./packages/examples/potentially_infinite.html) (***new in 2.0.0***). It feature transfer Mesh and Material (meta-information) bi-driectionally between Main and workers with proper handling of **Transferables**" are treated as such by **.
+- All code has been transform to TypeScript (***new in 2.0.0***)
+- [Vite](https://vitejs.dev/) is used for development and worker bundling / standard worker support (***new in 2.0.0***)
 
 
 # Getting Started
@@ -39,74 +34,63 @@ With version v2.0.0 the core and the three.js extensions (`wtd-three-ext`) where
 There exist three possibilities:
 * Press the `Gitpod` button above and start coding and using the examples directly in the browser
 * Checkout the repository and use `docker-compose up -d` to spin up local snowpack dev server
-* Checkout the repository and run `npm install` and then `npm run dev` to spin up local snowpack dev server
+* Checkout the repository and run `npm install`, `npm run build` and then `npm run dev` to spin up the local Vite dev server
 
-Whatever environment you choose to start [snowpack](https://www.snowpack.dev/) is used to serve the code and the examples using it. With this setup you are able to change the code and examples without invoking an additional bundler. Snowpack ensures all imported npm modules are available if previously installed in local environment (see `npm install`).
+Whatever environment you choose to start [Vite](https://vitejs.dev/) is used to serve the code and the examples using it. With this setup you are able to change the code and examples without invoking an additional bundler. Vite ensures all imported npm modules are available if previously installed in local environment (see `npm install`).
 
-If you run snowpack locally you require a `nodejs` and `npm`. The Gitpod and local docker environment ensure all prerequisites are fulfilled.
+If you run Vite locally you require a `nodejs` and `npm`. The Gitpod and local docker environment ensure all prerequisites are fulfilled.
 
 In any environment the dev server is reachable on port 8080.
 
-## Main Branches
+# Main Branches
 
 Main development takes place on branch [main](https://github.com/kaisalmen/three-wtm/tree/main).
 <br>
-The [stable](https://github.com/kaisalmen/three-wtm/tree/stable) branch contains the release versions.
+The [stable](https://github.com/kaisalmen/three-wtm/tree/stable) branch contains the released versions.
 
-## Docs
-Run `npm run doc` to create the documentation in directory **build/docs**.
+# Examples
 
-## Examples
+There are multiple examples available (listed from simple to complex):
+- [Hello World](./packages/examples/helloworld.html)
+- [Transferables](./packages/examples/transferables.html)
+- [Three.js Example](./packages/examples/threejs.html)
+- [Potentially Infinite Example](./packages/examples/potentially_infinite.html)
 
-This gives you an idead how you can define a standard worker inline and the register it with `WorkerTaskManager`, init and execute it:
+This shall give you an idea how you can use module worker with `WorkerTaskManager` (derived from Hello World example). It is registered, initialized and execute once:
 ```javascript
-const init = function ( context, id, config ) {
-  /* init code ... */
-  context.postMessage( { cmd: "init", id: id } );
-};
+const workerTaskDirector = new WorkerTaskDirector();
 
-const execute = function ( context, id, config ) {
-  /* execution code ... */
-  context.postMessage( { cmd: "execComplete", data: {} } );
+// define input payload used for init and execte
+const workerModulePayload = new DataTransportPayload('init', 0, 'WorkerModule');
+
+// register the module worker
+workerTaskDirector.registerTask(workerModulePayload.name, {
+    module: true,
+    blob: false,
+    url: new URL('helloWorldWorkerModule', import.meta.url)
+});
+
+// init the worker task with the data from workerModulePayload
+workerTaskDirector.initTaskType(workerModulePayload.name, workerStandardPC).then(() => {
+
+    // once the init Promise returns enqueue the execution
+    workerTaskDirector.enqueueWorkerExecutionPlan({
+            taskTypeName: workerStandardPC.name,
+            payload: workerStandardPC,
+            onComplete: (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 }); }
+        }).then(() => {
+            console.log('Worker executed sucessfully.');
+        }).catch(x => console.error(x));
+}).catch(x => console.error(x));
+
+// process the mesh data provided by the worker
+processMessage(payload: MeshTransportPayload, pos: { x: number, y: number, z: number }) {
+    ...
 }
-
-const buildDependencies = function () {
-  return [
-    { url: '/node_modules/three/build/three.min.js' },
-    { code: 'const hello = "Hello World!";' }
-  ]
-}
-
-const taskName = 'InlineWorker';
-this.workerTaskManager.registerTaskTypeStandard(taskName, init, execute, null, false, buildDependencies());
-await this.workerTaskManager.initTaskType(taskName, { name: taskName })
-    .then( () => this.workerTaskManager.enqueueForExecution( taskName, {}, null))
-    .then( data => processData(data) )
-    .catch( e => console.error( e ) );
 ```
 
-This is the same block required for a worker loaded from a URL. The worker code resides in an extra file an contains the required `init` and `execute` functions. If the argument is true, the worker is treated as module worker:
-```javascript
-const taskNameModule = 'ModuleWorker';
-this.workerTaskManager.registerTask('myModuleTask', true, '/examples/worker/helloWorldWorker.js');
-await this.workerTaskManager.initTaskType(taskNameModule, {})
-    .then( () => this.workerTaskManager.enqueueForExecution( taskName, {}, null))
-    .then( data => processData(data) )
-    .catch( e => console.error( e ) );
-
-```
-The examples above are fully specified and used in [wtm_helloworld.html](public/examples/wtm_helloworld.html").
-
-# Bundling
-
-Rollup is used to create the libraries that are contained in the deployed npm package.
-Just run `npm run build`
-
-## Local library test environment
-
-Rollup is also used to create local test environments where the library and uglified library are used by the examples.
-Use `npm run prerelease` to build the libraries and the test environment. Inside both `build/verify` or `build/verifymin` you find a npm package.json and snowpack configuration that allows to serve everything. Run `npm run dev`. The example then use the packages library.
-
+# Docs
+Run `npm run doc` to create the markdown documentation in directory **docs** of each package.
 
 Happy coding!
 

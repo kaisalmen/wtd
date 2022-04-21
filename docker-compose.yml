@@ -13,6 +13,6 @@ services:
         mode: host
     volumes:
       - ./:/home/devbox/workspace/:rw
-    command: ["bash", "-c", ". /home/devbox/.local/bin/env/configureN.sh && npm install && npm run dev"]
+    command: ["bash", "-c", ". /home/devbox/.local/bin/env/configureN.sh && npm install && npm run build && npm run dev"]
     working_dir: /home/devbox/workspace
     container_name: wtmdev

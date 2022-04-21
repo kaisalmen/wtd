@@ -18,8 +18,8 @@
     "README.md"
   ],
   "scripts": {
-    "clean": "shx rm -fr ./dist && shx rm -fr tsconfig.tsbuildinfo",
-    "doc": "jsdoc -c jsdoc.json",
+    "clean": "npx shx rm -fr dist && npx shx rm -fr tsconfig.tsbuildinfo",
+    "doc": "npx shx rm -fr docs && npx typedoc --plugin typedoc-plugin-markdown --out docs src/index.ts",
     "lint": "npx eslint src",
     "compile": "tsc -b",
     "watch": "tsc -w",
@@ -28,7 +28,8 @@
   "dependencies": {
   },
   "devDependencies": {
-    "jsdoc": "^3.6.10"
+    "typedoc": "^0.22.15",
+    "typedoc-plugin-markdown": "^3.12.0"
   },
   "repository": {
     "type": "git",

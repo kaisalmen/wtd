@@ -17,9 +17,9 @@
   "scripts": {
     "clean": "npm run clean --workspaces",
     "lint": "npm run lint --workspaces",
-    "doc": "npm run doc --workspace packages/three-wtm",
+    "doc": "npm run doc --workspaces",
     "build": "npm run build --workspaces",
-    "build:lib": "npm run build --workspace packages/three-wtm",
+    "build:libs": "npm run build --workspace packages/wtd-core && npm run build --workspace packages/wtd-three-ext",
     "dev": "npm run dev --workspace packages/examples",
     "prerelease": "npm run build && npm run doc",
     "test": "echo \\\"Error: no libs specified\\\" && exit 1"

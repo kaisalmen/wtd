@@ -4,8 +4,9 @@
   "type": "module",
   "private": "true",
   "scripts": {
-    "clean": "shx rm -fr ./dist && shx rm -fr tsconfig.tsbuildinfo",
+    "clean": "npx shx rm -fr ./dist && npx shx rm -fr tsconfig.tsbuildinfo",
     "dev": "npm run build:worker && npm run build:obj2worker && vite",
+    "doc": "echo 'docs are not generated for examples'",
     "lint": "npx eslint src",
     "compile": "tsc -b",
     "build:obj2worker": "npx shx mkdir -p ./src/worker/imported && npx shx cp -f ../../node_modules/wwobjloader2/src/worker/OBJLoader2Worker.js ./src/worker/imported",
