@@ -14,8 +14,8 @@
     "serve": "tsc && vite preview"
   },
   "dependencies": {
-    "wtd-core": "../packages/wtd-core",
-    "wtd-three-ext": "../packages/wtd-three-ext",
+    "wtd-core": "../wtd-core",
+    "wtd-three-ext": "../wtd-three-ext",
     "wwobjloader2": "^5.0.0-beta.0",
     "lil-gui": "^0.16.1"
   },
