@@ -1,9 +1,8 @@
-.idea
-
 dist
 node_modules
 docs
+packages/examples/src/worker/imported
+packages/examples/src/worker/volatile
 
 tsconfig.tsbuildinfo
 *.tgz
-packages/examples/src/worker/imported

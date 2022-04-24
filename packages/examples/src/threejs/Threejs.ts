@@ -123,15 +123,15 @@ class WorkerTaskDirectorExample {
     private async initTasks() {
         console.time('Init tasks');
         const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
-        const helloWorldWorker = new DataTransportPayload('init', 0);
-        helloWorldWorker.name = 'HelloWorldWorker';
-        this.workerTaskDirector.registerTask(helloWorldWorker.name, {
+        const helloWorldThreeWorker = new DataTransportPayload('init', 0);
+        helloWorldThreeWorker.name = 'HelloWorldThreeWorker';
+        this.workerTaskDirector.registerTask(helloWorldThreeWorker.name, {
             module: true,
             blob: false,
-            url: new URL('../worker/helloWorldWorkerModule', import.meta.url)
+            url: new URL('../worker/helloWorldThreeWorker', import.meta.url)
         });
-        this.tasksToUse.push(helloWorldWorker);
-        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldWorker.name, helloWorldWorker));
+        this.tasksToUse.push(helloWorldThreeWorker);
+        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldThreeWorker.name, helloWorldThreeWorker));
 
         const objLoaderWorker = new MaterialsTransportPayload('init', 0);
         objLoaderWorker.name = 'OBJLoaderdWorker';

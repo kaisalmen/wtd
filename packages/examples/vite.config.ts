@@ -16,8 +16,10 @@ export default defineConfig({
             ],
             input: {
                 main: path.resolve(__dirname, 'index.html'),
-                helloworld: path.resolve(__dirname, 'helloworld.html'),
+                helloWorld: path.resolve(__dirname, 'helloWorld.html'),
+                helloWorldStandard: path.resolve(__dirname, 'helloWorldStandard.html'),
                 transferables: path.resolve(__dirname, 'transferables.html'),
+                threejs: path.resolve(__dirname, 'threejs.html'),
                 potentiallyInfinite: path.resolve(__dirname, 'potentially_infinite.html')
             },
             plugins: [

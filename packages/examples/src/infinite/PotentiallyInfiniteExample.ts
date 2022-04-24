@@ -120,7 +120,7 @@ class PotentiallyInfiniteExample {
         use: true,
         module: true,
         blob: false,
-        workerUrl: new URL('../worker/imported/OBJLoader2Worker.js', import.meta.url),
+        workerUrl: new URL('../worker/volatile/OBJLoader2Worker.js', import.meta.url),
         workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions(),
         filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
         filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),

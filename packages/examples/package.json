@@ -9,8 +9,8 @@
     "doc": "echo 'docs are not generated for examples'",
     "lint": "npx eslint src",
     "compile": "tsc -b",
-    "build:obj2worker": "npx shx mkdir -p ./src/worker/imported && npx shx cp -f ../../node_modules/wwobjloader2/src/worker/OBJLoader2Worker.js ./src/worker/imported",
-    "build:worker": "npx shx rm -f ./dist/helloWorldWorkerStandard.js && vite -c vite.config.worker.ts build",
+    "build:obj2worker": "npx shx mkdir -p ./src/worker/volatile && npx shx cp -f ../../node_modules/wwobjloader2/src/worker/OBJLoader2Worker.js ./src/worker/volatile",
+    "build:worker": "npx shx mkdir -p ./src/worker/volatile && npx shx rm -f ./src/worker/volatile/helloWorldWorkerStandard.js && vite -c vite.config.worker.ts build",
     "build": "npm run clean && npm run build:worker && npm run build:obj2worker && npm run compile",
     "serve": "tsc && vite preview"
   },

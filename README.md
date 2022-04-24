@@ -54,37 +54,32 @@ There are multiple examples available (listed from simple to complex):
 - [Three.js Example](./packages/examples/threejs.html)
 - [Potentially Infinite Example](./packages/examples/potentially_infinite.html)
 
-This shall give you an idea how you can use module worker with `WorkerTaskManager` (derived from Hello World example). It is registered, initialized and execute once:
+This shall give you an idea how you can use module worker with `WorkerTaskManager` (also see [Hello World Example](./packages/examples/helloworld.html)). It is registered, initialized and execute once:
 ```javascript
-const workerTaskDirector = new WorkerTaskDirector();
-
 // define input payload used for init and execte
-const workerModulePayload = new DataTransportPayload('init', 0, 'WorkerModule');
+const moduleWorkerPayload = new DataTransportPayload('init', 0, 'WorkerModule');
 
 // register the module worker
-workerTaskDirector.registerTask(workerModulePayload.name, {
+this.workerTaskDirector.registerTask(moduleWorkerPayload.name, {
     module: true,
     blob: false,
-    url: new URL('helloWorldWorkerModule', import.meta.url)
+    url: new URL('../worker/helloWorldWorker', import.meta.url)
 });
 
 // init the worker task with the data from workerModulePayload
-workerTaskDirector.initTaskType(workerModulePayload.name, workerStandardPC).then(() => {
-
-    // once the init Promise returns enqueue the execution
-    workerTaskDirector.enqueueWorkerExecutionPlan({
-            taskTypeName: workerStandardPC.name,
-            payload: workerStandardPC,
-            onComplete: (e: unknown) => { this.processMessage(e as MeshTransportPayload, { x: 0, y: 0, z: 0 }); }
-        }).then(() => {
-            console.log('Worker executed sucessfully.');
-        }).catch(x => console.error(x));
-}).catch(x => console.error(x));
-
-// process the mesh data provided by the worker
-processMessage(payload: MeshTransportPayload, pos: { x: number, y: number, z: number }) {
-    ...
-}
+this.workerTaskDirector.initTaskType(moduleWorkerPayload.name, moduleWorkerPayload)
+    .then(() => {
+        // once the init Promise returns enqueue the execution
+        this.workerTaskDirector.enqueueWorkerExecutionPlan({
+            taskTypeName: moduleWorkerPayload.name,
+            payload: moduleWorkerPayload,
+            // decouple result evaluation ...
+            onComplete: (e: unknown) => { console.log('Received final command: ' + (e as PayloadType).cmd); }
+        });
+    }).then(() => {
+        // ... from promise result handling
+        alert(`Worker execution has been completed after ${t1 - t0}ms.`);
+    }).catch((x: unknown) => console.error(x));
 ```
 
 # Docs
