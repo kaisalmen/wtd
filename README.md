@@ -49,7 +49,8 @@ The [stable](https://github.com/kaisalmen/three-wtm/tree/stable) branch contains
 # Examples
 
 There are multiple examples available (listed from simple to complex):
-- [Hello World](./packages/examples/helloworld.html)
+- [Hello World](./packages/examples/helloWorld.html)
+- [Hello World Standard Worker](./packages/examples/helloWorldStandard.html)
 - [Transferables](./packages/examples/transferables.html)
 - [Three.js Example](./packages/examples/threejs.html)
 - [Potentially Infinite Example](./packages/examples/potentially_infinite.html)
