@@ -93,7 +93,7 @@ class PotentiallyInfiniteExample {
         worker = new SimpleBlobWorker();
         self.onmessage = message => worker.comRouting(message);
         `]),
-        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions()
+        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS
     } as TaskDescription;
     taskInfiniteWorkerInternalGeometry = {
         id: 1,
@@ -102,7 +102,7 @@ class PotentiallyInfiniteExample {
         module: true,
         blob: false,
         workerUrl: new URL('../worker/infiniteWorkerInternalGeometry', import.meta.url),
-        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions()
+        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS
     } as TaskDescription;
     taskInfiniteWorkerExternalGeometry = {
         id: 2,
@@ -111,7 +111,7 @@ class PotentiallyInfiniteExample {
         module: true,
         blob: false,
         workerUrl: new URL('../worker/infiniteWorkerExternalGeometry', import.meta.url),
-        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions()
+        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS
     } as TaskDescription;
     taskObjLoader2Worker = {
         id: 3,
@@ -121,7 +121,7 @@ class PotentiallyInfiniteExample {
         module: true,
         blob: false,
         workerUrl: new URL('../worker/volatile/OBJLoader2Worker.js', import.meta.url),
-        workerCount: this.workerTaskDirector.getDefaultMaxParallelExecutions(),
+        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS,
         filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
         filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),
         materialStore: new MaterialStore(true)
@@ -192,7 +192,6 @@ class PotentiallyInfiniteExample {
 
     resetAppContext() {
         this.workerTaskDirector = new WorkerTaskDirector();
-        this.workerTaskDirector.setVerbose(false);
 
         this.tasksToUse = [];
         this.executions = [];

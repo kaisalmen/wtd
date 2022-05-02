@@ -47,7 +47,10 @@ class WorkerTaskDirectorExample {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector(8).setVerbose(true);
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector({
+        defaultMaxParallelExecutions: 8,
+        verbose: true
+    });
 
     private objectsUsed: Map<number, THREE.Vector3> = new Map();
     private tasksToUse: PayloadType[] = [];

@@ -57,30 +57,33 @@ There are multiple examples available (listed from simple to complex):
 
 This shall give you an idea how you can use module worker with `WorkerTaskManager` (also see [Hello World Example](./packages/examples/helloworld.html)). It is registered, initialized and execute once:
 ```javascript
-// define input payload used for init and execte
-const moduleWorkerPayload = new DataTransportPayload('init', 0, 'WorkerModule');
+const taskName = 'WorkerModule';
 
 // register the module worker
-this.workerTaskDirector.registerTask(moduleWorkerPayload.name, {
+this.workerTaskDirector.registerTask(taskName, {
     module: true,
     blob: false,
     url: new URL('../worker/helloWorldWorker', import.meta.url)
 });
 
-// init the worker task with the data from workerModulePayload
-this.workerTaskDirector.initTaskType(moduleWorkerPayload.name, moduleWorkerPayload)
-    .then(() => {
+// init the worker task without any payload (worker init without function invocation on worker)
+this.workerTaskDirector.initTaskType(taskName)
+    .then((x: unknown) => {
         // once the init Promise returns enqueue the execution
+        const moduleWorkerPayload = new DataTransportPayload('execute', 0, taskName);
         this.workerTaskDirector.enqueueWorkerExecutionPlan({
             taskTypeName: moduleWorkerPayload.name,
             payload: moduleWorkerPayload,
             // decouple result evaluation ...
             onComplete: (e: unknown) => { console.log('Received final command: ' + (e as PayloadType).cmd); }
+        }).then((x: unknown) => {
+            // promise result handling
+            alert('Worker execution has been completed');
         });
-    }).then(() => {
-        // ... from promise result handling
-        alert(`Worker execution has been completed after ${t1 - t0}ms.`);
-    }).catch((x: unknown) => console.error(x));
+    }).catch(
+        // error handling
+        (x: unknown) => console.error(x)
+    );
 ```
 
 # Docs

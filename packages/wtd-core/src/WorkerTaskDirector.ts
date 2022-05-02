@@ -10,6 +10,11 @@ type WorkerTaskRuntimeDesc = {
     readonly maxParallelExecutions: number;
 }
 
+type WorkerTaskDirectorConfig = {
+    defaultMaxParallelExecutions: number;
+    verbose: boolean;
+}
+
 /**
  * Register one to many tasks type to the WorkerTaskDirector. Then init and enqueue a worker based execution by passing
  * configuration and buffers. The WorkerTaskDirector allows to execute a maximum number of executions in parallel.
@@ -18,50 +23,27 @@ type WorkerTaskRuntimeDesc = {
  */
 export class WorkerTaskDirector {
 
+    static DEFAULT_MAX_PARALLEL_EXECUTIONS = 4;
+
+    private config: WorkerTaskDirectorConfig = {
+        defaultMaxParallelExecutions: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS,
+        verbose: false
+    };
     private taskTypes: Map<string, WorkerTaskRuntimeDesc>;
-    private verbose: boolean;
-    private defaultMaxParallelExecutions: number;
     private workerExecutionPlans: Map<string, WorkerExecutionPlan[]>;
 
     /**
      * Creates a new WorkerTaskDirector instance.
      *
-     * @param {number} [defaultMaxParallelExecutions] How many workers are allowed to be executed in parallel.
+     * @param {WorkerTaskDirectorConfig} [config] configuration options
      */
-    constructor(defaultMaxParallelExecutions?: number) {
+    constructor(config?: WorkerTaskDirectorConfig) {
+        if (config) {
+            this.config.defaultMaxParallelExecutions = config.defaultMaxParallelExecutions;
+            this.config.verbose = config.verbose === true;
+        }
         this.taskTypes = new Map();
-        this.verbose = false;
-        this.defaultMaxParallelExecutions = defaultMaxParallelExecutions ?? 4;
         this.workerExecutionPlans = new Map();
-    }
-
-    /**
-     * Set if logging should be verbose
-     *
-     * @param {boolean} verbose
-     * @return {WorkerTaskDirector}
-     */
-    setVerbose(verbose: boolean) {
-        this.verbose = verbose;
-        return this;
-    }
-
-    getDefaultMaxParallelExecutions() {
-        return this.defaultMaxParallelExecutions;
-    }
-
-    setDefaultMaxParallelExecutions(defaultMaxParallelExecutions: number) {
-        this.defaultMaxParallelExecutions = defaultMaxParallelExecutions;
-    }
-
-    /**
-     * Returns true if support for the given task type is available.
-     *
-     * @param {string} taskTypeName The task type as string
-     * @return boolean
-     */
-    supportsTaskType(taskTypeName: string) {
-        return this.taskTypes.has(taskTypeName);
     }
 
     /**
@@ -72,16 +54,16 @@ export class WorkerTaskDirector {
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
     registerTask(taskTypeName: string, workerRegistration: WorkerRegistration, maxParallelExecutions?: number) {
-        const allowedToRegister = !this.supportsTaskType(taskTypeName);
+        const allowedToRegister = !this.taskTypes.has(taskTypeName);
         if (allowedToRegister) {
-            maxParallelExecutions = maxParallelExecutions ?? this.defaultMaxParallelExecutions;
+            maxParallelExecutions = maxParallelExecutions ?? this.config.defaultMaxParallelExecutions;
             const workerTaskRuntimeDesc: WorkerTaskRuntimeDesc = {
                 workerStories: new Map(),
                 maxParallelExecutions: maxParallelExecutions
             };
             this.taskTypes.set(taskTypeName, workerTaskRuntimeDesc);
             for (let i = 0; i < maxParallelExecutions; i++) {
-                workerTaskRuntimeDesc.workerStories.set(i, new WorkerTask(taskTypeName, i, workerRegistration, this.verbose));
+                workerTaskRuntimeDesc.workerStories.set(i, new WorkerTask(taskTypeName, i, workerRegistration, this.config.verbose));
             }
         }
         return allowedToRegister;
@@ -91,21 +73,26 @@ export class WorkerTaskDirector {
      * Provides initialization configuration and transferable objects.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {PayloadType} payload Configuration properties as serializable string.
+     * @param {PayloadType} [payload] Configuration properties as serializable string.
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      */
-    async initTaskType(taskTypeName: string, payload: PayloadType, transferables?: Transferable[]) {
+    async initTaskType(taskTypeName: string, payload?: PayloadType, transferables?: Transferable[]) {
         const executions = [];
         const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
         if (workerTaskRuntimeDesc) {
+            this.workerExecutionPlans.set(taskTypeName, []);
             for (const workerTask of workerTaskRuntimeDesc.workerStories.values()) {
                 executions.push(workerTask.initWorker(payload, transferables));
             }
-            this.workerExecutionPlans.set(taskTypeName, []);
         }
         else {
-            executions.push(new Promise((_resolve, reject) => {
+            executions.push(new Promise<void>((_resolve, reject) => {
                 reject();
+            }));
+        }
+        if (executions.length === 0) {
+            executions.push(new Promise<void>((resolve, _reject) => {
+                resolve();
             }));
         }
         return Promise.all(executions);
@@ -153,7 +140,7 @@ export class WorkerTaskDirector {
     private depleteWorkerExecutionPlans(taskTypeName: string) {
         const planForType = this.workerExecutionPlans.get(taskTypeName);
         if (planForType?.length === 0) {
-            if (this.verbose) {
+            if (this.config.verbose) {
                 console.log(`No more WorkerExecutionPlans in the queue for: ${taskTypeName}`);
             }
             return;
@@ -163,8 +150,7 @@ export class WorkerTaskDirector {
             const workerTaskRuntimeDesc = this.taskTypes.get(plan.taskTypeName);
             const workerTask = this.getUnusedWorkerTask(workerTaskRuntimeDesc);
             if (workerTask) {
-                const promiseWorker = workerTask.executeWorker(plan);
-                promiseWorker.then((message: unknown) => {
+                workerTask.executeWorker(plan).then((message: unknown) => {
                     plan.promiseFunctions?.resolve(message);
                     this.depleteWorkerExecutionPlans(taskTypeName);
                 }).catch((e) => {

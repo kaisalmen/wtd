@@ -78,7 +78,7 @@ export class WorkerTask {
         });
     }
 
-    async initWorker(payload: PayloadType, transferables?: Transferable[]) {
+    async initWorker(payload?: PayloadType, transferables?: Transferable[]) {
         return new Promise((resolve, reject) => {
             this.worker = this.createWorker();
             if (this.verbose) {
@@ -89,6 +89,10 @@ export class WorkerTask {
                 reject(new Error('No worker was created before initWorker was called.'));
             }
             else {
+                if (!payload) {
+                    resolve('WorkerTask#initWorker: No Payload provided => No init required');
+                    return;
+                }
                 this.worker.onmessage = message => {
                     if (this.verbose) {
                         console.log(`Init Completed: ${payload.type}: ${message.data.id}`);

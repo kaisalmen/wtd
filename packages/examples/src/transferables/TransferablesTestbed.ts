@@ -43,7 +43,10 @@ class TransferablesTestbed {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector(1).setVerbose(true);
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector({
+        defaultMaxParallelExecutions: 1,
+        verbose: true
+    });
     private tasks: ExampleTask[] = [];
 
     constructor(elementToBindTo: HTMLElement | null) {
