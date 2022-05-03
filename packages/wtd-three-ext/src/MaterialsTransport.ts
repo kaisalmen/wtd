@@ -35,7 +35,7 @@ export class MaterialsTransportPayload extends DataTransportPayload implements M
  */
 export class MaterialsTransportPayloadUtils {
 
-    static packMaterialsTransportPayload(payload: MaterialsTransportPayload, cloneBuffers: boolean): { payload: MaterialsTransportPayloadType, transferables: Transferable[] } {
+    static packMaterialsTransportPayload(payload: MaterialsTransportPayload, cloneBuffers: boolean) {
         const transferables: Transferable[] = [];
         DataTransportPayloadUtils.fillTransferables(payload.buffers.values(), transferables, cloneBuffers);
         payload.materialsJson = MaterialUtils.getMaterialsJSON(payload.materials);

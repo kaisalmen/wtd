@@ -1,8 +1,8 @@
 export type PayloadType = {
-    cmd: string;
-    id: number;
-    name: string | 'unknown';
-    type?: string | 'unknown';
+    cmd?: string;
+    id?: number;
+    name?: string;
+    type?: string;
     workerId?: number;
     // TODO: params should be data
     params?: Record<string, unknown>;

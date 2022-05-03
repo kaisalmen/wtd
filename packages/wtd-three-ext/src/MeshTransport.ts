@@ -32,7 +32,7 @@ export class MeshTransportPayload extends DataTransportPayload implements MeshTr
     geometryType: 0 | 1 | 2 = 0;
     bufferGeometry: BufferGeometry | Record<string, unknown> | undefined;
     meshName: string | undefined;
-    materialsTransportPayload: MaterialsTransportPayload = new MaterialsTransportPayload();
+    materialsTransportPayload: MaterialsTransportPayload = new MaterialsTransportPayload({});
 
 }
 
@@ -65,12 +65,15 @@ export class MeshTransportPayloadUtils {
     static packMeshTransportPayload(payload: MeshTransportPayload, cloneBuffers: boolean): { payload: MeshTransportPayload, transferables: Transferable[] } {
         MeshTransportPayloadUtils.packGeometryBuffers(cloneBuffers, payload.bufferGeometry as BufferGeometry, payload.buffers);
 
-        const transferables: Transferable[] = [];
+        let transferables: Transferable[] = [];
         DataTransportPayloadUtils.fillTransferables(payload.buffers.values(), transferables, cloneBuffers);
 
         if (payload.materialsTransportPayload) {
-            MaterialsTransportPayloadUtils.packMaterialsTransportPayload(payload.materialsTransportPayload, cloneBuffers);
+            const packedMtp = MaterialsTransportPayloadUtils.packMaterialsTransportPayload(payload.materialsTransportPayload, cloneBuffers);
+            payload.materialsTransportPayload = packedMtp.payload;
+            transferables = transferables.concat(packedMtp.transferables);
         }
+
         return {
             payload: payload,
             transferables: transferables
@@ -112,11 +115,11 @@ export class MeshTransportPayloadUtils {
     }
 
     static unpackMeshTransportPayload(payload: MeshTransportPayloadType, cloneBuffers: boolean): MeshTransportPayload {
-        const mtp = Object.assign(new MeshTransportPayload(payload.cmd, payload.id), payload);
+        const mtp = Object.assign(new MeshTransportPayload({}), payload);
         mtp.bufferGeometry = MeshTransportPayloadUtils.reconstructBuffer(cloneBuffers, mtp.bufferGeometry as Record<string, unknown>);
 
         if (payload.materialsTransportPayload) {
-            mtp.materialsTransportPayload = Object.assign(new MaterialsTransportPayload(), payload.materialsTransportPayload);
+            mtp.materialsTransportPayload = Object.assign(new MaterialsTransportPayload({}), payload.materialsTransportPayload);
             MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(mtp.materialsTransportPayload, payload.materialsTransportPayload, cloneBuffers);
         }
         return mtp;

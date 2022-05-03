@@ -21,7 +21,11 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDirectorDefaultWorker imp
 
     init(payload: MeshTransportPayload) {
         this.localData.initPayload = payload;
-        const initAnswer = new DataTransportPayload('initComplete', payload.id, payload.name);
+        const initAnswer = new DataTransportPayload({
+            cmd: 'initComplete',
+            id: payload.id,
+            name: payload.name
+        });
         self.postMessage(initAnswer);
     }
 
@@ -41,7 +45,10 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDirectorDefaultWorker imp
                     vertexArray[i] = vertexArray[i] + 10 * (Math.random() - 0.5);
                 }
 
-                const sender = new MeshTransportPayload('execComplete', payload.id);
+                const sender = new MeshTransportPayload({
+                    cmd: 'execComplete',
+                    id: payload.id
+                });
                 MeshTransportPayloadUtils.setBufferGeometry(sender, geometry, 2);
 
                 const randArray = new Uint8Array(3);

@@ -41,11 +41,14 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker imp
         color.b = randArray[2] / 255;
         const material = new MeshPhongMaterial({ color: color });
 
-        const materialTP = new MaterialsTransportPayload('execComplete', payload.id);
+        const materialTP = new MaterialsTransportPayload({});
         MaterialUtils.addMaterial(materialTP.materials, 'randomColor' + payload.id, material, false, false);
         MaterialsTransportPayloadUtils.cleanMaterials(materialTP);
 
-        const meshTP = new MeshTransportPayload('execComplete', payload.id);
+        const meshTP = new MeshTransportPayload({
+            cmd: 'execComplete',
+            id: payload.id
+        });
         MeshTransportPayloadUtils.setBufferGeometry(meshTP, bufferGeometry, 2);
         meshTP.materialsTransportPayload = materialTP;
 

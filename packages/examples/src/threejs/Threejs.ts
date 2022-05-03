@@ -126,8 +126,10 @@ class WorkerTaskDirectorExample {
     private async initTasks() {
         console.time('Init tasks');
         const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
-        const helloWorldThreeWorker = new DataTransportPayload('init', 0);
-        helloWorldThreeWorker.name = 'HelloWorldThreeWorker';
+        const helloWorldThreeWorker = new DataTransportPayload({
+            id: 0,
+            name: 'HelloWorldThreeWorker'
+        });
         this.workerTaskDirector.registerTask(helloWorldThreeWorker.name, {
             module: true,
             blob: false,
@@ -136,9 +138,11 @@ class WorkerTaskDirectorExample {
         this.tasksToUse.push(helloWorldThreeWorker);
         awaiting.push(this.workerTaskDirector.initTaskType(helloWorldThreeWorker.name, helloWorldThreeWorker));
 
-        const objLoaderWorker = new MaterialsTransportPayload('init', 0);
-        objLoaderWorker.name = 'OBJLoaderdWorker';
-        objLoaderWorker.params = { filename: '../models/obj/female02/female02_vertex_colors.obj' };
+        const objLoaderWorker = new MaterialsTransportPayload({
+            id: 0,
+            name: 'OBJLoaderdWorker',
+            params: { filename: '../models/obj/female02/female02_vertex_colors.obj' }
+        });
         this.workerTaskDirector.registerTask(objLoaderWorker.name, {
             module: true,
             blob: false,
@@ -183,11 +187,14 @@ class WorkerTaskDirectorExample {
 
         for (let i = 0; i < 1024; i++) {
             const payloadType = this.tasksToUse[taskToUseIndex];
-            const payload = new DataTransportPayload('execute', globalCount, `${payloadType.name}_${globalCount}`);
+            const payload = new DataTransportPayload({
+                id: globalCount,
+                name: `${payloadType.name}_${globalCount}`
+            });
             payload.params = payloadType.params;
 
             const voidPromise = this.workerTaskDirector.enqueueWorkerExecutionPlan({
-                taskTypeName: payloadType.name,
+                taskTypeName: payloadType.name ?? 'unknown',
                 payload: payload,
                 onComplete: (e: unknown) => { this.processMessage(e as PayloadType); },
                 onIntermediate: (e: unknown) => { this.processMessage(e as PayloadType); }

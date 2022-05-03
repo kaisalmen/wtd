@@ -10,20 +10,18 @@ export class DataTransportPayload implements DataTransportPayloadType {
     name = 'unnamed';
     type = 'DataTransportPayload';
     cmd = 'unknown';
-    id: number;
+    id = 0;
     workerId?: number | undefined = 0;
     params?: Record<string, unknown> = {};
     buffers: Map<string, ArrayBufferLike> = new Map();
     progress = 0;
 
-    constructor(cmd?: string, id?: number, name?: string) {
-        if (cmd) {
-            this.cmd = cmd;
-        }
-        this.id = id ?? 0;
-        if (name) {
-            this.name = name;
-        }
+    constructor(config: PayloadType) {
+        this.cmd = config.cmd ?? this.cmd;
+        this.id = config.id ?? this.id;
+        this.name = config.name ?? this.name;
+        this.workerId = config.workerId ?? this.workerId;
+        this.params = config.params ?? this.params;
     }
 
 }
@@ -55,21 +53,15 @@ export class DataTransportPayloadUtils {
             else {
                 output.push(potentialClone);
             }
-            /*
-                        if (Object.prototype.hasOwnProperty.call(buffer, 'buffer')) {
-                            output.push();
-                        }
-                        else {
-                            output.push(potentialClone);
-                        }
-            */
         }
     }
 
     static unpackDataTransportPayload(payload: DataTransportPayload, cloneBuffers: boolean) {
+        const dtp = Object.assign(new DataTransportPayload({}), payload);
         for (const [name, buffer] of payload.buffers.entries()) {
-            payload.buffers.set(name, cloneBuffers ? buffer.slice(0) : buffer);
+            dtp.buffers.set(name, cloneBuffers ? buffer.slice(0) : buffer);
         }
+        return dtp;
     }
 }
 

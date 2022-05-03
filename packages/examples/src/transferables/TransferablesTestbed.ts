@@ -186,14 +186,20 @@ class TransferablesTestbed {
         if (task.sendGeometry) {
             const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
             torus.name = 'torus';
-            const payloadToSend = new MeshTransportPayload('init', task.id, task.name);
+            const payloadToSend = new MeshTransportPayload({
+                id: task.id,
+                name: task.name
+            });
             MeshTransportPayloadUtils.setBufferGeometry(payloadToSend, torus, 0);
 
             const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
             return this.workerTaskDirector.initTaskType(task.name, packed.payload, packed.transferables);
         }
         else {
-            const payload = new DataTransportPayload('init', task.id, task.name);
+            const payload = new DataTransportPayload({
+                id: task.id,
+                name: task.name
+            });
             return this.workerTaskDirector.initTaskType(task.name, payload);
         }
     }
@@ -213,7 +219,10 @@ class TransferablesTestbed {
     }
 
     private executeWorker(task: ExampleTask) {
-        const payload = new DataTransportPayload('execute', task.id, task.name);
+        const payload = new DataTransportPayload({
+            id: task.id,
+            name: task.name
+        });
         payload.params = {
             name: task.name,
             segments: task.segments

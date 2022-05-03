@@ -276,7 +276,10 @@ class PotentiallyInfiniteExample {
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
-            const payload = new DataTransportPayload('init', taskDescr.id, taskDescr.name);
+            const payload = new DataTransportPayload({
+                id: taskDescr.id,
+                name: taskDescr.name
+            });
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, payload));
         }
 
@@ -289,7 +292,10 @@ class PotentiallyInfiniteExample {
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
 
-            const payload = new DataTransportPayload('init', taskDescr.id, taskDescr.name);
+            const payload = new DataTransportPayload({
+                id: taskDescr.id,
+                name: taskDescr.name
+            });
             payload.params = {
                 param1: 'param1value'
             };
@@ -307,7 +313,10 @@ class PotentiallyInfiniteExample {
 
             const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
             torus.name = 'torus';
-            const payloadToSend = new MeshTransportPayload('init', taskDescr.id, taskDescr.name);
+            const payloadToSend = new MeshTransportPayload({
+                id: taskDescr.id,
+                name: taskDescr.name
+            });
             MeshTransportPayloadUtils.setBufferGeometry(payloadToSend, torus, 0);
             const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, packed.payload, packed.transferables));
@@ -343,7 +352,10 @@ class PotentiallyInfiniteExample {
         if (awaiting.length > 0) {
             await Promise.all(awaiting).then(async () => {
                 if (this.taskObjLoader2Worker.use) {
-                    const objLoader2Payload = new MaterialsTransportPayload('init', 0, 'objLoader2Worker');
+                    const objLoader2Payload = new MaterialsTransportPayload({
+                        id: 0,
+                        name: 'objLoader2Worker'
+                    });
                     objLoader2Payload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
                     objLoader2Payload.materials = this.taskObjLoader2Worker.materialStore?.getMaterials() as Map<string, THREE.Material>;
                     MaterialsTransportPayloadUtils.cleanMaterials(objLoader2Payload);
@@ -386,7 +398,9 @@ class PotentiallyInfiniteExample {
                 const indexToUse = Math.floor(Math.random() * taskSelector.totalWorkers);
                 const taskDescr = taskSelector.taskSelectorArray[indexToUse];
 
-                const tb = new DataTransportPayload('execute', globalCount);
+                const tb = new DataTransportPayload({
+                    id: globalCount
+                });
                 tb.params = {
                     modelName: taskDescr.name
                 };

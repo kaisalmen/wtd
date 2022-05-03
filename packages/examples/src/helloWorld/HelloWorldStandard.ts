@@ -33,7 +33,10 @@ class WorkerTaskDirectorHelloWorldExample {
                 t0 = performance.now();
 
                 // once the init Promise returns enqueue the execution
-                const standardWorkerPayload = new DataTransportPayload('execute', 0, taskName);
+                const standardWorkerPayload = new DataTransportPayload({
+                    id: 0,
+                    name: taskName
+                });
                 this.workerTaskDirector.enqueueWorkerExecutionPlan({
                     taskTypeName: standardWorkerPayload.name,
                     payload: standardWorkerPayload,

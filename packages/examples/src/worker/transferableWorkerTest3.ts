@@ -22,7 +22,11 @@ class TransferableWorkerTest3 extends WorkerTaskDirectorDefaultWorker implements
         console.log(`TransferableWorkerTest3#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
 
         this.context.initPayload = payload;
-        const initAnswer = new DataTransportPayload('initComplete', payload.id, payload.name);
+        const initAnswer = new DataTransportPayload({
+            cmd: 'initComplete',
+            id: payload.id,
+            name: payload.name
+        });
         self.postMessage(initAnswer);
     }
 

@@ -30,7 +30,7 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
         if (payload.type === 'MaterialsTransportPayload') {
             this.localData.buffer = payload.buffers?.get('modelData');
 
-            const materialsTransportPayload = Object.assign(new MaterialsTransportPayload(), payload as MaterialsTransportPayload);
+            const materialsTransportPayload = Object.assign(new MaterialsTransportPayload({}), payload as MaterialsTransportPayload);
             MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(materialsTransportPayload, payload as MaterialsTransportPayload, true);
             this.localData.materials = materialsTransportPayload.materials;
 
@@ -64,12 +64,18 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
                 mesh = meshes.children[i] as Mesh;
                 mesh.name = mesh.name + payload.id;
 
-                const materialTP = new MaterialsTransportPayload('intermediate', payload.id);
+                const materialTP = new MaterialsTransportPayload({
+                    cmd: 'intermediate',
+                    id: payload.id
+                });
                 const material = mesh.material;
                 if (material instanceof Material) {
                     MaterialUtils.addMaterial(materialTP.materials, material.name, material, false, false);
                 }
-                const meshTP = new MeshTransportPayload('intermediate', payload.id);
+                const meshTP = new MeshTransportPayload({
+                    cmd: 'intermediate',
+                    id: payload.id
+                });
                 MeshTransportPayloadUtils.setMesh(meshTP, mesh, 0);
                 meshTP.materialsTransportPayload = materialTP;
 

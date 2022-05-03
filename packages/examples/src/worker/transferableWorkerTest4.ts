@@ -25,7 +25,10 @@ class TransferableWorkerTest4 extends WorkerTaskDirectorDefaultWorker implements
             const bufferGeometry = new TorusKnotBufferGeometry(20, 3, payload.params.segments as number, payload.params.segments as number);
             bufferGeometry.name = payload.name;
 
-            const mtp = new MeshTransportPayload('execComplete', payload.id);
+            const mtp = new MeshTransportPayload({
+                cmd: 'execComplete',
+                id: payload.id
+            });
             MeshTransportPayloadUtils.setBufferGeometry(mtp, bufferGeometry, 0);
             const packed = MeshTransportPayloadUtils.packMeshTransportPayload(mtp, false);
             self.postMessage(packed.payload, packed.transferables);

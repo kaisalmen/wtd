@@ -11,7 +11,7 @@ import {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-export class HelloWorldWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+export class HelloWorlThreedWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     init(payload: PayloadType) {
         console.log(`HelloWorldWorker#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
@@ -22,13 +22,17 @@ export class HelloWorldWorker extends WorkerTaskDirectorDefaultWorker implements
         console.log(`HelloWorldWorker#execute: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
 
         const bufferGeometry = new SphereBufferGeometry(40, 64, 64);
-        bufferGeometry.name = payload.name + payload.id;
+        bufferGeometry.name = payload.name ?? 'unknown' + payload.id ?? 'unknown';
         const vertexArray = bufferGeometry.getAttribute('position').array as number[];
         for (let i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
         }
 
-        const mtp = new MeshTransportPayload('execComplete', payload.id, payload.name);
+        const mtp = new MeshTransportPayload({
+            cmd: 'execComplete',
+            id: payload.id,
+            name: payload.name
+        });
         MeshTransportPayloadUtils.setBufferGeometry(mtp, bufferGeometry, 0);
         const packed = MeshTransportPayloadUtils.packMeshTransportPayload(mtp, false);
         self.postMessage(packed.payload, packed.transferables);
@@ -36,5 +40,5 @@ export class HelloWorldWorker extends WorkerTaskDirectorDefaultWorker implements
 
 }
 
-const worker = new HelloWorldWorker();
+const worker = new HelloWorlThreedWorker();
 self.onmessage = message => worker.comRouting(message);
