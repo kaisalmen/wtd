@@ -6,24 +6,24 @@ import {
     MaterialStore
 } from './MaterialStore';
 import {
-    MaterialsTransportPayloadType,
-    MaterialsTransportPayload,
-    MaterialsTransportPayloadUtils
-} from './MaterialsTransport';
+    MaterialsPayloadType,
+    MaterialsPayload,
+    MaterialsPayloadHandler
+} from './MaterialsPayload';
 import {
-    MeshTransportPayloadType,
-    MeshTransportPayload,
-    MeshTransportPayloadUtils
-} from './MeshTransport';
+    MeshPayloadType,
+    MeshPayload,
+    MeshPayloadHandler
+} from './MeshPayload';
 
 export {
     MaterialUtils,
     MaterialCloneInstructions,
     MaterialStore,
-    MaterialsTransportPayloadType,
-    MaterialsTransportPayload,
-    MaterialsTransportPayloadUtils,
-    MeshTransportPayloadType,
-    MeshTransportPayload,
-    MeshTransportPayloadUtils
+    MaterialsPayloadType,
+    MaterialsPayload,
+    MaterialsPayloadHandler,
+    MeshPayloadType,
+    MeshPayload,
+    MeshPayloadHandler
 };

@@ -11,7 +11,7 @@
     "compile": "tsc -b",
     "watch": "tsc -w",
     "build:obj2worker": "npx shx mkdir -p ./src/worker/volatile && npx shx cp -f ../../node_modules/wwobjloader2/src/worker/OBJLoader2Worker.js ./src/worker/volatile",
-    "build:worker": "npx shx mkdir -p ./src/worker/volatile && npx shx rm -f ./src/worker/volatile/helloWorldWorkerStandard.js && vite -c vite.config.worker.ts build",
+    "build:worker": "npx shx mkdir -p ./src/worker/volatile && npx shx rm -f ./src/worker/volatile/HelloWorldWorkerStandard.js && vite -c vite.config.worker.ts build",
     "build": "npm run clean && npm run build:worker && npm run build:obj2worker && npm run compile",
     "serve": "tsc && vite preview"
   },

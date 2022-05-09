@@ -3,15 +3,13 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
     WorkerTaskDirectorDefaultWorker,
     WorkerTaskDirectorWorker,
-    DataTransportPayload,
-    DataTransportPayloadUtils
+    WorkerTaskMessage,
+    WorkerTaskMessageType
 } from 'wtd-core';
 import {
+    MaterialsPayload,
     MaterialUtils,
-    MeshTransportPayload,
-    MaterialsTransportPayload,
-    MaterialsTransportPayloadUtils,
-    MeshTransportPayloadUtils,
+    MeshPayload,
 } from 'wtd-three-ext';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -25,69 +23,77 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
         objectId: 0
     };
 
-    init(payload: DataTransportPayload) {
-        console.log(`OBJLoaderWorker#init: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
-        if (payload.type === 'MaterialsTransportPayload') {
-            this.localData.buffer = payload.buffers?.get('modelData');
+    init(message: WorkerTaskMessageType) {
+        console.log(`OBJLoaderWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-            const materialsTransportPayload = Object.assign(new MaterialsTransportPayload({}), payload as MaterialsTransportPayload);
-            MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(materialsTransportPayload, payload as MaterialsTransportPayload, true);
-            this.localData.materials = materialsTransportPayload.materials;
+        const wtm = WorkerTaskMessage.unpack(message, true);
+        if (wtm.payloads.length === 2) {
+            const dataPayload = wtm.payloads[0];
+            const materialsPayload = wtm.payloads[1] as MaterialsPayload;
 
-            payload.cmd = 'initComplete';
-            self.postMessage(payload);
+            this.localData.buffer = dataPayload.buffers?.get('modelData');
+            this.localData.materials = materialsPayload.materials;
+
+            wtm.cleanPayloads();
+
+            wtm.cmd = 'initComplete';
+            self.postMessage(wtm);
         }
     }
 
-    execute(payload: DataTransportPayload) {
-        console.log(`OBJLoaderWorker#execute: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+    execute(message: WorkerTaskMessageType) {
+        console.log(`OBJLoaderWorker#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        if (payload.type === 'DataTransportPayload') {
-            this.localData.objLoader = new OBJLoader();
-            this.localData.objectId = payload.params?.objectId as number;
+        this.localData.objLoader = new OBJLoader();
+        this.localData.objectId = message.id as number;
 
-            const materials: Record<string, unknown> = {};
-            materials.create = (name: string) => {
-                return materials[name];
-            };
-            for (const [k, v] of Object.entries(this.localData.materials)) {
-                materials[k] = v;
-            }
-
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            this.localData.objLoader.setMaterials(materials as unknown);
-
-            const enc = new TextDecoder('utf-8');
-            const meshes = this.localData.objLoader.parse(enc.decode(this.localData.buffer));
-            for (let mesh, i = 0; i < meshes.children.length; i++) {
-                mesh = meshes.children[i] as Mesh;
-                mesh.name = mesh.name + payload.id;
-
-                const materialTP = new MaterialsTransportPayload({
-                    cmd: 'intermediate',
-                    id: payload.id
-                });
-                const material = mesh.material;
-                if (material instanceof Material) {
-                    MaterialUtils.addMaterial(materialTP.materials, material.name, material, false, false);
-                }
-                const meshTP = new MeshTransportPayload({
-                    cmd: 'intermediate',
-                    id: payload.id
-                });
-                MeshTransportPayloadUtils.setMesh(meshTP, mesh, 0);
-                meshTP.materialsTransportPayload = materialTP;
-
-                const packed = MeshTransportPayloadUtils.packMeshTransportPayload(meshTP, false);
-                self.postMessage(packed.payload, packed.transferables);
-            }
-
-            // signal complete
-            payload.cmd = 'execComplete';
-            const packedFinal = DataTransportPayloadUtils.packDataTransportPayload(payload as DataTransportPayload, false);
-            self.postMessage(packedFinal.payload, packedFinal.transferables);
+        const materials: Record<string, unknown> = {};
+        materials.create = (name: string) => {
+            return materials[name];
+        };
+        for (const [k, v] of Object.entries(this.localData.materials)) {
+            materials[k] = v;
         }
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.localData.objLoader.setMaterials(materials as unknown);
+
+        const enc = new TextDecoder('utf-8');
+        const meshes = this.localData.objLoader.parse(enc.decode(this.localData.buffer));
+        for (let mesh, i = 0; i < meshes.children.length; i++) {
+            mesh = meshes.children[i] as Mesh;
+            mesh.name = mesh.name + message.id;
+
+            // signal intermediate feedback
+            const intermediateMessage = new WorkerTaskMessage({
+                cmd: 'intermediate',
+                id: message.id,
+                name: message.name
+            });
+
+            const meshPayload = new MeshPayload();
+            meshPayload.setMesh(mesh, 0);
+            intermediateMessage.addPayload(meshPayload);
+
+            const material = mesh.material;
+            if (material instanceof Material) {
+                const materialPayload = new MaterialsPayload();
+                MaterialUtils.addMaterial(materialPayload.materials, material.name, material, false, false);
+                intermediateMessage.addPayload(materialPayload);
+            }
+
+            const transferables = intermediateMessage.pack(false);
+            self.postMessage(intermediateMessage, transferables);
+        }
+
+        // signal complete
+        const execCompleteMessage = new WorkerTaskMessage({
+            cmd: 'intermediate',
+            id: message.id,
+            name: message.name
+        });
+        self.postMessage(execCompleteMessage);
     }
 
 }

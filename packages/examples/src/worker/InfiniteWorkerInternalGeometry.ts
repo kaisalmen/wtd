@@ -6,26 +6,26 @@ import {
 import {
     WorkerTaskDirectorDefaultWorker,
     WorkerTaskDirectorWorker,
-    PayloadType
+    WorkerTaskMessage,
+    WorkerTaskMessageType
 } from 'wtd-core';
 import {
     MaterialUtils,
-    MeshTransportPayload,
-    MaterialsTransportPayload,
-    MaterialsTransportPayloadUtils,
-    MeshTransportPayloadUtils,
+    MeshPayload,
+    MaterialsPayload,
 } from 'wtd-three-ext';
 
 class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
-    init(payload: PayloadType) {
-        payload.cmd = 'initComplete';
-        self.postMessage(payload);
+    init(message: WorkerTaskMessageType) {
+        message.cmd = 'initComplete';
+        self.postMessage(message);
     }
 
-    execute(payload: PayloadType) {
+    execute(message: WorkerTaskMessageType) {
+
         const bufferGeometry = new TorusKnotBufferGeometry(20, 3, 100, 64);
-        bufferGeometry.name = 'tmProto' + payload.id;
+        bufferGeometry.name = 'tmProto' + message.id;
 
         const vertexBA = bufferGeometry.getAttribute('position');
         const vertexArray = vertexBA.array as number[];
@@ -41,19 +41,23 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker imp
         color.b = randArray[2] / 255;
         const material = new MeshPhongMaterial({ color: color });
 
-        const materialTP = new MaterialsTransportPayload({});
-        MaterialUtils.addMaterial(materialTP.materials, 'randomColor' + payload.id, material, false, false);
-        MaterialsTransportPayloadUtils.cleanMaterials(materialTP);
+        const materialsPayload = new MaterialsPayload();
+        MaterialUtils.addMaterial(materialsPayload.materials, 'randomColor' + message.id, material, false, false);
+        materialsPayload.cleanMaterials();
 
-        const meshTP = new MeshTransportPayload({
+        const meshPayload = new MeshPayload();
+        meshPayload.setBufferGeometry(bufferGeometry, 2);
+
+        const execCompleteMessage = new WorkerTaskMessage({
             cmd: 'execComplete',
-            id: payload.id
+            name: message.name,
+            id: message.id,
+            workerId: message.workerId
         });
-        MeshTransportPayloadUtils.setBufferGeometry(meshTP, bufferGeometry, 2);
-        meshTP.materialsTransportPayload = materialTP;
-
-        const packed = MeshTransportPayloadUtils.packMeshTransportPayload(meshTP, false);
-        self.postMessage(packed.payload, packed.transferables);
+        execCompleteMessage.addPayload(meshPayload);
+        execCompleteMessage.addPayload(materialsPayload);
+        const transferables = execCompleteMessage.pack(false);
+        self.postMessage(execCompleteMessage, transferables);
     }
 }
 

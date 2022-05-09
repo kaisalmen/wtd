@@ -63,22 +63,25 @@ const taskName = 'WorkerModule';
 this.workerTaskDirector.registerTask(taskName, {
     module: true,
     blob: false,
-    url: new URL('../worker/helloWorldWorker', import.meta.url)
+    url: new URL('../worker/HelloWorldWorker', import.meta.url)
 });
 
 // init the worker task without any payload (worker init without function invocation on worker)
 this.workerTaskDirector.initTaskType(taskName)
     .then((x: unknown) => {
         // once the init Promise returns enqueue the execution
-        const moduleWorkerPayload = new DataTransportPayload('execute', 0, taskName);
+        const execMessage = new WorkerTaskMessage({
+            id: 0,
+            name: taskName
+        });
         this.workerTaskDirector.enqueueWorkerExecutionPlan({
-            taskTypeName: moduleWorkerPayload.name,
-            payload: moduleWorkerPayload,
+            taskTypeName: execMessage.name,
+            message: execMessage,
             // decouple result evaluation ...
-            onComplete: (e: unknown) => { console.log('Received final command: ' + (e as PayloadType).cmd); }
+            onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }
         }).then((x: unknown) => {
-            // promise result handling
-            alert('Worker execution has been completed');
+            // ... promise result handling
+            alert('Worker execution has been completed after.');
         });
     }).catch(
         // error handling

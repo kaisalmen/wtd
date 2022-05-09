@@ -27,12 +27,12 @@
   },
   "dependencies": {
     "wtd-core": "../wtd-core",
-    "three": "^0.139.2",
-    "@types/three": "^0.139.0"
+    "three": "^0.140.0",
+    "@types/three": "^0.140.0"
   },
   "devDependencies": {
     "typedoc": "^0.22.15",
-    "typedoc-plugin-markdown": "^3.12.0"
+    "typedoc-plugin-markdown": "^3.12.1"
   },
   "repository": {
     "type": "git",

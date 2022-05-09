@@ -2,13 +2,14 @@ import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
 import {
-    DataTransportPayload,
-    PayloadType,
-    WorkerTaskDirector
+    DataPayload,
+    WorkerTaskDirector,
+    WorkerTaskMessage,
+    WorkerTaskMessageType
 } from 'wtd-core';
 import {
-    MeshTransportPayload,
-    MeshTransportPayloadUtils
+    MeshPayload,
+    MeshPayloadHandler
 } from 'wtd-three-ext';
 
 type CameraDefaults = {
@@ -70,33 +71,33 @@ class TransferablesTestbed {
         this.tasks.push({
             execute: true,
             id: 1,
-            name: 'transferableWorkerTest1',
+            name: 'TransferableWorkerTest1',
             sendGeometry: false,
-            moduleURL: new URL('../worker/transferableWorkerTest1', import.meta.url),
+            moduleURL: new URL('../worker/TransferableWorkerTest1', import.meta.url),
             segments: 0
         });
         this.tasks.push({
             execute: true,
             id: 2,
-            name: 'transferableWorkerTest2',
+            name: 'TransferableWorkerTest2',
             sendGeometry: false,
-            moduleURL: new URL('../worker/transferableWorkerTest2', import.meta.url),
+            moduleURL: new URL('../worker/TransferableWorkerTest2', import.meta.url),
             segments: 0
         });
         this.tasks.push({
             execute: true,
             id: 3,
-            name: 'transferableWorkerTest3',
+            name: 'TransferableWorkerTest3',
             sendGeometry: true,
-            moduleURL: new URL('../worker/transferableWorkerTest3', import.meta.url),
+            moduleURL: new URL('../worker/TransferableWorkerTest3', import.meta.url),
             segments: 1024
         });
         this.tasks.push({
             execute: true,
             id: 4,
-            name: 'transferableWorkerTest4',
+            name: 'TransferableWorkerTest4',
             sendGeometry: false,
-            moduleURL: new URL('../worker/transferableWorkerTest4', import.meta.url),
+            moduleURL: new URL('../worker/TransferableWorkerTest4', import.meta.url),
             segments: 1024
         });
 
@@ -178,29 +179,36 @@ class TransferablesTestbed {
     }
 
     private initTask(task: ExampleTask) {
+        // fast-fail: direct resolve a void Promise
+        if (!task.execute) {
+            return new Promise<void>((resolve, _reject) => {
+                resolve();
+            });
+        }
+
         this.workerTaskDirector.registerTask(task.name, {
             module: true,
             blob: false,
             url: task.moduleURL
         });
+
+        const initMessage = new WorkerTaskMessage({
+            id: task.id,
+            name: task.name
+        });
         if (task.sendGeometry) {
             const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
             torus.name = 'torus';
-            const payloadToSend = new MeshTransportPayload({
-                id: task.id,
-                name: task.name
-            });
-            MeshTransportPayloadUtils.setBufferGeometry(payloadToSend, torus, 0);
 
-            const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
-            return this.workerTaskDirector.initTaskType(task.name, packed.payload, packed.transferables);
+            const meshPayload = new MeshPayload();
+            meshPayload.setBufferGeometry(torus, 0);
+            initMessage.addPayload(meshPayload);
+
+            const transferables = initMessage.pack(false);
+            return this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables);
         }
         else {
-            const payload = new DataTransportPayload({
-                id: task.id,
-                name: task.name
-            });
-            return this.workerTaskDirector.initTaskType(task.name, payload);
+            return this.workerTaskDirector.initTaskType(initMessage.name, initMessage);
         }
     }
 
@@ -219,56 +227,71 @@ class TransferablesTestbed {
     }
 
     private executeWorker(task: ExampleTask) {
-        const payload = new DataTransportPayload({
+        const execMessage = new WorkerTaskMessage({
             id: task.id,
             name: task.name
         });
-        payload.params = {
+
+        const dataPayload = new DataPayload();
+        dataPayload.params = {
             name: task.name,
             segments: task.segments
         };
+        execMessage.addPayload(dataPayload);
+        const transferables = execMessage.pack(false);
+
         return this.workerTaskDirector.enqueueWorkerExecutionPlan({
-            payload: payload,
+            message: execMessage,
             taskTypeName: task.name,
-            onComplete: (e: unknown) => {
-                this.processMessage(e as PayloadType);
-            }
+            onComplete: (m: WorkerTaskMessageType) => {
+                this.processMessage(m);
+            },
+            transferables: transferables
         });
     }
 
-    private processMessage(payload: PayloadType) {
-        switch (payload.cmd) {
+    private processMessage(message: WorkerTaskMessageType) {
+        let wtm;
+        switch (message.cmd) {
             case 'execComplete':
-                console.log(`TransferableTestbed#execComplete: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
-                if (payload.type === 'DataTransportPayload') {
-                    if (payload.params && Object.keys(payload.params).length > 0 &&
-                        payload.params.geometry) {
-                        //  && (payload.params.geometry as Record<string, unknown>).type === 'TorusKnotGeometry'
-                        const mesh = new THREE.Mesh(
-                            MeshTransportPayloadUtils.reconstructBuffer(false, payload.params.geometry as THREE.BufferGeometry),
-                            new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff0000) })
-                        );
-                        mesh.position.set(100, 0, 0);
-                        this.scene.add(mesh);
+                console.log(`TransferableTestbed#execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+
+                wtm = WorkerTaskMessage.unpack(message, false);
+                if (wtm.payloads.length === 1) {
+
+                    const payload = wtm.payloads[0];
+                    if (payload.type === DataPayload.TYPE) {
+                        const dataPayload = payload;
+                        if (dataPayload.params && Object.keys(dataPayload.params).length > 0 &&
+                            dataPayload.params.geometry) {
+                            //  && (payload.params.geometry as Record<string, unknown>).type === 'TorusKnotGeometry'
+                            const mesh = new THREE.Mesh(
+                                MeshPayloadHandler.reconstructBuffer(false, dataPayload.params.geometry as THREE.BufferGeometry),
+                                new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff0000) })
+                            );
+                            mesh.position.set(100, 0, 0);
+                            this.scene.add(mesh);
+                        }
+                        else {
+                            console.log(`${message.name}: Just data`);
+                        }
                     }
-                    else {
-                        console.log(`${payload.name}: Just data`);
-                    }
-                }
-                else if (payload.type === 'MeshTransportPayload') {
-                    const mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload as MeshTransportPayload, false);
-                    if (mtp.bufferGeometry) {
-                        const mesh = new THREE.Mesh(
-                            mtp.bufferGeometry as THREE.BufferGeometry,
-                            new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff0000) })
-                        );
-                        this.scene.add(mesh);
+
+                    if (payload.type === MeshPayload.TYPE) {
+                        const meshPayload = payload as MeshPayload;
+                        if (meshPayload.bufferGeometry) {
+                            const mesh = new THREE.Mesh(
+                                meshPayload.bufferGeometry as THREE.BufferGeometry,
+                                new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff0000) })
+                            );
+                            this.scene.add(mesh);
+                        }
                     }
                 }
                 break;
 
             default:
-                console.error(payload.id + ': Received unknown command: ' + payload.cmd);
+                console.error(`${message.id}: Received unknown command: ${message.cmd}`);
                 break;
         }
     }

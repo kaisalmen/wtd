@@ -11,15 +11,14 @@ import {
 import {
     WorkerTask,
     WorkerTaskDirector,
-    PayloadType,
-    DataTransportPayload,
+    DataPayload,
+    WorkerTaskMessage,
+    WorkerTaskMessageType,
 } from 'wtd-core';
 import {
     MaterialStore,
-    MeshTransportPayload,
-    MeshTransportPayloadUtils,
-    MaterialsTransportPayloadUtils,
-    MaterialsTransportPayload
+    MeshPayload,
+    MaterialsPayload
 } from 'wtd-three-ext';
 
 export type CameraDefaults = {
@@ -46,6 +45,8 @@ type TaskDescription = {
 };
 
 /**
+ * TODO: Outdated description!!
+ *
  * The aim of this example is to show all possible ways how to use the {@link WorkerTaskDirector}:
  * - Standard Workers with dependency loading
  * - Module Workers with and without additional dependencies
@@ -93,35 +94,35 @@ class PotentiallyInfiniteExample {
         worker = new SimpleBlobWorker();
         self.onmessage = message => worker.comRouting(message);
         `]),
-        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS
+        workerCount: 6
     } as TaskDescription;
     taskInfiniteWorkerInternalGeometry = {
         id: 1,
-        name: 'infiniteWorkerInternalGeometry',
+        name: 'InfiniteWorkerInternalGeometry',
         use: true,
         module: true,
         blob: false,
-        workerUrl: new URL('../worker/infiniteWorkerInternalGeometry', import.meta.url),
-        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS
+        workerUrl: new URL('../worker/InfiniteWorkerInternalGeometry', import.meta.url),
+        workerCount: 10
     } as TaskDescription;
     taskInfiniteWorkerExternalGeometry = {
         id: 2,
-        name: 'infiniteWorkerExternalGeometry',
+        name: 'InfiniteWorkerExternalGeometry',
         use: true,
         module: true,
         blob: false,
-        workerUrl: new URL('../worker/infiniteWorkerExternalGeometry', import.meta.url),
-        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS
+        workerUrl: new URL('../worker/InfiniteWorkerExternalGeometry', import.meta.url),
+        workerCount: 8
     } as TaskDescription;
     taskObjLoader2Worker = {
         id: 3,
-        name: 'objLoader2Worker',
+        name: 'OBJLoader2Worker',
         modelName: 'female02',
         use: true,
         module: true,
         blob: false,
         workerUrl: new URL('../worker/volatile/OBJLoader2Worker.js', import.meta.url),
-        workerCount: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS,
+        workerCount: 2,
         filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
         filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),
         materialStore: new MaterialStore(true)
@@ -276,11 +277,11 @@ class PotentiallyInfiniteExample {
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
-            const payload = new DataTransportPayload({
+            const initMessage = new WorkerTaskMessage({
                 id: taskDescr.id,
                 name: taskDescr.name
             });
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, payload));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage));
         }
 
         taskDescr = this.taskInfiniteWorkerInternalGeometry;
@@ -292,14 +293,11 @@ class PotentiallyInfiniteExample {
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
 
-            const payload = new DataTransportPayload({
+            const initMessage = new WorkerTaskMessage({
                 id: taskDescr.id,
                 name: taskDescr.name
             });
-            payload.params = {
-                param1: 'param1value'
-            };
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, payload));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage));
         }
 
         taskDescr = this.taskInfiniteWorkerExternalGeometry;
@@ -313,13 +311,16 @@ class PotentiallyInfiniteExample {
 
             const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
             torus.name = 'torus';
-            const payloadToSend = new MeshTransportPayload({
+            const initMessage = new WorkerTaskMessage({
                 id: taskDescr.id,
                 name: taskDescr.name
             });
-            MeshTransportPayloadUtils.setBufferGeometry(payloadToSend, torus, 0);
-            const packed = MeshTransportPayloadUtils.packMeshTransportPayload(payloadToSend, false);
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, packed.payload, packed.transferables));
+            const meshPayload = new MeshPayload();
+            meshPayload.setBufferGeometry(torus, 0);
+
+            initMessage.addPayload(meshPayload);
+            const transferables = initMessage.pack(false);
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage, transferables));
         }
 
         taskDescr = this.taskObjLoader2Worker;
@@ -352,15 +353,23 @@ class PotentiallyInfiniteExample {
         if (awaiting.length > 0) {
             await Promise.all(awaiting).then(async () => {
                 if (this.taskObjLoader2Worker.use) {
-                    const objLoader2Payload = new MaterialsTransportPayload({
+                    const initMessage = new WorkerTaskMessage({
                         id: 0,
-                        name: 'objLoader2Worker'
+                        name: 'OBJLoader2Worker'
                     });
-                    objLoader2Payload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
-                    objLoader2Payload.materials = this.taskObjLoader2Worker.materialStore?.getMaterials() as Map<string, THREE.Material>;
-                    MaterialsTransportPayloadUtils.cleanMaterials(objLoader2Payload);
-                    MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoader2Payload, false);
-                    await this.workerTaskDirector.initTaskType(objLoader2Payload.name, objLoader2Payload)
+
+                    const dataPayload = new DataPayload();
+                    dataPayload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
+
+                    const materialsPayload = new MaterialsPayload();
+                    materialsPayload.materials = this.taskObjLoader2Worker.materialStore?.getMaterials() as Map<string, THREE.Material>;
+                    materialsPayload.cleanMaterials();
+
+                    initMessage.addPayload(dataPayload);
+                    initMessage.addPayload(materialsPayload);
+
+                    const transferables = initMessage.pack(false);
+                    await this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables)
                         .then(() => {
                             console.timeEnd('All tasks have been initialized');
                             this.executeWorkers();
@@ -398,13 +407,16 @@ class PotentiallyInfiniteExample {
                 const indexToUse = Math.floor(Math.random() * taskSelector.totalWorkers);
                 const taskDescr = taskSelector.taskSelectorArray[indexToUse];
 
-                const tb = new DataTransportPayload({
+                const execMessage = new WorkerTaskMessage({
                     id: globalCount
                 });
-                tb.params = {
+                const dataPayload = new DataPayload();
+                dataPayload.params = {
                     modelName: taskDescr.name
                 };
-                const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, tb,
+                execMessage.addPayload(dataPayload);
+
+                const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, execMessage,
                     data => this.processMessage(taskDescr, data),
                     data => this.processMessage(taskDescr, data));
                 this.executions.push(promise);
@@ -444,68 +456,66 @@ class PotentiallyInfiniteExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(taskDescr: TaskDescription, payload: PayloadType | Error) {
+    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessageType | Error) {
         let material: THREE.Material | THREE.Material[] | undefined;
-        let mTP: MeshTransportPayload;
+        let meshPayload: MeshPayload;
+        let materialsPayload: MaterialsPayload;
         let mesh: THREE.Mesh;
-        if (payload instanceof Error) {
-            console.error(payload);
+        if (message instanceof Error) {
+            console.error(message);
             return;
         }
-        switch (payload.cmd) {
+
+        const wtm = WorkerTaskMessage.unpack(message, false);
+        switch (wtm.cmd) {
             case 'initComplete':
-                console.log('Init Completed: ' + payload.id);
+                console.log('Init Completed: ' + wtm.id);
                 break;
 
             case 'execComplete':
             case 'intermediate':
-                switch (payload.type) {
-                    case 'MeshTransportPayload':
-                        mTP = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload as MeshTransportPayload, false);
-                        if (mTP.params?.color) {
-                            const pColor = mTP.params?.color as { r: number, g: number, b: number };
-                            const color = new THREE.Color(pColor.r, pColor.g, pColor.b);
-                            material = new THREE.MeshPhongMaterial({ color: color });
-                        }
-                        else {
-                            if (mTP.materialsTransportPayload) {
-                                const storedMaterials = taskDescr.materialStore ? taskDescr.materialStore.getMaterials() : new Map();
-                                material = MaterialsTransportPayloadUtils.processMaterialTransport(mTP.materialsTransportPayload, storedMaterials, true);
-                                if (!material) {
-                                    material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
-                                }
-                            }
-                            else {
-                                const randArray = new Uint8Array(3);
-                                window.crypto.getRandomValues(randArray);
-                                const color = new THREE.Color();
-                                color.r = randArray[0] / 255;
-                                color.g = randArray[1] / 255;
-                                color.b = randArray[2] / 255;
-                                material = new THREE.MeshPhongMaterial({ color: color });
-                            }
-                        }
-                        mesh = new THREE.Mesh(mTP.bufferGeometry as THREE.BufferGeometry, material);
-                        this.addMesh(mesh, mTP.id);
-                        break;
+                if (wtm.payloads.length > 0) {
 
-                    case 'DataTransportPayload':
-                        if (payload.cmd === 'execComplete') {
-                            // This is the end-point for the
-                            //console.log(`DataTransport: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+                    meshPayload = wtm.payloads[0] as MeshPayload;
+                    if (meshPayload.params?.color) {
+                        const pColor = meshPayload.params?.color as { r: number, g: number, b: number };
+                        const color = new THREE.Color(pColor.r, pColor.g, pColor.b);
+                        material = new THREE.MeshPhongMaterial({ color: color });
+                    }
+
+                    if (wtm.payloads.length === 2) {
+                        materialsPayload = wtm.payloads[1] as MaterialsPayload;
+                        const storedMaterials = taskDescr.materialStore ? taskDescr.materialStore.getMaterials() : new Map();
+                        material = materialsPayload.processMaterialTransport(storedMaterials, true);
+                        if (!material) {
+                            material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
                         }
-                        break;
+                    }
+                    else {
+                        const randArray = new Uint8Array(3);
+                        window.crypto.getRandomValues(randArray);
+                        const color = new THREE.Color();
+                        color.r = randArray[0] / 255;
+                        color.g = randArray[1] / 255;
+                        color.b = randArray[2] / 255;
+                        material = new THREE.MeshPhongMaterial({ color: color });
+                    }
 
-                    default:
-                        console.error('Provided payload.type did not match: ' + payload.cmd);
-                        break;
-
+                    mesh = new THREE.Mesh(meshPayload.bufferGeometry as THREE.BufferGeometry, material);
+                    this.addMesh(mesh, wtm.id);
+                }
+                else {
+                    if (wtm.cmd !== 'execComplete') {
+                        // This is the end-point for the execution
+                        //console.log(`DataTransport: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+                        console.error('Provided payload.type did not match: ' + wtm.cmd);
+                    }
                 }
                 this.cleanMeshes();
                 break;
 
             default:
-                console.error(payload.id + ': Received unknown command: ' + payload.cmd);
+                console.error(`${wtm.id}: Received unknown command: ${wtm.cmd}`);
                 break;
         }
     }
@@ -580,33 +590,40 @@ class PotentiallyInfiniteExample {
 // Simplest way to define a worker, but can't be a module worker
 class SimpleBlobWorker {
 
-    init(payload: PayloadType) {
-        payload.cmd = 'initComplete';
-        self.postMessage(payload);
+    init(message: WorkerTaskMessageType) {
+        message.cmd = 'initComplete';
+        self.postMessage(message);
     }
 
-    execute(payload: PayloadType) {
-        payload.cmd = 'execComplete';
-        payload.params = {
-            hello: 'say hello'
-        };
-
+    execute(message: WorkerTaskMessageType) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
         }
-        self.postMessage(payload);
+
+        const dataPayload = {
+            params: {
+                hello: 'say hello'
+            },
+            type: 'dataPayload',
+            buffers: new Map(),
+            progress: 0
+        };
+        message.payloads[0] = dataPayload;
+
+        message.cmd = 'execComplete';
+        self.postMessage(message);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
-        const payload = (message as MessageEvent).data as PayloadType;
-        if (payload) {
-            if (payload.cmd === 'init') {
-                this.init(payload);
+        const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
+        if (wtmt) {
+            if (wtmt.cmd === 'init') {
+                this.init(wtmt);
             }
-            else if (payload.cmd === 'execute') {
-                this.execute(payload);
+            else if (wtmt.cmd === 'execute') {
+                this.execute(wtmt);
             }
         }
     }
@@ -647,7 +664,7 @@ class GUIControls {
 
         this.app = app;
 
-        const controllerSimpleBlobWorker = gui.add(this, 'simpleBlobWorker').name('Blob Worker Standard');
+        const controllerSimpleBlobWorker = gui.add(this, 'simpleBlobWorker').name('Blob: Waste CPU');
         const controllerSimpleBlobWorkerCount = gui.add(this, 'simpleBlobWorkerCount', 1, 32).step(1).name('Worker Count');
         this.controllers.set('simpleBlobWorker', controllerSimpleBlobWorker);
         this.controllers.set('simpleBlobWorkerCount', controllerSimpleBlobWorkerCount);
@@ -659,7 +676,7 @@ class GUIControls {
             this.app.taskSimpleBlobWorker.workerCount = value;
         });
 
-        const controllerInfiniteWorkerInternalGeometry = gui.add(this, 'infiniteWorkerInternalGeometry').name('Worker Module + three');
+        const controllerInfiniteWorkerInternalGeometry = gui.add(this, 'infiniteWorkerInternalGeometry').name('Module: Internal Geometry');
         const controllerInfiniteWorkerInternalGeometryCount = gui.add(this, 'infiniteWorkerInternalGeometryCount', 1, 32).step(1).name('Worker Count');
         this.controllers.set('infiniteWorkerInternalGeometry', controllerInfiniteWorkerInternalGeometry);
         this.controllers.set('infiniteWorkerInternalGeometryCount', controllerInfiniteWorkerInternalGeometryCount);
@@ -671,7 +688,7 @@ class GUIControls {
             this.app.taskInfiniteWorkerInternalGeometry.workerCount = value;
         });
 
-        const controllerInfiniteWorkerExternalGeometry = gui.add(this, 'infiniteWorkerExternalGeometry').name('Worker Module solo');
+        const controllerInfiniteWorkerExternalGeometry = gui.add(this, 'infiniteWorkerExternalGeometry').name('Module: External Geometry');
         const controllerInfiniteWorkerExternalGeometryCount = gui.add(this, 'infiniteWorkerExternalGeometryCount', 1, 32).step(1).name('Worker Count');
         this.controllers.set('infiniteWorkerExternalGeometry', controllerInfiniteWorkerExternalGeometry);
         this.controllers.set('infiniteWorkerExternalGeometryCount', controllerInfiniteWorkerExternalGeometryCount);
@@ -683,7 +700,7 @@ class GUIControls {
             this.app.taskInfiniteWorkerExternalGeometry.workerCount = value;
         });
 
-        const controllerObjLoader2Worker = gui.add(this, 'objLoader2Worker').name('OBJLoader2Parser Module');
+        const controllerObjLoader2Worker = gui.add(this, 'objLoader2Worker').name('Module: OBJLoader2Worker');
         const controllerObjLoader2WorkerCount = gui.add(this, 'objLoader2WorkerCount', 1, 32).step(1).name('Worker Count');
         this.controllers.set('objLoader2Worker', controllerObjLoader2Worker);
         this.controllers.set('objLoader2WorkerCount', controllerObjLoader2WorkerCount);

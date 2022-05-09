@@ -3,16 +3,15 @@ import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
 import {
+    DataPayload,
     WorkerTaskDirector,
-    PayloadType,
-    DataTransportPayload,
+    WorkerTaskMessage,
+    WorkerTaskMessageType,
 } from 'wtd-core';
 import {
-    MeshTransportPayload,
-    MeshTransportPayloadUtils,
-    MaterialsTransportPayloadUtils,
+    MaterialsPayload,
     MaterialStore,
-    MaterialsTransportPayload
+    MeshPayload
 } from 'wtd-three-ext';
 
 export type CameraDefaults = {
@@ -53,7 +52,7 @@ class WorkerTaskDirectorExample {
     });
 
     private objectsUsed: Map<number, THREE.Vector3> = new Map();
-    private tasksToUse: PayloadType[] = [];
+    private tasksToUse: string[] = [];
     private materialStore = new MaterialStore(true);
 
     constructor(elementToBindTo: HTMLElement | null) {
@@ -126,29 +125,34 @@ class WorkerTaskDirectorExample {
     private async initTasks() {
         console.time('Init tasks');
         const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
-        const helloWorldThreeWorker = new DataTransportPayload({
+        const helloWorldInitMessage = new WorkerTaskMessage({
             id: 0,
             name: 'HelloWorldThreeWorker'
         });
-        this.workerTaskDirector.registerTask(helloWorldThreeWorker.name, {
+        this.workerTaskDirector.registerTask(helloWorldInitMessage.name, {
             module: true,
             blob: false,
-            url: new URL('../worker/helloWorldThreeWorker', import.meta.url)
+            url: new URL('../worker/HelloWorldThreeWorker', import.meta.url)
         });
-        this.tasksToUse.push(helloWorldThreeWorker);
-        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldThreeWorker.name, helloWorldThreeWorker));
+        this.tasksToUse.push(helloWorldInitMessage.name);
+        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldInitMessage.name, helloWorldInitMessage));
 
-        const objLoaderWorker = new MaterialsTransportPayload({
+        const objLoaderInitMessage = new WorkerTaskMessage({
             id: 0,
-            name: 'OBJLoaderdWorker',
-            params: { filename: '../models/obj/female02/female02_vertex_colors.obj' }
+            name: 'OBJLoaderdWorker'
         });
-        this.workerTaskDirector.registerTask(objLoaderWorker.name, {
+
+        const objLoaderDataPayload = new DataPayload();
+        objLoaderDataPayload.params = {
+            filename: '../models/obj/female02/female02_vertex_colors.obj'
+        };
+
+        this.workerTaskDirector.registerTask(objLoaderInitMessage.name, {
             module: true,
             blob: false,
             url: new URL('../worker/OBJLoaderWorker', import.meta.url)
         });
-        this.tasksToUse.push(objLoaderWorker);
+        this.tasksToUse.push(objLoaderInitMessage.name);
 
         const loadObj = async function(filenameObj: string) {
             const fileLoader = new THREE.FileLoader();
@@ -157,18 +161,24 @@ class WorkerTaskDirectorExample {
         };
 
         let bufferExt: ArrayBufferLike;
-        awaiting.push(loadObj(objLoaderWorker.params?.filename as string)
+        awaiting.push(loadObj(objLoaderDataPayload.params?.filename as string)
             .then(async (buffer: string | ArrayBuffer) => {
                 bufferExt = buffer as ArrayBufferLike;
             }));
         await Promise.all(awaiting)
             .then(async () => {
                 console.log('Loaded OBJ');
-                objLoaderWorker.buffers.set('modelData', bufferExt);
-                objLoaderWorker.materials = this.materialStore.getMaterials();
-                MaterialsTransportPayloadUtils.cleanMaterials(objLoaderWorker);
-                MaterialsTransportPayloadUtils.packMaterialsTransportPayload(objLoaderWorker, false);
-                await this.workerTaskDirector.initTaskType(objLoaderWorker.name, objLoaderWorker)
+                objLoaderDataPayload.buffers.set('modelData', bufferExt);
+
+                const materialsPayload = new MaterialsPayload();
+                materialsPayload.materials = this.materialStore.getMaterials();
+                materialsPayload.cleanMaterials();
+
+                objLoaderInitMessage.addPayload(objLoaderDataPayload);
+                objLoaderInitMessage.addPayload(materialsPayload);
+
+                const transferables = objLoaderInitMessage.pack(false);
+                await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, objLoaderInitMessage, transferables)
                     .then(() => {
                         console.timeEnd('Init tasks');
                         this.executeTasks();
@@ -186,18 +196,22 @@ class WorkerTaskDirectorExample {
         const executions = [];
 
         for (let i = 0; i < 1024; i++) {
-            const payloadType = this.tasksToUse[taskToUseIndex];
-            const payload = new DataTransportPayload({
+            const name = this.tasksToUse[taskToUseIndex];
+
+            const execMessage = new WorkerTaskMessage({
                 id: globalCount,
-                name: `${payloadType.name}_${globalCount}`
+                name: `${name}_${globalCount}`
             });
-            payload.params = payloadType.params;
 
             const voidPromise = this.workerTaskDirector.enqueueWorkerExecutionPlan({
-                taskTypeName: payloadType.name ?? 'unknown',
-                payload: payload,
-                onComplete: (e: unknown) => { this.processMessage(e as PayloadType); },
-                onIntermediate: (e: unknown) => { this.processMessage(e as PayloadType); }
+                taskTypeName: name ?? 'unknown',
+                message: execMessage,
+                onComplete: (m: WorkerTaskMessageType) => {
+                    this.processMessage(m);
+                },
+                onIntermediate: (m: WorkerTaskMessageType) => {
+                    this.processMessage(m);
+                }
             });
             executions.push(voidPromise);
 
@@ -219,39 +233,42 @@ class WorkerTaskDirectorExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(payload: PayloadType) {
-        switch (payload.cmd) {
+    private processMessage(message: WorkerTaskMessageType) {
+        const wtm = WorkerTaskMessage.unpack(message, false);
+        switch (wtm.cmd) {
             case 'intermediate':
-                if (payload.type === 'MeshTransportPayload') {
-                    this.buildMesh(payload as MeshTransportPayload);
-                }
-                break;
-
             case 'execComplete':
-                if (payload.type === 'MeshTransportPayload') {
-                    this.buildMesh(payload as MeshTransportPayload);
+                if (wtm.payloads.length === 1) {
+                    this.buildMesh(wtm.id, wtm.payloads[0] as MeshPayload);
                 }
-                console.log(`execComplete: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
+                else if (wtm.payloads.length === 2) {
+                    this.buildMesh(wtm.id, wtm.payloads[0] as MeshPayload, wtm.payloads[1] as MaterialsPayload);
+                }
+                if (wtm.cmd === 'execComplete') {
+                    console.log(`execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+                }
                 break;
 
             default:
-                console.error(payload.id + ': Received unknown command: ' + payload.cmd);
+                console.error(`${message.id}: Received unknown command: ${message.cmd}`);
                 break;
         }
     }
 
-    private buildMesh(payload: MeshTransportPayload) {
-        const mtp = MeshTransportPayloadUtils.unpackMeshTransportPayload(payload, false);
-        let material = MaterialsTransportPayloadUtils.processMaterialTransport(mtp.materialsTransportPayload, this.materialStore.getMaterials(), true);
-        if (!material) {
+    private buildMesh(id: number, meshPayload: MeshPayload, materialsPayload?: MaterialsPayload) {
+        let material;
+        if (!materialsPayload) {
             const randArray = new Uint8Array(3);
             window.crypto.getRandomValues(randArray);
             const color = new THREE.Color(randArray[0] / 255, randArray[1] / 255, randArray[2] / 255);
             material = new THREE.MeshPhongMaterial({ color: color });
         }
-        if (mtp.bufferGeometry) {
-            const mesh = new THREE.Mesh(mtp.bufferGeometry as THREE.BufferGeometry, material as THREE.Material);
-            this.addMesh(mesh, mtp.id);
+        else {
+            material = materialsPayload.processMaterialTransport(this.materialStore.getMaterials(), true);
+        }
+        if (meshPayload.bufferGeometry) {
+            const mesh = new THREE.Mesh(meshPayload.bufferGeometry as THREE.BufferGeometry, material as THREE.Material);
+            this.addMesh(mesh, id);
         }
     }
 

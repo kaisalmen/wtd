@@ -3,27 +3,42 @@ import {
     WorkerTaskDirectorWorker,
     WorkerTaskDirectorDefaultWorker
 } from './WorkerTaskDirector';
+
 import {
-    PayloadType,
     WorkerExecutionPlan,
     WorkerRegistration,
     WorkerTask
 } from './WorkerTask';
+
 import {
-    DataTransportPayload,
-    DataTransportPayloadUtils,
-    ObjectManipulator
-} from './DataTransport';
+    DataPayloadType,
+    DataPayload,
+    DataPayloadHandler,
+    PayloadHandler,
+    PayloadRegister
+} from './DataPayload';
+
+import {
+    WorkerTaskMessageHeaderType,
+    WorkerTaskMessageBodyType,
+    WorkerTaskMessageType,
+    WorkerTaskMessage,
+} from './WorkerTaskMessage';
 
 export {
-    PayloadType,
     WorkerExecutionPlan,
     WorkerRegistration,
     WorkerTask,
     WorkerTaskDirector,
     WorkerTaskDirectorWorker,
     WorkerTaskDirectorDefaultWorker,
-    DataTransportPayload,
-    DataTransportPayloadUtils,
-    ObjectManipulator
+    WorkerTaskMessageHeaderType,
+    WorkerTaskMessageBodyType,
+    WorkerTaskMessageType,
+    WorkerTaskMessage,
+    DataPayloadType,
+    DataPayload,
+    DataPayloadHandler,
+    PayloadHandler,
+    PayloadRegister
 };

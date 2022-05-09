@@ -1,5 +1,8 @@
 import {
-    PayloadType,
+    WorkerTaskMessage,
+    WorkerTaskMessageType
+} from './WorkerTaskMessage';
+import {
     WorkerExecutionPlan,
     WorkerRegistration,
     WorkerTask
@@ -73,16 +76,16 @@ export class WorkerTaskDirector {
      * Provides initialization configuration and transferable objects.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {PayloadType} [payload] Configuration properties as serializable string.
+     * @param {WorkerTaskMessage} [message] Optional intt message to be sent
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      */
-    async initTaskType(taskTypeName: string, payload?: PayloadType, transferables?: Transferable[]) {
+    async initTaskType(taskTypeName: string, message?: WorkerTaskMessage, transferables?: Transferable[]) {
         const executions = [];
         const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
         if (workerTaskRuntimeDesc) {
             this.workerExecutionPlans.set(taskTypeName, []);
             for (const workerTask of workerTaskRuntimeDesc.workerStories.values()) {
-                executions.push(workerTask.initWorker(payload, transferables));
+                executions.push(workerTask.initWorker(message, transferables));
             }
         }
         else {
@@ -102,17 +105,17 @@ export class WorkerTaskDirector {
      * Queues a new task of the given type. Task will not execute until initialization completes.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {PayloadType} payload Configuration properties as serializable string.
+     * @param {WorkerTaskMessage} message Configuration properties as serializable string.
      * @param {(data: PayloadType) => void} onComplete Invoke this function if everything is completed
      * @param {(data: PayloadType) => void} onIntermediate Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, payload: PayloadType, onComplete: (data: PayloadType) => void,
-        onIntermediate?: (data: PayloadType) => void, transferables?: Transferable[]) {
+    async enqueueForExecution(taskTypeName: string, message: WorkerTaskMessage, onComplete: (message: WorkerTaskMessageType) => void,
+        onIntermediate?: (message: WorkerTaskMessageType) => void, transferables?: Transferable[]) {
         const plan = {
             taskTypeName: taskTypeName,
-            payload: payload,
+            message: message,
             onComplete: onComplete,
             onIntermediate: onIntermediate,
             transferables: transferables
@@ -192,9 +195,9 @@ export class WorkerTaskDirector {
 
 export interface WorkerTaskDirectorWorker {
 
-    init(payload: PayloadType): void;
+    init(message: WorkerTaskMessageType): void;
 
-    execute(payload: PayloadType): void;
+    execute(message: WorkerTaskMessageType): void;
 
     comRouting(message: never): void;
 
@@ -202,23 +205,23 @@ export interface WorkerTaskDirectorWorker {
 
 export class WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
-    init(payload: PayloadType): void {
-        console.log(`WorkerTaskDirectorDefaultWorker#init: name: ${payload.type} id: ${payload.id} workerId: ${payload.workerId}`);
+    init(message: WorkerTaskMessageType): void {
+        console.log(`WorkerTaskDirectorDefaultWorker#init: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
     }
 
-    execute(payload: PayloadType): void {
-        console.log(`WorkerTaskDirectorDefaultWorker#execute: name: ${payload.type} id: ${payload.id} workerId: ${payload.workerId}`);
+    execute(message: WorkerTaskMessageType): void {
+        console.log(`WorkerTaskDirectorDefaultWorker#execute: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
-        const payload = (message as MessageEvent).data as PayloadType;
-        if (payload) {
-            if (payload.cmd === 'init') {
-                this.init(payload);
+        const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
+        if (wtmt) {
+            if (wtmt.cmd === 'init') {
+                this.init(wtmt);
             }
-            else if (payload.cmd === 'execute') {
-                this.execute(payload);
+            else if (wtmt.cmd === 'execute') {
+                this.execute(wtmt);
             }
         }
     }

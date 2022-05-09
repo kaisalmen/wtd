@@ -1,14 +1,10 @@
 import {
-    PayloadType
+    DataPayloadHandler,
+    DataPayload,
+    DataPayloadType,
+    PayloadHandler,
+    PayloadRegister
 } from 'wtd-core';
-import {
-    DataTransportPayload,
-    DataTransportPayloadUtils
-} from 'wtd-core';
-import {
-    MaterialsTransportPayload,
-    MaterialsTransportPayloadUtils
-} from './MaterialsTransport';
 import {
     Box3,
     BufferAttribute,
@@ -18,25 +14,20 @@ import {
     Sphere
 } from 'three';
 
-export type MeshTransportPayloadType = PayloadType & {
+export type MeshPayloadType = DataPayloadType & {
     geometryType: 0 | 1 | 2;
     bufferGeometry: BufferGeometry | Record<string, unknown> | undefined;
     meshName: string | undefined;
-    materialsTransportPayload: MaterialsTransportPayload | undefined;
 };
 
-export class MeshTransportPayload extends DataTransportPayload implements MeshTransportPayloadType {
+export class MeshPayload extends DataPayload implements MeshPayloadType {
 
-    type = 'MeshTransportPayload';
+    static TYPE = 'MeshPayload';
+    type = MeshPayload.TYPE;
     // 0: mesh, 1: line, 2: point
     geometryType: 0 | 1 | 2 = 0;
     bufferGeometry: BufferGeometry | Record<string, unknown> | undefined;
     meshName: string | undefined;
-    materialsTransportPayload: MaterialsTransportPayload = new MaterialsTransportPayload({});
-
-}
-
-export class MeshTransportPayloadUtils {
 
     /**
      * Set the {@link BufferGeometry} and geometry type that can be used when a mesh is created.
@@ -44,9 +35,9 @@ export class MeshTransportPayloadUtils {
      * @param {BufferGeometry} bufferGeometry
      * @param {number} geometryType [0=Mesh|1=LineSegments|2=Points]
      */
-    static setBufferGeometry(payload: MeshTransportPayload, bufferGeometry: BufferGeometry | undefined, geometryType: 0 | 1 | 2) {
-        payload.bufferGeometry = bufferGeometry;
-        payload.geometryType = geometryType;
+    setBufferGeometry(bufferGeometry: BufferGeometry | undefined, geometryType: 0 | 1 | 2) {
+        this.bufferGeometry = bufferGeometry;
+        this.geometryType = geometryType;
     }
 
     /**
@@ -54,30 +45,38 @@ export class MeshTransportPayloadUtils {
      * @param {Mesh} mesh
      * @param {number} geometryType
      */
-    static setMesh(payload: MeshTransportPayload, mesh: Mesh, geometryType: 0 | 1 | 2) {
-        payload.meshName = mesh.name;
-        MeshTransportPayloadUtils.setBufferGeometry(payload, mesh.geometry, geometryType);
+    setMesh(mesh: Mesh, geometryType: 0 | 1 | 2) {
+        this.meshName = mesh.name;
+        this.setBufferGeometry(mesh.geometry, geometryType);
+    }
+
+}
+
+export class MeshPayloadHandler implements PayloadHandler {
+
+    static pack(payload: MeshPayload, transferables: Transferable[], cloneBuffers: boolean) {
+        const handler = PayloadRegister.handler.get(MeshPayload.TYPE);
+        return handler ? handler.pack(payload, transferables, cloneBuffers) : undefined;
     }
 
     /**
      * @param {boolean} cloneBuffers
      */
-    static packMeshTransportPayload(payload: MeshTransportPayload, cloneBuffers: boolean): { payload: MeshTransportPayload, transferables: Transferable[] } {
-        MeshTransportPayloadUtils.packGeometryBuffers(cloneBuffers, payload.bufferGeometry as BufferGeometry, payload.buffers);
+    pack(payload: MeshPayload, transferables: Transferable[], cloneBuffers: boolean) {
+        MeshPayloadHandler.packGeometryBuffers(cloneBuffers, payload.bufferGeometry as BufferGeometry, payload.buffers);
+        DataPayloadHandler.fillTransferables(payload.buffers.values(), transferables, cloneBuffers);
+        return transferables;
+    }
 
-        let transferables: Transferable[] = [];
-        DataTransportPayloadUtils.fillTransferables(payload.buffers.values(), transferables, cloneBuffers);
+    static unpack(transportObject: MeshPayloadType, cloneBuffers: boolean) {
+        const handler = PayloadRegister.handler.get(MeshPayload.TYPE);
+        return handler ? handler.unpack(transportObject, cloneBuffers) : undefined;
+    }
 
-        if (payload.materialsTransportPayload) {
-            const packedMtp = MaterialsTransportPayloadUtils.packMaterialsTransportPayload(payload.materialsTransportPayload, cloneBuffers);
-            payload.materialsTransportPayload = packedMtp.payload;
-            transferables = transferables.concat(packedMtp.transferables);
-        }
-
-        return {
-            payload: payload,
-            transferables: transferables
-        };
+    unpack(transportObject: MeshPayloadType, cloneBuffers: boolean) {
+        const meshPayload = Object.assign(new MeshPayload(), transportObject);
+        meshPayload.bufferGeometry = MeshPayloadHandler.reconstructBuffer(cloneBuffers, meshPayload.bufferGeometry as Record<string, unknown>);
+        return meshPayload;
     }
 
     /**
@@ -97,32 +96,21 @@ export class MeshTransportPayloadUtils {
         const skinWeightBA = bufferGeometry.getAttribute('skinWeight');
         const indexBA = bufferGeometry.getIndex();
 
-        MeshTransportPayloadUtils.addAttributeToBuffers('position', vertexBA, cloneBuffers, buffers);
-        MeshTransportPayloadUtils.addAttributeToBuffers('normal', normalBA, cloneBuffers, buffers);
-        MeshTransportPayloadUtils.addAttributeToBuffers('uv', uvBA, cloneBuffers, buffers);
-        MeshTransportPayloadUtils.addAttributeToBuffers('color', colorBA, cloneBuffers, buffers);
-        MeshTransportPayloadUtils.addAttributeToBuffers('skinIndex', skinIndexBA, cloneBuffers, buffers);
-        MeshTransportPayloadUtils.addAttributeToBuffers('skinWeight', skinWeightBA, cloneBuffers, buffers);
-        MeshTransportPayloadUtils.addAttributeToBuffers('index', indexBA, cloneBuffers, buffers);
+        MeshPayloadHandler.addAttributeToBuffers('position', vertexBA, cloneBuffers, buffers);
+        MeshPayloadHandler.addAttributeToBuffers('normal', normalBA, cloneBuffers, buffers);
+        MeshPayloadHandler.addAttributeToBuffers('uv', uvBA, cloneBuffers, buffers);
+        MeshPayloadHandler.addAttributeToBuffers('color', colorBA, cloneBuffers, buffers);
+        MeshPayloadHandler.addAttributeToBuffers('skinIndex', skinIndexBA, cloneBuffers, buffers);
+        MeshPayloadHandler.addAttributeToBuffers('skinWeight', skinWeightBA, cloneBuffers, buffers);
+        MeshPayloadHandler.addAttributeToBuffers('index', indexBA, cloneBuffers, buffers);
     }
 
     static addAttributeToBuffers(name: string, input: BufferAttribute | InterleavedBufferAttribute | null | undefined,
         cloneBuffer: boolean, buffers: Map<string, ArrayBufferLike>): void {
         if (input && input !== null) {
-            const arrayLike = (cloneBuffer ? Array.from(input.array).slice(0) : input.array) as Uint8Array;
-            buffers.set(name, arrayLike);
+            const typedArray = input.array as unknown as ArrayBufferLike;
+            buffers.set(name, cloneBuffer ? typedArray.slice(0) : typedArray);
         }
-    }
-
-    static unpackMeshTransportPayload(payload: MeshTransportPayloadType, cloneBuffers: boolean): MeshTransportPayload {
-        const mtp = Object.assign(new MeshTransportPayload({}), payload);
-        mtp.bufferGeometry = MeshTransportPayloadUtils.reconstructBuffer(cloneBuffers, mtp.bufferGeometry as Record<string, unknown>);
-
-        if (payload.materialsTransportPayload) {
-            mtp.materialsTransportPayload = Object.assign(new MaterialsTransportPayload({}), payload.materialsTransportPayload);
-            MaterialsTransportPayloadUtils.unpackMaterialsTransportPayload(mtp.materialsTransportPayload, payload.materialsTransportPayload, cloneBuffers);
-        }
-        return mtp;
     }
 
     /**
@@ -142,12 +130,12 @@ export class MeshTransportPayloadUtils {
 
         if (transferredGeometry.attributes) {
             const attr = transferredGeometry.attributes as Record<string, BufferAttribute | InterleavedBufferAttribute>;
-            MeshTransportPayloadUtils.assignAttributeFromTransfered(bufferGeometry, attr.position, 'position', cloneBuffers);
-            MeshTransportPayloadUtils.assignAttributeFromTransfered(bufferGeometry, attr.normal, 'normal', cloneBuffers);
-            MeshTransportPayloadUtils.assignAttributeFromTransfered(bufferGeometry, attr.uv, 'uv', cloneBuffers);
-            MeshTransportPayloadUtils.assignAttributeFromTransfered(bufferGeometry, attr.color, 'color', cloneBuffers);
-            MeshTransportPayloadUtils.assignAttributeFromTransfered(bufferGeometry, attr.skinIndex, 'skinIndex', cloneBuffers);
-            MeshTransportPayloadUtils.assignAttributeFromTransfered(bufferGeometry, attr.skinWeight, 'skinWeight', cloneBuffers);
+            MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.position, 'position', cloneBuffers);
+            MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.normal, 'normal', cloneBuffers);
+            MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.uv, 'uv', cloneBuffers);
+            MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.color, 'color', cloneBuffers);
+            MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.skinIndex, 'skinIndex', cloneBuffers);
+            MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.skinWeight, 'skinWeight', cloneBuffers);
         }
 
         // TODO: morphAttributes
@@ -187,3 +175,6 @@ export class MeshTransportPayloadUtils {
         }
     }
 }
+
+// register the Mesh related payload handler
+PayloadRegister.handler.set(MeshPayload.TYPE, new MeshPayloadHandler());

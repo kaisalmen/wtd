@@ -1,12 +1,7 @@
-export type PayloadType = {
-    cmd?: string;
-    id?: number;
-    name?: string;
-    type?: string;
-    workerId?: number;
-    // TODO: params should be data
-    params?: Record<string, unknown>;
-}
+import {
+    WorkerTaskMessage,
+    WorkerTaskMessageType
+} from './WorkerTaskMessage';
 
 export type WorkerRegistration = {
     module: boolean;
@@ -16,9 +11,9 @@ export type WorkerRegistration = {
 
 export type WorkerExecutionPlan = {
     taskTypeName: string;
-    payload: PayloadType;
-    onComplete: (data: PayloadType) => void;
-    onIntermediate?: (data: PayloadType) => void;
+    message: WorkerTaskMessage;
+    onComplete: (message: WorkerTaskMessageType) => void;
+    onIntermediate?: (message: WorkerTaskMessageType) => void;
     transferables?: Transferable[];
     promiseFunctions?: {
         resolve: (value: unknown) => void,
@@ -78,7 +73,7 @@ export class WorkerTask {
         });
     }
 
-    async initWorker(payload?: PayloadType, transferables?: Transferable[]) {
+    async initWorker(message?: WorkerTaskMessage, transferables?: Transferable[]) {
         return new Promise((resolve, reject) => {
             this.worker = this.createWorker();
             if (this.verbose) {
@@ -89,34 +84,34 @@ export class WorkerTask {
                 reject(new Error('No worker was created before initWorker was called.'));
             }
             else {
-                if (!payload) {
+                if (!message) {
                     resolve('WorkerTask#initWorker: No Payload provided => No init required');
                     return;
                 }
-                this.worker.onmessage = message => {
+                this.worker.onmessage = m => {
                     if (this.verbose) {
-                        console.log(`Init Completed: ${payload.type}: ${message.data.id}`);
+                        console.log(`Init Completed: ${message.name}: ${m.data.id}`);
                     }
-                    resolve(message);
+                    resolve(m);
                 };
-                this.worker.onerror = message => {
+                this.worker.onerror = m => {
                     if (this.verbose) {
-                        console.log(`Init Aborted: ${payload.type}: ${message.error}`);
+                        console.log(`Init Aborted: ${message.name}: ${m.error}`);
                     }
-                    reject(message);
+                    reject(m);
                 };
-                payload.cmd = 'init';
-                payload.workerId = this.workerId;
+                message.cmd = 'init';
+                message.workerId = this.workerId;
                 if (transferables) {
                     // ensure all transferables are copies to all workers on init!
                     const transferablesToWorker = [];
                     for (const transferable of transferables) {
                         transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
                     }
-                    this.worker.postMessage(payload, transferablesToWorker);
+                    this.worker.postMessage(message, transferablesToWorker);
                 }
                 else {
-                    this.worker.postMessage(payload);
+                    this.worker.postMessage(message);
                 }
             }
         });
@@ -149,7 +144,7 @@ export class WorkerTask {
                             plan.onIntermediate(message.data);
                         }
                     } else {
-                        const completionMsg = `Execution Completed: ${plan.payload.type}: ${message.data.id}`;
+                        const completionMsg = `Execution Completed: ${plan.message.name}: ${message.data.id}`;
                         if (this.verbose) {
                             console.log(completionMsg);
                         }
@@ -160,14 +155,14 @@ export class WorkerTask {
                 };
                 this.worker.onerror = message => {
                     if (this.verbose) {
-                        console.log(`Execution Aborted: ${plan.payload.type}: ${message.error}`);
+                        console.log(`Execution Aborted: ${plan.message.name}: ${message.error}`);
                     }
                     reject(message);
                     this.markExecuting(false);
                 };
-                plan.payload.cmd = 'execute';
-                plan.payload.workerId = this.workerId;
-                this.worker.postMessage(plan.payload, plan.transferables!);
+                plan.message.cmd = 'execute';
+                plan.message.workerId = this.workerId;
+                this.worker.postMessage(plan.message, plan.transferables!);
             }
         });
     }
