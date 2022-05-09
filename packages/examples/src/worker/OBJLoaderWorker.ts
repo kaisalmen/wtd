@@ -89,7 +89,7 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
 
         // signal complete
         const execCompleteMessage = new WorkerTaskMessage({
-            cmd: 'intermediate',
+            cmd: 'execComplete',
             id: message.id,
             name: message.name
         });
