@@ -30,6 +30,7 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
         this.id = config.id ?? this.id;
         this.name = config.name ?? this.name;
         this.workerId = config.workerId ?? this.workerId;
+        this.progress = config.progress ?? this.progress;
     }
 
     addPayload(payload: DataPayload | DataPayload[] | undefined) {
@@ -44,8 +45,12 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
         }
     }
 
-    cleanPayloads() {
-        this.payloads = [];
+    static createFromExisting(message: WorkerTaskMessageType, cmd?: string) {
+        const wtm = new WorkerTaskMessage(message);
+        if (cmd) {
+            wtm.cmd = cmd;
+        }
+        return wtm;
     }
 
     pack(cloneBuffers: boolean): Transferable[] {
@@ -58,8 +63,7 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
     }
 
     static unpack(rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) {
-        const instance = Object.assign(new WorkerTaskMessage({}), rawMessage);
-        instance.cleanPayloads();
+        const instance = new WorkerTaskMessage(rawMessage);
 
         for (const payload of rawMessage.payloads) {
             const handler = PayloadRegister.handler.get(payload.type);

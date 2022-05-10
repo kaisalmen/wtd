@@ -18,12 +18,11 @@ import {
 class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     init(message: WorkerTaskMessageType) {
-        message.cmd = 'initComplete';
-        self.postMessage(message);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
-
         const bufferGeometry = new TorusKnotBufferGeometry(20, 3, 100, 64);
         bufferGeometry.name = 'tmProto' + message.id;
 
@@ -48,16 +47,12 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker imp
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 2);
 
-        const execCompleteMessage = new WorkerTaskMessage({
-            cmd: 'execComplete',
-            name: message.name,
-            id: message.id,
-            workerId: message.workerId
-        });
-        execCompleteMessage.addPayload(meshPayload);
-        execCompleteMessage.addPayload(materialsPayload);
-        const transferables = execCompleteMessage.pack(false);
-        self.postMessage(execCompleteMessage, transferables);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        execComplete.addPayload(meshPayload);
+        execComplete.addPayload(materialsPayload);
+
+        const transferables = execComplete.pack(false);
+        self.postMessage(execComplete, transferables);
     }
 }
 

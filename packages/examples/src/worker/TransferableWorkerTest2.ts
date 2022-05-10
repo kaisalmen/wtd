@@ -12,8 +12,9 @@ class TransferableWorkerTest2 extends WorkerTaskDirectorDefaultWorker implements
 
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest2#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
-        message.cmd = 'initComplete';
-        self.postMessage(message);
+
+        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -23,17 +24,15 @@ class TransferableWorkerTest2 extends WorkerTaskDirectorDefaultWorker implements
         if (wtm.payloads.length === 1) {
             const payload = wtm.payloads[0];
             if (payload.params) {
-                wtm.name = payload.params.name as string;
-
                 const payloadOut = new DataPayload();
                 payloadOut.buffers.set('data', new Uint32Array(32 * 1024 * 1024));
 
-                wtm.cleanPayloads();
-                wtm.addPayload(payloadOut);
+                const execComplete = WorkerTaskMessage.createFromExisting(wtm, 'execComplete');
+                execComplete.name = payload.params.name as string;
+                execComplete.addPayload(payloadOut);
 
-                wtm.cmd = 'execComplete';
-                const transferables = wtm.pack(false);
-                self.postMessage(wtm, transferables);
+                const transferables = execComplete.pack(false);
+                self.postMessage(execComplete, transferables);
             }
         }
     }

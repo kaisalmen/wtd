@@ -11,8 +11,8 @@ declare const self: DedicatedWorkerGlobalScope;
 export class HelloWorldWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
 
     init(message: WorkerTaskMessageType) {
-        message.cmd = 'initComplete';
-        self.postMessage(message);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -27,15 +27,11 @@ export class HelloWorldWorker extends WorkerTaskDirectorDefaultWorker implements
             hello: 'say hello'
         };
 
-        const execCompleteMessage = new WorkerTaskMessage({
-            cmd: 'execComplete',
-            name: message.name,
-            id: message.id,
-            workerId: message.workerId
-        });
-        execCompleteMessage.addPayload(dataPayload);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        execComplete.addPayload(dataPayload);
+
         // no need to pack as there aren't any buffers used
-        self.postMessage(execCompleteMessage);
+        self.postMessage(execComplete);
     }
 
 }

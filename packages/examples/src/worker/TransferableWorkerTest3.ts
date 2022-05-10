@@ -27,9 +27,8 @@ class TransferableWorkerTest3 extends WorkerTaskDirectorDefaultWorker implements
             this.context.initPayload = wtm.payloads[0] as MeshPayload;
         }
 
-        wtm.cleanPayloads();
-        wtm.cmd = 'initComplete';
-        self.postMessage(wtm);
+        const initComplete = WorkerTaskMessage.createFromExisting(wtm, 'initComplete');
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -48,12 +47,11 @@ class TransferableWorkerTest3 extends WorkerTaskDirectorDefaultWorker implements
                 MeshPayloadHandler.packGeometryBuffers(false, bufferGeometry as BufferGeometry, dataPayload.buffers);
             }
 
-            wtm.cleanPayloads();
-            wtm.addPayload(dataPayload);
+            const execComplete = WorkerTaskMessage.createFromExisting(wtm, 'execComplete');
+            execComplete.addPayload(dataPayload);
 
-            wtm.cmd = 'execComplete';
-            const transferables = wtm.pack(false);
-            self.postMessage(wtm, transferables);
+            const transferables = execComplete.pack(false);
+            self.postMessage(execComplete, transferables);
         }
     }
 }

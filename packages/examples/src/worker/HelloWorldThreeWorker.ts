@@ -15,8 +15,9 @@ export class HelloWorlThreedWorker extends WorkerTaskDirectorDefaultWorker imple
 
     init(message: WorkerTaskMessageType) {
         console.log(`HelloWorldWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
-        message.cmd = 'initComplete';
-        self.postMessage(message);
+
+        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -32,16 +33,11 @@ export class HelloWorlThreedWorker extends WorkerTaskDirectorDefaultWorker imple
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-        const execCompleteMessage = new WorkerTaskMessage({
-            cmd: 'execComplete',
-            name: message.name,
-            id: message.id,
-            workerId: message.workerId
-        });
-        execCompleteMessage.addPayload(meshPayload);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        execComplete.addPayload(meshPayload);
 
-        const transferables = execCompleteMessage.pack(false);
-        self.postMessage(execCompleteMessage, transferables);
+        const transferables = execComplete.pack(false);
+        self.postMessage(execComplete, transferables);
     }
 
 }

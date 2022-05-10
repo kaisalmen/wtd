@@ -7,7 +7,7 @@ import {
 /**
  * Hello World example showing standard and module worker using three
  */
-class WorkerTaskDirectorHelloWorldExample {
+class HelloWorldModuleWorkerExample {
 
     private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector({
         defaultMaxParallelExecutions: 1,
@@ -62,5 +62,5 @@ class WorkerTaskDirectorHelloWorldExample {
     }
 }
 
-const app = new WorkerTaskDirectorHelloWorldExample();
+const app = new HelloWorldModuleWorkerExample();
 app.run();

@@ -1,4 +1,7 @@
-import { Mesh, Material } from 'three';
+import {
+    Mesh,
+    Material
+} from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
     WorkerTaskDirectorDefaultWorker,
@@ -34,10 +37,8 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
             this.localData.buffer = dataPayload.buffers?.get('modelData');
             this.localData.materials = materialsPayload.materials;
 
-            wtm.cleanPayloads();
-
-            wtm.cmd = 'initComplete';
-            self.postMessage(wtm);
+            const initComplete = WorkerTaskMessage.createFromExisting(wtm, 'initComplete');
+            self.postMessage(initComplete);
         }
     }
 
@@ -66,34 +67,26 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
             mesh.name = mesh.name + message.id;
 
             // signal intermediate feedback
-            const intermediateMessage = new WorkerTaskMessage({
-                cmd: 'intermediate',
-                id: message.id,
-                name: message.name
-            });
+            const intermediate = WorkerTaskMessage.createFromExisting(message, 'intermediate');
 
             const meshPayload = new MeshPayload();
             meshPayload.setMesh(mesh, 0);
-            intermediateMessage.addPayload(meshPayload);
+            intermediate.addPayload(meshPayload);
 
             const material = mesh.material;
             if (material instanceof Material) {
                 const materialPayload = new MaterialsPayload();
                 MaterialUtils.addMaterial(materialPayload.materials, material.name, material, false, false);
-                intermediateMessage.addPayload(materialPayload);
+                intermediate.addPayload(materialPayload);
             }
 
-            const transferables = intermediateMessage.pack(false);
-            self.postMessage(intermediateMessage, transferables);
+            const transferables = intermediate.pack(false);
+            self.postMessage(intermediate, transferables);
         }
 
         // signal complete
-        const execCompleteMessage = new WorkerTaskMessage({
-            cmd: 'execComplete',
-            id: message.id,
-            name: message.name
-        });
-        self.postMessage(execCompleteMessage);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        self.postMessage(execComplete);
     }
 
 }

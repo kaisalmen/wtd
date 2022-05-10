@@ -31,12 +31,11 @@ class TransferableWorkerTest4 extends WorkerTaskDirectorDefaultWorker implements
             const meshPayload = new MeshPayload();
             meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-            wtm.cleanPayloads();
-            wtm.addPayload(meshPayload);
+            const execComplete = WorkerTaskMessage.createFromExisting(wtm, 'execComplete');
+            execComplete.addPayload(meshPayload);
 
-            wtm.cmd = 'execComplete';
-            const transferables = wtm.pack(false);
-            self.postMessage(wtm, transferables);
+            const transferables = execComplete.pack(false);
+            self.postMessage(execComplete, transferables);
         }
     }
 

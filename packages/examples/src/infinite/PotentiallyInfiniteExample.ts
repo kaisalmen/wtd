@@ -156,7 +156,7 @@ class PotentiallyInfiniteExample {
         if (elementToBindTo === null) {
             throw Error('Bad element HTML given as canvas.');
         }
-        this.ui = new GUIControls(document.getElementById('dat'), this);
+        this.ui = new GUIControls(document.getElementById('lil-gui'), this);
 
         this.canvas = elementToBindTo;
         this.renderer = new THREE.WebGLRenderer({

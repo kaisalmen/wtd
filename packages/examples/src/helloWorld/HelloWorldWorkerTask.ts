@@ -1,33 +1,33 @@
 import {
-    WorkerTaskDirector,
+    WorkerTask,
     WorkerTaskMessage,
     WorkerTaskMessageType
 } from 'wtd-core';
 
 /**
- * Hello World example showing standard and module worker using three
+ * Hello World example just using the WorkerTask directly without the WorkerTaskDirector
  */
-class HelloWorldStandardWorkerExample {
-
-    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector({
-        defaultMaxParallelExecutions: 1,
-        verbose: true
-    });
+class HelloWorldWorkerTaskExample {
 
     async run() {
         let t0: number;
         let t1: number;
-        const taskName = 'WorkerModuleStandard';
+        const taskName = 'HelloWorldTaskWorker';
 
-        // register the standard worker
-        this.workerTaskDirector.registerTask(taskName, {
-            module: false,
+        const workerTask = new WorkerTask(taskName, 1, {
+            module: true,
             blob: false,
-            url: new URL('../worker/volatile/HelloWorldWorkerStandard', import.meta.url)
+            url: new URL('../worker/HelloWorldWorker', import.meta.url)
+        }, true);
+
+        const initMessage = new WorkerTaskMessage({
+            cmd: 'init',
+            id: 0,
+            name: taskName
         });
 
         // init the worker task without any payload (worker init without function invocation on worker)
-        this.workerTaskDirector.initTaskType(taskName)
+        workerTask.initWorker(initMessage)
             .then((x: unknown) => {
                 console.log(`initTaskType then: ${x}`);
                 t0 = performance.now();
@@ -37,7 +37,7 @@ class HelloWorldStandardWorkerExample {
                     id: 0,
                     name: taskName
                 });
-                this.workerTaskDirector.enqueueWorkerExecutionPlan({
+                workerTask.executeWorker({
                     taskTypeName: execMessage.name,
                     message: execMessage,
                     // decouple result evaluation ...
@@ -62,5 +62,5 @@ class HelloWorldStandardWorkerExample {
     }
 }
 
-const app = new HelloWorldStandardWorkerExample();
+const app = new HelloWorldWorkerTaskExample();
 app.run();

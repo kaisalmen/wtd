@@ -22,13 +22,8 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDirectorDefaultWorker imp
     init(message: WorkerTaskMessage) {
         this.localData.meshPayloadRaw = message.payloads[0] as MeshPayload;
 
-        const initCompleteMessage = new WorkerTaskMessage({
-            cmd: 'initComplete',
-            name: message.name,
-            id: message.id,
-            workerId: message.workerId
-        });
-        self.postMessage(initCompleteMessage);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -61,16 +56,11 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDirectorDefaultWorker imp
                     }
                 };
 
-                const execCompleteMessage = new WorkerTaskMessage({
-                    cmd: 'execComplete',
-                    name: message.name,
-                    id: message.id,
-                    workerId: message.workerId
-                });
-                execCompleteMessage.addPayload(meshPayload);
+                const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+                execComplete.addPayload(meshPayload);
 
-                const transferables = execCompleteMessage.pack(false);
-                self.postMessage(execCompleteMessage, transferables);
+                const transferables = execComplete.pack(false);
+                self.postMessage(execComplete, transferables);
             }
         }
 

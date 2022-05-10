@@ -19,7 +19,6 @@
     "lint": "npm run lint --workspaces",
     "doc": "npm run doc --workspaces",
     "compile": "npm run compile --workspaces",
-    "watch": "npm run watch --workspaces",
     "build": "npm run build --workspaces",
     "build:libs": "npm run build --workspace packages/wtd-core && npm run build --workspace packages/wtd-three-ext",
     "dev": "npm run dev --workspace packages/examples",

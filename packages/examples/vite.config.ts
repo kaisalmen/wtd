@@ -18,6 +18,7 @@ export default defineConfig({
                 main: path.resolve(__dirname, 'index.html'),
                 helloWorld: path.resolve(__dirname, 'helloWorld.html'),
                 helloWorldStandard: path.resolve(__dirname, 'helloWorldStandard.html'),
+                helloWorldWorkerTask: path.resolve(__dirname, 'helloWorldWorkerTask.html'),
                 transferables: path.resolve(__dirname, 'transferables.html'),
                 threejs: path.resolve(__dirname, 'threejs.html'),
                 potentiallyInfinite: path.resolve(__dirname, 'potentially_infinite.html')
