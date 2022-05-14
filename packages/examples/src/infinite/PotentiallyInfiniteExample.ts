@@ -102,7 +102,7 @@ class PotentiallyInfiniteExample {
         use: true,
         module: true,
         blob: false,
-        workerUrl: new URL('../worker/InfiniteWorkerInternalGeometry', import.meta.url),
+        workerUrl: new URL(import.meta.env.DEV ? '../worker/InfiniteWorkerInternalGeometry.ts' : '../worker/generated/InfiniteWorkerInternalGeometry-es.js', import.meta.url),
         workerCount: 10
     } as TaskDescription;
     taskInfiniteWorkerExternalGeometry = {
@@ -111,7 +111,7 @@ class PotentiallyInfiniteExample {
         use: true,
         module: true,
         blob: false,
-        workerUrl: new URL('../worker/InfiniteWorkerExternalGeometry', import.meta.url),
+        workerUrl: new URL(import.meta.env.DEV ? '../worker/InfiniteWorkerExternalGeometry.ts' : '../worker/generated/InfiniteWorkerExternalGeometry-es.js', import.meta.url),
         workerCount: 8
     } as TaskDescription;
     taskObjLoader2Worker = {
@@ -121,7 +121,7 @@ class PotentiallyInfiniteExample {
         use: true,
         module: true,
         blob: false,
-        workerUrl: new URL('../worker/volatile/OBJLoader2Worker.js', import.meta.url),
+        workerUrl: new URL(import.meta.env.DEV ? '../worker/volatile/OBJLoader2Worker.js' : '../worker/generated/OBJLoader2Worker-es.js', import.meta.url),
         workerCount: 2,
         filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
         filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),

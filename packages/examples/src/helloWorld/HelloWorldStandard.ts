@@ -23,7 +23,7 @@ class HelloWorldStandardWorkerExample {
         this.workerTaskDirector.registerTask(taskName, {
             module: false,
             blob: false,
-            url: new URL('../worker/volatile/HelloWorldWorkerStandard', import.meta.url)
+            url: new URL(import.meta.env.DEV ? '../worker/generated/HelloWorldWorker-iife.js' : '../worker/generated/HelloWorldWorker-iife.js', import.meta.url)
         });
 
         // init the worker task without any payload (worker init without function invocation on worker)

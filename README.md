@@ -26,7 +26,6 @@ With version v2.0.0 the core library [wtd-core](./packages/wtd-core) and the thr
 - All code has been transform to TypeScript (***new in 2.0.0***)
 - [Vite](https://vitejs.dev/) is used for development and worker bundling / standard worker support (***new in 2.0.0***)
 
-
 # Getting Started
 
 There exist three possibilities:
@@ -49,11 +48,12 @@ The [stable](https://github.com/kaisalmen/three-wtm/tree/stable) branch contains
 # Examples
 
 There are multiple examples available (listed from simple to complex):
-- [Hello World](./packages/examples/helloWorld.html)
-- [Hello World Standard Worker](./packages/examples/helloWorldStandard.html)
-- [Transferables](./packages/examples/transferables.html)
-- [Three.js Example](./packages/examples/threejs.html)
-- [Potentially Infinite Example](./packages/examples/potentially_infinite.html)
+- **Hello World: Module Worker**: [html](./packages/examples/helloWorld.html), [ts](./packages/examples/src/helloWorld/helloWorld.ts), [worker-ts](./packages/examples/src/worker/HelloWorldWorker.ts)
+- **Hello World: Standard Worker**: [html](./packages/examples/helloWorldStandard.html), [ts](./packages/examples/src/helloWorld/helloWorldStandard.ts), [worker-js (generated)](./packages/examples/src/worker/volatile/HelloWorldWorkerStandard.js)
+- **Hello World: WorkerTask Only**: [html](./packages/examples/helloWorldWorkerTask.html), [ts](./packages/examples/src/helloWorld/helloWorldWorkerTask.ts), [worker-ts](./packages/examples/src/worker/HelloWorldWorker.ts)
+- **Transferables**: [html](./packages/examples/transferables.html), [ts](./packages/examples/src/transferables/TransferablesTestbed.ts), **Worker**: [1](./packages/examples/src/worker/TransferableWorkerTest1.ts), [2](./packages/examples/src/worker/TransferableWorkerTest2.ts), [3](./packages/examples/src/worker/TransferableWorkerTest3.ts), [4](./packages/examples/src/worker/TransferableWorkerTest4.ts)
+- **Three.js Example**: [hmtl](./packages/examples/threejs.html), [ts](./packages/examples/src/threejs/Threejs.ts), **Worker**: [1](./packages/examples/src/worker/HelloWorldThreeWorker.ts), [2](./packages/examples/src/worker/OBJLoaderWorker.ts)
+- **Potentially Infinite Example**: [html](./packages/examples/potentially_infinite.html), [ts](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts), **Worker**: [1](./packages/examples/src/worker/InfiniteWorkerExternalGeometry.ts), [2](./packages/examples/src/worker/InfiniteWorkerInternalGeometry.ts), [3](./packages/examples/src/worker/OBJLoader2Worker.js), [4](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts#L591)
 
 This shall give you an idea how you can use module worker with `WorkerTaskManager` (also see [Hello World Example](./packages/examples/helloworld.html)). It is registered, initialized and execute once:
 ```javascript

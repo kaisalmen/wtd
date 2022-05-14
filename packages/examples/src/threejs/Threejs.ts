@@ -132,7 +132,7 @@ class WorkerTaskDirectorExample {
         this.workerTaskDirector.registerTask(helloWorldInitMessage.name, {
             module: true,
             blob: false,
-            url: new URL('../worker/HelloWorldThreeWorker', import.meta.url)
+            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldThreeWorker.ts' : '../worker/generated/HelloWorldThreeWorker-es.js', import.meta.url)
         });
         this.tasksToUse.push(helloWorldInitMessage.name);
         awaiting.push(this.workerTaskDirector.initTaskType(helloWorldInitMessage.name, helloWorldInitMessage));
@@ -142,32 +142,31 @@ class WorkerTaskDirectorExample {
             name: 'OBJLoaderdWorker'
         });
 
-        const objLoaderDataPayload = new DataPayload();
-        objLoaderDataPayload.params = {
-            filename: '../models/obj/female02/female02_vertex_colors.obj'
-        };
-
         this.workerTaskDirector.registerTask(objLoaderInitMessage.name, {
             module: true,
             blob: false,
-            url: new URL('../worker/OBJLoaderWorker', import.meta.url)
+            url: new URL(import.meta.env.DEV ? '../worker/OBJLoaderWorker.ts' : '../worker/generated/OBJLoaderWorker-es.js', import.meta.url)
         });
         this.tasksToUse.push(objLoaderInitMessage.name);
 
-        const loadObj = async function(filenameObj: string) {
+        const loadObj = async function() {
             const fileLoader = new THREE.FileLoader();
             fileLoader.setResponseType('arraybuffer');
-            return fileLoader.loadAsync(filenameObj);
+
+            const objFilename = new URL('../../models/obj/female02/female02_vertex_colors.obj', import.meta.url);
+            return fileLoader.loadAsync(objFilename as unknown as string);
         };
 
         let bufferExt: ArrayBufferLike;
-        awaiting.push(loadObj(objLoaderDataPayload.params?.filename as string)
+        awaiting.push(loadObj()
             .then(async (buffer: string | ArrayBuffer) => {
                 bufferExt = buffer as ArrayBufferLike;
             }));
         await Promise.all(awaiting)
             .then(async () => {
                 console.log('Loaded OBJ');
+
+                const objLoaderDataPayload = new DataPayload();
                 objLoaderDataPayload.buffers.set('modelData', bufferExt);
 
                 const materialsPayload = new MaterialsPayload();

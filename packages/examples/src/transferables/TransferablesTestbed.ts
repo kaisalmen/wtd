@@ -25,7 +25,7 @@ type ExampleTask = {
     id: number;
     name: string;
     sendGeometry: boolean;
-    moduleURL: URL;
+    url: URL;
     segments: number;
 }
 
@@ -73,7 +73,7 @@ class TransferablesTestbed {
             id: 1,
             name: 'TransferableWorkerTest1',
             sendGeometry: false,
-            moduleURL: new URL('../worker/TransferableWorkerTest1', import.meta.url),
+            url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest1.ts' : '../worker/generated/TransferableWorkerTest1-es.js', import.meta.url),
             segments: 0
         });
         this.tasks.push({
@@ -81,7 +81,7 @@ class TransferablesTestbed {
             id: 2,
             name: 'TransferableWorkerTest2',
             sendGeometry: false,
-            moduleURL: new URL('../worker/TransferableWorkerTest2', import.meta.url),
+            url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest2.ts' : '../worker/generated/TransferableWorkerTest2-es.js', import.meta.url),
             segments: 0
         });
         this.tasks.push({
@@ -89,7 +89,7 @@ class TransferablesTestbed {
             id: 3,
             name: 'TransferableWorkerTest3',
             sendGeometry: true,
-            moduleURL: new URL('../worker/TransferableWorkerTest3', import.meta.url),
+            url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest3.ts' : '../worker/generated/TransferableWorkerTest3-es.js', import.meta.url),
             segments: 1024
         });
         this.tasks.push({
@@ -97,7 +97,7 @@ class TransferablesTestbed {
             id: 4,
             name: 'TransferableWorkerTest4',
             sendGeometry: false,
-            moduleURL: new URL('../worker/TransferableWorkerTest4', import.meta.url),
+            url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest4.ts' : '../worker/generated/TransferableWorkerTest4-es.js', import.meta.url),
             segments: 1024
         });
 
@@ -189,7 +189,7 @@ class TransferablesTestbed {
         this.workerTaskDirector.registerTask(task.name, {
             module: true,
             blob: false,
-            url: task.moduleURL
+            url: task.url
         });
 
         const initMessage = new WorkerTaskMessage({

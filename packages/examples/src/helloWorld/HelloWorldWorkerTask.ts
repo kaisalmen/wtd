@@ -17,7 +17,7 @@ class HelloWorldWorkerTaskExample {
         const workerTask = new WorkerTask(taskName, 1, {
             module: true,
             blob: false,
-            url: new URL('../worker/HelloWorldWorker', import.meta.url)
+            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
         }, true);
 
         const initMessage = new WorkerTaskMessage({

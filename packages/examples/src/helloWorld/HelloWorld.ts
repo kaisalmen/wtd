@@ -23,7 +23,7 @@ class HelloWorldModuleWorkerExample {
         this.workerTaskDirector.registerTask(taskName, {
             module: true,
             blob: false,
-            url: new URL('../worker/HelloWorldWorker', import.meta.url)
+            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
         });
 
         // init the worker task without any payload (worker init without function invocation on worker)
