@@ -18,7 +18,7 @@ With version v2.0.0 the core library [wtd-core](./packages/wtd-core) and the thr
 
 There are multiple examples available (listed from simple to advanced):
 - **Hello World: Module Worker**: [html](./packages/examples/helloWorld.html), [ts](./packages/examples/src/helloWorld/helloWorld.ts), [worker-ts](./packages/examples/src/worker/HelloWorldWorker.ts)
-- **Hello World: Standard Worker**: [html](./packages/examples/helloWorldStandard.html), [ts](./packages/examples/src/helloWorld/helloWorldStandard.ts), [worker-js (generated)](./packages/examples/src/worker/volatile/HelloWorldWorkerStandard.js)
+- **Hello World: Standard Worker**: [html](./packages/examples/helloWorldStandard.html), [ts](./packages/examples/src/helloWorld/helloWorldStandard.ts), [worker-js (generated)](./packages/examples/src/worker/generated/HelloWorldWorker-iife.js)
 - **Hello World: WorkerTask Only**: [html](./packages/examples/helloWorldWorkerTask.html), [ts](./packages/examples/src/helloWorld/helloWorldWorkerTask.ts), [worker-ts](./packages/examples/src/worker/HelloWorldWorker.ts)
 - **Transferables**: [html](./packages/examples/transferables.html), [ts](./packages/examples/src/transferables/TransferablesTestbed.ts), **Worker**: [1](./packages/examples/src/worker/TransferableWorkerTest1.ts), [2](./packages/examples/src/worker/TransferableWorkerTest2.ts), [3](./packages/examples/src/worker/TransferableWorkerTest3.ts), [4](./packages/examples/src/worker/TransferableWorkerTest4.ts)
 - **Three.js Example**: [html](./packages/examples/threejs.html), [ts](./packages/examples/src/threejs/Threejs.ts), **Worker**: [1](./packages/examples/src/worker/HelloWorldThreeWorker.ts), [2](./packages/examples/src/worker/OBJLoaderWorker.ts)
