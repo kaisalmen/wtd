@@ -9,7 +9,7 @@ import {
 } from './WorkerTask';
 
 type WorkerTaskRuntimeDesc = {
-    workerStories: Map<number, WorkerTask>;
+    workerTasks: Map<number, WorkerTask>;
     readonly maxParallelExecutions: number;
 }
 
@@ -61,12 +61,12 @@ export class WorkerTaskDirector {
         if (allowedToRegister) {
             maxParallelExecutions = maxParallelExecutions ?? this.config.defaultMaxParallelExecutions;
             const workerTaskRuntimeDesc: WorkerTaskRuntimeDesc = {
-                workerStories: new Map(),
+                workerTasks: new Map(),
                 maxParallelExecutions: maxParallelExecutions
             };
             this.taskTypes.set(taskTypeName, workerTaskRuntimeDesc);
             for (let i = 0; i < maxParallelExecutions; i++) {
-                workerTaskRuntimeDesc.workerStories.set(i, new WorkerTask(taskTypeName, i, workerRegistration, this.config.verbose));
+                workerTaskRuntimeDesc.workerTasks.set(i, new WorkerTask(taskTypeName, i, workerRegistration, this.config.verbose));
             }
         }
         return allowedToRegister;
@@ -84,7 +84,7 @@ export class WorkerTaskDirector {
         const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
         if (workerTaskRuntimeDesc) {
             this.workerExecutionPlans.set(taskTypeName, []);
-            for (const workerTask of workerTaskRuntimeDesc.workerStories.values()) {
+            for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 executions.push(workerTask.initWorker(message, transferables));
             }
         }
@@ -169,7 +169,7 @@ export class WorkerTaskDirector {
 
     private getUnusedWorkerTask(workerTaskRuntimeDesc: WorkerTaskRuntimeDesc | undefined) {
         if (workerTaskRuntimeDesc) {
-            for (const workerTask of workerTaskRuntimeDesc.workerStories.values()) {
+            for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 if (!workerTask.isWorkerExecuting()) {
                     workerTask.markExecuting(true);
                     return workerTask;
@@ -185,7 +185,7 @@ export class WorkerTaskDirector {
      */
     dispose() {
         for (const workerTaskRuntimeDesc of this.taskTypes.values()) {
-            for (const workerTask of workerTaskRuntimeDesc.workerStories.values()) {
+            for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 workerTask.dispose();
             }
         }

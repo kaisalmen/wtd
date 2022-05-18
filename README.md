@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
+[![wtd](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml/badge.svg)](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml)
 
 # Overview
 
@@ -81,13 +82,21 @@ In any environment the dev server is reachable on port 8080.
 - Dependency handling is realized via regular module import
 - `WorkerTaskDirector` has an execution queue allowing to queue more task than can be currently executed.
 - The worker interface is specified by `WorkerTaskDirectorWorker` and is implemented by default by `WorkerTaskDirectorDefaultWorker`. Extending this class defines the easiest way to integrate a worker. (***new in 2.0.0***)
-- The amount of workers that are created for each task can now be configured. This is shown in the [Potentially Infinite Example](./packages/examples/potentially_infinite.html) (***new in 2.0.0***). It feature transfer Mesh and Material (meta-information) bi-driectionally between Main and workers with proper handling of **Transferables**" are treated as such by **.
-- All code has been transform to TypeScript (***new in 2.0.0***)
-- [Vite](https://vitejs.dev/) is used for development and worker bundling / standard worker support (***new in 2.0.0***)
+- The workers that are created for each task can now be configured. This is shown in the [Potentially Infinite Example](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts) (***new in 2.0.0***). It features transfer Mesh and Material (meta-information) bi-driectionally between Main and workers with proper handling of **Transferables**" are treated as such by **.
 
 # Execution Workflow
 
-`WorkerTaskDirector` (repeatively) and `WorkerTask`
+The following table describes the currently implemented execution workflow of `WorkerTaskManager`:
+
+| WorkerTaskManager (function)  | Message cmd + direction   | Worker (function) | Comment
+| ---                           | :---:                     | ---               | ---
+| `registerTask`                |                           |                   |
+| `initTaskType`                | **init ->**               | `init`            | User of `initTaskType` receives resolved promise after execution completion.<br>Sending `init` message is Optional
+|                               | **<- initComplete**       |                   |
+| `enqueueForExecution`         | **exec ->**               | `exec`            |
+|                               | **<- intermediate**       |                   | Can be sent 0 to n times before **execComplete**
+|                               | **<- execComplete**       |                   | User of `enqueueForExecution` receives resolved promise after execution completion.<br>Callbacks `onIntermediate` and `onComplete` are used to handle message+payload.
+
 
 # Main Branches
 
