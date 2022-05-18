@@ -1,6 +1,6 @@
 {
   "name": "wtd-examples",
-  "version": "2.0.0",
+  "version": "2.0.0-rc.0",
   "type": "module",
   "private": "true",
   "scripts": {
@@ -31,7 +31,7 @@
   "dependencies": {
     "wtd-core": "../wtd-core",
     "wtd-three-ext": "../wtd-three-ext",
-    "wwobjloader2": "../../../WWOBJLoader/packages/objloader2",
+    "wwobjloader2": "^5.0.0-beta.3",
     "lil-gui": "^0.16.1"
   },
   "devDependencies": {
