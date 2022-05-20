@@ -63,28 +63,14 @@ export class MaterialStore {
         }
     }
 
-
-    /**
-     * Returns the mapping object of material name and corresponding material.
-     *
-     * @returns {Map<string, Material>}
-     */
     getMaterials(): Map<string, Material> {
         return this.materials;
     }
 
-    /**
-     *
-     * @param {String} materialName
-     * @returns {Material}
-     */
     getMaterial(materialName: string): Material | undefined {
         return this.materials.get(materialName);
     }
 
-    /**
-     * Removes all materials
-     */
     clearMaterials() {
         this.materials.clear();
     }

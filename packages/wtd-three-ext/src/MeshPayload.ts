@@ -79,11 +79,6 @@ export class MeshPayloadHandler implements PayloadHandler {
         return meshPayload;
     }
 
-    /**
-     * Package {@link BufferGeometry} and prepare it for transport.
-     *
-     * @param {boolean} cloneBuffers Clone buffers if their content shall stay in the current context.
-     */
     static packGeometryBuffers(cloneBuffers: boolean, bufferGeometry: BufferGeometry | undefined, buffers: Map<string, ArrayBufferLike>) {
         // fast-fail
         if (!(bufferGeometry instanceof BufferGeometry)) return;
@@ -113,10 +108,6 @@ export class MeshPayloadHandler implements PayloadHandler {
         }
     }
 
-    /**
-     * Reconstructs the {@link BufferGeometry} from the raw buffers.
-     * @param {boolean} cloneBuffers
-     */
     static reconstructBuffer(cloneBuffers: boolean, transferredGeometry: BufferGeometry | Record<string, unknown>): BufferGeometry {
         const bufferGeometry = new BufferGeometry();
 

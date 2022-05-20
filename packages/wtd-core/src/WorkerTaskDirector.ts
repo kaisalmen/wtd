@@ -20,9 +20,8 @@ type WorkerTaskDirectorConfig = {
 
 /**
  * Register one to many tasks type to the WorkerTaskDirector. Then init and enqueue a worker based execution by passing
- * configuration and buffers. The WorkerTaskDirector allows to execute a maximum number of executions in parallel.
- *
- * Initial idea by Don McCurdy / https://www.donmccurdy.com / https://github.com/mrdoob/three.js/issues/18234
+ * configuration and buffers. The WorkerTaskDirector allows to execute a maximum number of executions in parallel for
+ * each registered worker task.
  */
 export class WorkerTaskDirector {
 
@@ -35,11 +34,6 @@ export class WorkerTaskDirector {
     private taskTypes: Map<string, WorkerTaskRuntimeDesc>;
     private workerExecutionPlans: Map<string, WorkerExecutionPlan[]>;
 
-    /**
-     * Creates a new WorkerTaskDirector instance.
-     *
-     * @param {WorkerTaskDirectorConfig} [config] configuration options
-     */
     constructor(config?: WorkerTaskDirectorConfig) {
         if (config) {
             this.config.defaultMaxParallelExecutions = config.defaultMaxParallelExecutions;
@@ -50,10 +44,11 @@ export class WorkerTaskDirector {
     }
 
     /**
-     * Registers functionality for a new task type based on module file.
+     * Registers functionality for a new task type based on workerRegistration info
      *
      * @param {string} taskTypeName The name to be used for registration.
-     * @param {WorkerRegistration} workerRegistration
+     * @param {WorkerRegistration} workerRegistration information regarding the worker to be registered
+     * @param {number} maxParallelExecutions Number of maximum parallel executions allowed
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
     registerTask(taskTypeName: string, workerRegistration: WorkerRegistration, maxParallelExecutions?: number) {

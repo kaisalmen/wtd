@@ -15,13 +15,13 @@ export type MaterialCloneInstructions = {
 export class MaterialUtils {
 
     /**
-     * Adds the provided material to the provided materials object if the material does not exists.
+     * Adds the provided material to the provided map of materials if the material does not exists.
      * Use force override existing material.
      *
      * @param {Map<string, Material>} materialsObject
-     * @param {Material} material
      * @param {string} materialName
-     * @param {boolean} force
+     * @param {Material} material
+     * @param {boolean} force Enforce addition of provided material
      * @param {boolean} [log] Log messages to the console
      */
     static addMaterial(materialsObject: Map<string, Material>, materialName: string, material: Material,

@@ -21,9 +21,6 @@ export type WorkerExecutionPlan = {
     };
 }
 
-/**
- * Defines a worker type: functions, dependencies and runtime information once it was created.
- */
 export class WorkerTask {
 
     private taskTypeName: string;
@@ -39,14 +36,6 @@ export class WorkerTask {
     private worker: Worker | undefined;
     private executing = false;
 
-    /**
-     * Creates a new instance of {@link WorkerTask}.
-     *
-     * @param {string} taskTypeName The name of the registered task type.
-     * @param {number} workerId The workerId
-     * @param {WorkerRegistration} workerRegistration The name of the registered task type.
-     * @param {boolean} [verbose] Set if logging should be verbose
-     */
     constructor(taskTypeName: string, workerId: number, workerRegistration: WorkerRegistration, verbose?: boolean) {
         this.taskTypeName = taskTypeName;
         this.workerId = workerId;
