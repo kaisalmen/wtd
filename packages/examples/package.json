@@ -1,6 +1,5 @@
 {
   "name": "wtd-examples",
-  "version": "2.0.0-rc.0",
   "type": "module",
   "private": "true",
   "scripts": {
