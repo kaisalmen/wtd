@@ -22,8 +22,7 @@
     "lint": "npx eslint src",
     "compile": "tsc -b",
     "watch": "tsc -w",
-    "build": "npm run clean && npm run compile",
-    "serve": "tsc && vite preview"
+    "build": "npm run clean && npm run compile"
   },
   "dependencies": {
     "wtd-core": "../wtd-core",
