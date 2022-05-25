@@ -1,4 +1,4 @@
-# WorkerTaskDirector Core Library, Extensions for three.js and plus examples
+# WorkerTaskDirector Core Library, Extensions for three.js and examples
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
