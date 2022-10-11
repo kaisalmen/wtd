@@ -1,8 +1,10 @@
+import type {
+    DataPayloadType,
+    PayloadHandlerType
+} from 'wtd-core';
 import {
     DataPayloadHandler,
     DataPayload,
-    DataPayloadType,
-    PayloadHandler,
     PayloadRegister
 } from 'wtd-core';
 import {
@@ -52,7 +54,7 @@ export class MeshPayload extends DataPayload implements MeshPayloadType {
 
 }
 
-export class MeshPayloadHandler implements PayloadHandler {
+export class MeshPayloadHandler implements PayloadHandlerType {
 
     static pack(payload: MeshPayload, transferables: Transferable[], cloneBuffers: boolean) {
         const handler = PayloadRegister.handler.get(MeshPayload.TYPE);

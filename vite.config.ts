@@ -7,18 +7,19 @@ import path from 'path';
 
 export default defineConfig(({ command }) => {
     console.log(`Running: ${command}`);
+    const dirExamples = path.resolve(__dirname, 'pacakges/examples');
     return {
         build: {
             target: ['es2020'],
             rollupOptions: {
                 input: {
-                    main: path.resolve(__dirname, 'index.html'),
-                    helloWorld: path.resolve(__dirname, 'helloWorld.html'),
-                    helloWorldStandard: path.resolve(__dirname, 'helloWorldStandard.html'),
-                    helloWorldWorkerTask: path.resolve(__dirname, 'helloWorldWorkerTask.html'),
-                    transferables: path.resolve(__dirname, 'transferables.html'),
-                    threejs: path.resolve(__dirname, 'threejs.html'),
-                    potentiallyInfinite: path.resolve(__dirname, 'potentially_infinite.html')
+                    main: path.resolve(dirExamples, 'index.html'),
+                    helloWorld: path.resolve(dirExamples, 'helloWorld.html'),
+                    helloWorldStandard: path.resolve(dirExamples, 'helloWorldStandard.html'),
+                    helloWorldWorkerTask: path.resolve(dirExamples, 'helloWorldWorkerTask.html'),
+                    transferables: path.resolve(dirExamples, 'transferables.html'),
+                    threejs: path.resolve(dirExamples, 'threejs.html'),
+                    potentiallyInfinite: path.resolve(dirExamples, 'potentially_infinite.html')
                 },
                 output: {
                     esModule: true
@@ -26,7 +27,7 @@ export default defineConfig(({ command }) => {
             },
             minify: false,
             assetsInlineLimit: 128,
-            outDir: './preview',
+            outDir: path.resolve(dirExamples, 'preview'),
             emptyOutDir: true,
         },
         server: {

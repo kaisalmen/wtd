@@ -1,4 +1,4 @@
-import { TorusKnotBufferGeometry } from 'three';
+import { TorusKnotGeometry } from 'three';
 import {
     WorkerTaskDirectorWorker,
     WorkerTaskDirectorDefaultWorker,
@@ -25,7 +25,7 @@ class TransferableWorkerTest4 extends WorkerTaskDirectorDefaultWorker implements
         const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads.length === 1) {
             const payload = wtm.payloads[0];
-            const bufferGeometry = new TorusKnotBufferGeometry(20, 3, payload.params?.segments as number, payload.params?.segments as number);
+            const bufferGeometry = new TorusKnotGeometry(20, 3, payload.params?.segments as number, payload.params?.segments as number);
             bufferGeometry.name = wtm.name;
 
             const meshPayload = new MeshPayload();

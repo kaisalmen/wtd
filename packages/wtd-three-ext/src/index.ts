@@ -1,24 +1,30 @@
+import type {
+    MaterialCloneInstructionsType
+} from './MaterialUtils';
 import {
-    MaterialUtils,
-    MaterialCloneInstructions
+    MaterialUtils
 } from './MaterialUtils';
 import {
     MaterialStore
 } from './MaterialStore';
+import type {
+    MaterialsPayloadType
+} from './MaterialsPayload';
 import {
-    MaterialsPayloadType,
     MaterialsPayload,
     MaterialsPayloadHandler
 } from './MaterialsPayload';
+import type {
+    MeshPayloadType
+} from './MeshPayload';
 import {
-    MeshPayloadType,
     MeshPayload,
     MeshPayloadHandler
 } from './MeshPayload';
 
 export {
     MaterialUtils,
-    MaterialCloneInstructions,
+    MaterialCloneInstructionsType,
     MaterialStore,
     MaterialsPayloadType,
     MaterialsPayload,

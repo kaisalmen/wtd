@@ -1,5 +1,5 @@
 import {
-    TorusKnotBufferGeometry,
+    TorusKnotGeometry,
     Color,
     MeshPhongMaterial
 } from 'three';
@@ -23,7 +23,7 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker imp
     }
 
     execute(message: WorkerTaskMessageType) {
-        const bufferGeometry = new TorusKnotBufferGeometry(20, 3, 100, 64);
+        const bufferGeometry = new TorusKnotGeometry(20, 3, 100, 64);
         bufferGeometry.name = 'tmProto' + message.id;
 
         const vertexBA = bufferGeometry.getAttribute('position');

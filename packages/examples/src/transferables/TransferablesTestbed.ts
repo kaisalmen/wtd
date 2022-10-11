@@ -197,7 +197,7 @@ class TransferablesTestbed {
             name: task.name
         });
         if (task.sendGeometry) {
-            const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
+            const torus = new THREE.TorusGeometry(25, 8, 16, 100);
             torus.name = 'torus';
 
             const meshPayload = new MeshPayload();

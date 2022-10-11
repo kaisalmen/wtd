@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+- Export an esm bundle along with raw code
+- Use `import type` for importing type definitions
+
 ## 2.0.0
 
 - Completely transform the source code from JavaScript to TypeScript
@@ -16,13 +21,16 @@
   - The depletion code has been rewritten and Promise handling has been fixed
 
 ## 1.1.0
+
 - Added the possibility to load a non-module worker from a URL. Triggered by https://github.com/kaisalmen/WWOBJLoader/issues/60
 - Updated example wtm_helloworld.html to reflect how this is done.
 - Updated formatting of files
 
 ## 1.0.1
+
 - `three.js` is no longer a **peerDependency**. It is just a **dependency**.
 - Updated **devDependencies** to resolve potential security issues.
 
 ## 1.0.0
+
 - Initial public release.

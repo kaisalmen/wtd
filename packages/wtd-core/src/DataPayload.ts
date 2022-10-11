@@ -12,7 +12,7 @@ export class DataPayload implements DataPayloadType {
     progress = 0;
 }
 
-export interface PayloadHandler {
+export interface PayloadHandlerType {
 
     pack(payload: DataPayload, transferable: Transferable[], cloneBuffers: boolean): Transferable[];
 
@@ -22,10 +22,10 @@ export interface PayloadHandler {
 
 export class PayloadRegister {
 
-    static handler = new Map<string, PayloadHandler>();
+    static handler = new Map<string, PayloadHandlerType>();
 }
 
-export class DataPayloadHandler implements PayloadHandler {
+export class DataPayloadHandler implements PayloadHandlerType {
 
     static pack(payload: DataPayload, transferables: Transferable[], cloneBuffers: boolean) {
         const handler = PayloadRegister.handler.get(DataPayload.TYPE);

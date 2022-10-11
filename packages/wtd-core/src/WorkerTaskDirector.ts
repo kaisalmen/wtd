@@ -1,10 +1,14 @@
-import {
-    WorkerTaskMessage,
+import type {
     WorkerTaskMessageType
 } from './WorkerTaskMessage';
 import {
-    WorkerExecutionPlan,
-    WorkerRegistration,
+    WorkerTaskMessage
+} from './WorkerTaskMessage';
+import type {
+    WorkerExecutionPlanType,
+    WorkerRegistrationType
+} from './WorkerTask';
+import {
     WorkerTask
 } from './WorkerTask';
 
@@ -32,7 +36,7 @@ export class WorkerTaskDirector {
         verbose: false
     };
     private taskTypes: Map<string, WorkerTaskRuntimeDesc>;
-    private workerExecutionPlans: Map<string, WorkerExecutionPlan[]>;
+    private workerExecutionPlans: Map<string, WorkerExecutionPlanType[]>;
 
     constructor(config?: WorkerTaskDirectorConfig) {
         if (config) {
@@ -47,11 +51,11 @@ export class WorkerTaskDirector {
      * Registers functionality for a new task type based on workerRegistration info
      *
      * @param {string} taskTypeName The name to be used for registration.
-     * @param {WorkerRegistration} workerRegistration information regarding the worker to be registered
+     * @param {WorkerRegistrationType} workerRegistration information regarding the worker to be registered
      * @param {number} maxParallelExecutions Number of maximum parallel executions allowed
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTask(taskTypeName: string, workerRegistration: WorkerRegistration, maxParallelExecutions?: number) {
+    registerTask(taskTypeName: string, workerRegistration: WorkerRegistrationType, maxParallelExecutions?: number) {
         const allowedToRegister = !this.taskTypes.has(taskTypeName);
         if (allowedToRegister) {
             maxParallelExecutions = maxParallelExecutions ?? this.config.defaultMaxParallelExecutions;
@@ -101,8 +105,8 @@ export class WorkerTaskDirector {
      *
      * @param {string} taskTypeName The name of the registered task type.
      * @param {WorkerTaskMessage} message Configuration properties as serializable string.
-     * @param {(data: PayloadType) => void} onComplete Invoke this function if everything is completed
-     * @param {(data: PayloadType) => void} onIntermediate Invoke this function if an asset become intermediately available
+     * @param {(message: WorkerTaskMessageType) => void} onComplete Invoke this function if everything is completed
+     * @param {(message: WorkerTaskMessageType) => void} onIntermediate Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
@@ -118,7 +122,7 @@ export class WorkerTaskDirector {
         return this.enqueueWorkerExecutionPlan(plan);
     }
 
-    async enqueueWorkerExecutionPlan(plan: WorkerExecutionPlan) {
+    async enqueueWorkerExecutionPlan(plan: WorkerExecutionPlanType) {
         const promise = this.buildWorkerExecutionPlanPromise(plan);
         const planForType = this.workerExecutionPlans.get(plan.taskTypeName);
         planForType?.push(plan);
@@ -126,7 +130,7 @@ export class WorkerTaskDirector {
         return promise;
     }
 
-    private buildWorkerExecutionPlanPromise(plan: WorkerExecutionPlan) {
+    private buildWorkerExecutionPlanPromise(plan: WorkerExecutionPlanType) {
         return new Promise((resolve, reject) => {
             plan.promiseFunctions = {
                 resolve: resolve,
@@ -188,7 +192,7 @@ export class WorkerTaskDirector {
     }
 }
 
-export interface WorkerTaskDirectorWorker {
+export type WorkerTaskDirectorWorker = {
 
     init(message: WorkerTaskMessageType): void;
 

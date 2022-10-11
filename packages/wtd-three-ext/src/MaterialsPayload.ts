@@ -1,12 +1,16 @@
+import type {
+    DataPayloadType,
+    PayloadHandlerType
+} from 'wtd-core';
 import {
     DataPayloadHandler,
     DataPayload,
-    DataPayloadType,
-    PayloadHandler,
     PayloadRegister
 } from 'wtd-core';
+import type {
+    MaterialCloneInstructionsType
+} from './MaterialUtils';
 import {
-    MaterialCloneInstructions,
     MaterialUtils
 } from './MaterialUtils';
 import {
@@ -19,7 +23,7 @@ export type MaterialsPayloadType = DataPayloadType & {
     materials: Map<string, Material>;
     materialsJson: Map<string, unknown>;
     multiMaterialNames: Map<number, string>;
-    cloneInstructions: MaterialCloneInstructions[];
+    cloneInstructions: MaterialCloneInstructionsType[];
 };
 
 export class MaterialsPayload extends DataPayload implements MaterialsPayloadType {
@@ -29,7 +33,7 @@ export class MaterialsPayload extends DataPayload implements MaterialsPayloadTyp
     materials: Map<string, Material> = new Map();
     materialsJson: Map<string, unknown> = new Map();
     multiMaterialNames: Map<number, string> = new Map();
-    cloneInstructions: MaterialCloneInstructions[] = [];
+    cloneInstructions: MaterialCloneInstructionsType[] = [];
 
     /**
      * Set an object containing named materials.
@@ -118,7 +122,7 @@ export class MaterialsPayload extends DataPayload implements MaterialsPayloadTyp
 /**
  * Define a structure that is used to ship materials data between main and workers.
  */
-export class MaterialsPayloadHandler implements PayloadHandler {
+export class MaterialsPayloadHandler implements PayloadHandlerType {
 
     static pack(payload: MaterialsPayload, transferables: Transferable[], cloneBuffers: boolean) {
         const handler = PayloadRegister.handler.get(MaterialsPayload.TYPE);

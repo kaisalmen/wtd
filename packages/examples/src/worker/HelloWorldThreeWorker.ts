@@ -1,4 +1,4 @@
-import { SphereBufferGeometry } from 'three';
+import { SphereGeometry } from 'three';
 import {
     WorkerTaskDirectorDefaultWorker,
     WorkerTaskDirectorWorker,
@@ -23,7 +23,7 @@ export class HelloWorlThreedWorker extends WorkerTaskDirectorDefaultWorker imple
     execute(message: WorkerTaskMessageType) {
         console.log(`HelloWorldWorker#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const bufferGeometry = new SphereBufferGeometry(40, 64, 64);
+        const bufferGeometry = new SphereGeometry(40, 64, 64);
         bufferGeometry.name = message.name ?? 'unknown' + message.id ?? 'unknown';
         const vertexArray = bufferGeometry.getAttribute('position').array as number[];
         for (let i = 0; i < vertexArray.length; i++) {

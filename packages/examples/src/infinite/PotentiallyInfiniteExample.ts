@@ -20,6 +20,9 @@ import {
     MeshPayload,
     MaterialsPayload
 } from 'wtd-three-ext';
+import {
+    OBJLoader2
+} from 'wwobjloader2/bundle';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
@@ -116,12 +119,12 @@ class PotentiallyInfiniteExample {
     } as TaskDescription;
     taskObjLoader2Worker = {
         id: 3,
-        name: 'OBJLoader2Worker',
+        name: 'OBJLoader2WorkerModule',
         modelName: 'female02',
         use: true,
         module: true,
         blob: false,
-        workerUrl: new URL(import.meta.env.DEV ? '../worker/OBJLoader2Worker.js' : '../worker/generated/OBJLoader2Worker-es.js', import.meta.url),
+        workerUrl: new URL('../../../../node_modules/wwobjloader2/lib/worker/OBJLoader2WorkerModule.js', import.meta.url),
         workerCount: 2,
         filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
         filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),
@@ -309,7 +312,7 @@ class PotentiallyInfiniteExample {
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
 
-            const torus = new THREE.TorusBufferGeometry(25, 8, 16, 100);
+            const torus = new THREE.TorusGeometry(25, 8, 16, 100);
             torus.name = 'torus';
             const initMessage = new WorkerTaskMessage({
                 id: taskDescr.id,
@@ -355,18 +358,17 @@ class PotentiallyInfiniteExample {
                 if (this.taskObjLoader2Worker.use) {
                     const initMessage = new WorkerTaskMessage({
                         id: 0,
-                        name: 'OBJLoader2Worker'
+                        name: 'OBJLoader2WorkerModule'
                     });
 
                     const dataPayload = new DataPayload();
                     dataPayload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
-
-                    const materialsPayload = new MaterialsPayload();
-                    materialsPayload.materials = this.taskObjLoader2Worker.materialStore?.getMaterials() as Map<string, THREE.Material>;
-                    materialsPayload.cleanMaterials();
-
+                    if (this.taskObjLoader2Worker.materialStore) {
+                        dataPayload.params = {
+                            materialNames: new Set(Array.from(this.taskObjLoader2Worker.materialStore?.getMaterials().keys()))
+                        };
+                    }
                     initMessage.addPayload(dataPayload);
-                    initMessage.addPayload(materialsPayload);
 
                     const transferables = initMessage.pack(false);
                     await this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables)
@@ -474,34 +476,41 @@ class PotentiallyInfiniteExample {
 
             case 'execComplete':
             case 'intermediate':
+                // were are getting raw vertex buffers here
                 if (wtm.payloads.length > 0) {
-
-                    meshPayload = wtm.payloads[0] as MeshPayload;
-                    if (meshPayload.params?.color) {
-                        const pColor = meshPayload.params?.color as { r: number, g: number, b: number };
-                        const color = new THREE.Color(pColor.r, pColor.g, pColor.b);
-                        material = new THREE.MeshPhongMaterial({ color: color });
-                    }
-
-                    if (wtm.payloads.length === 2) {
-                        materialsPayload = wtm.payloads[1] as MaterialsPayload;
-                        const storedMaterials = taskDescr.materialStore ? taskDescr.materialStore.getMaterials() : new Map();
-                        material = materialsPayload.processMaterialTransport(storedMaterials, true);
-                        if (!material) {
-                            material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+                    if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads.length === 1) {
+                        const dataPayloadOBJ = wtm.payloads[0];
+                        const preparedMesh = dataPayloadOBJ?.params?.preparedMesh;
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        mesh = OBJLoader2.buildThreeMesh(preparedMesh, taskDescr.materialStore?.getMaterials(), false) as THREE.Mesh;
+                    } else {
+                        meshPayload = wtm.payloads[0] as MeshPayload;
+                        if (meshPayload.params?.color) {
+                            const pColor = meshPayload.params?.color as { r: number, g: number, b: number };
+                            const color = new THREE.Color(pColor.r, pColor.g, pColor.b);
+                            material = new THREE.MeshPhongMaterial({ color: color });
                         }
-                    }
-                    else {
-                        const randArray = new Uint8Array(3);
-                        window.crypto.getRandomValues(randArray);
-                        const color = new THREE.Color();
-                        color.r = randArray[0] / 255;
-                        color.g = randArray[1] / 255;
-                        color.b = randArray[2] / 255;
-                        material = new THREE.MeshPhongMaterial({ color: color });
-                    }
 
-                    mesh = new THREE.Mesh(meshPayload.bufferGeometry as THREE.BufferGeometry, material);
+                        if (wtm.payloads.length === 2) {
+                            materialsPayload = wtm.payloads[1] as MaterialsPayload;
+                            const storedMaterials = taskDescr.materialStore ? taskDescr.materialStore.getMaterials() : new Map();
+                            material = materialsPayload.processMaterialTransport(storedMaterials, true);
+                            if (!material) {
+                                material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+                            }
+                        }
+                        else {
+                            const randArray = new Uint8Array(3);
+                            window.crypto.getRandomValues(randArray);
+                            const color = new THREE.Color();
+                            color.r = randArray[0] / 255;
+                            color.g = randArray[1] / 255;
+                            color.b = randArray[2] / 255;
+                            material = new THREE.MeshPhongMaterial({ color: color });
+                        }
+                        mesh = new THREE.Mesh(meshPayload.bufferGeometry as THREE.BufferGeometry, material);
+                    }
                     this.addMesh(mesh, wtm.id);
                 }
                 else {

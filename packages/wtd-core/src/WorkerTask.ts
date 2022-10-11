@@ -1,15 +1,17 @@
-import {
-    WorkerTaskMessage,
+import type {
     WorkerTaskMessageType
 } from './WorkerTaskMessage';
+import {
+    WorkerTaskMessage
+} from './WorkerTaskMessage';
 
-export type WorkerRegistration = {
+export type WorkerRegistrationType = {
     module: boolean;
     blob: boolean;
     url: URL | string | undefined;
 }
 
-export type WorkerExecutionPlan = {
+export type WorkerExecutionPlanType = {
     taskTypeName: string;
     message: WorkerTaskMessage;
     onComplete: (message: WorkerTaskMessageType) => void;
@@ -27,7 +29,7 @@ export class WorkerTask {
     private workerId: number;
     private verbose: boolean;
 
-    private workerRegistration: WorkerRegistration = {
+    private workerRegistration: WorkerRegistrationType = {
         module: true,
         blob: false,
         url: undefined
@@ -36,7 +38,7 @@ export class WorkerTask {
     private worker: Worker | undefined;
     private executing = false;
 
-    constructor(taskTypeName: string, workerId: number, workerRegistration: WorkerRegistration, verbose?: boolean) {
+    constructor(taskTypeName: string, workerId: number, workerRegistration: WorkerRegistrationType, verbose?: boolean) {
         this.taskTypeName = taskTypeName;
         this.workerId = workerId;
         this.workerRegistration = workerRegistration;
@@ -119,7 +121,7 @@ export class WorkerTask {
         return undefined;
     }
 
-    executeWorker(plan: WorkerExecutionPlan) {
+    executeWorker(plan: WorkerExecutionPlanType) {
         return new Promise((resolve, reject) => {
             if (!this.worker) {
                 reject(new Error('Execution error: Worker is undefined.'));

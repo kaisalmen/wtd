@@ -21,18 +21,23 @@
     "compile": "npm run compile --workspaces",
     "build": "npm run build --workspaces",
     "build:libs": "npm run build --workspace packages/wtd-core && npm run build --workspace packages/wtd-three-ext",
-    "dev": "npm run dev --workspace packages/examples",
+    "dev": "npx vite",
+    "dev:debug": "npx vite --force --debug",
     "prerelease": "npm run build && npm run doc",
     "test": "echo \\\"Error: no libs specified\\\" && exit 1"
   },
   "keywords": [],
   "homepage": "https://github.com/kaisalmen/three-wtm#README",
+  "volta": {
+    "node": "16.17.1",
+    "npm": "8.19.2"
+  },
   "devDependencies": {
-    "@types/node": "^16.11.7",
-    "vite": "2.9.6",
-    "typescript": "^4.6.4",
-    "eslint": "^8.15.0",
-    "@typescript-eslint/eslint-plugin": "^5.25.0",
+    "@types/node": "^16.11.64",
+    "vite": "3.1.7",
+    "typescript": "^4.8.4",
+    "eslint": "^8.25.0",
+    "@typescript-eslint/eslint-plugin": "^5.40.0",
     "editorconfig": "^0.15.3",
     "shx": "^0.3.4"
   },

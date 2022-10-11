@@ -1,6 +1,6 @@
 import { Material } from 'three';
 
-export type MaterialCloneInstructions = {
+export type MaterialCloneInstructionsType = {
     materialNameOrg: string,
     materialProperties: {
         name: string,
@@ -67,10 +67,10 @@ export class MaterialUtils {
      * Clones a material according the provided instructions.
      *
      * @param {Map<string, Material>} materials
-     * @param {MaterialCloneInstructions} materialCloneInstruction
+     * @param {MaterialCloneInstructionsType} materialCloneInstruction
      * @param {boolean} [log]
      */
-    static cloneMaterial(materials: Map<string, Material>, materialCloneInstruction: MaterialCloneInstructions, log?: boolean): Material | undefined {
+    static cloneMaterial(materials: Map<string, Material>, materialCloneInstruction: MaterialCloneInstructionsType, log?: boolean): Material | undefined {
         if (materialCloneInstruction) {
             let materialNameOrg = materialCloneInstruction.materialNameOrg;
             materialNameOrg = (materialNameOrg !== undefined && materialNameOrg !== null) ? materialNameOrg : '';

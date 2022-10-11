@@ -1,6 +1,7 @@
 dist
 node_modules
 docs
+bundle
 
 packages/examples/preview
 packages/examples/src/worker/generated
