@@ -22,7 +22,7 @@ import {
 } from 'wtd-three-ext';
 import {
     OBJLoader2
-} from 'wwobjloader2/bundle';
+} from 'wwobjloader2';
 
 export type CameraDefaults = {
     posCamera: THREE.Vector3;
