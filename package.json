@@ -15,7 +15,6 @@
     "url": "https://github.com/kaisalmen/three-wtm/issues"
   },
   "scripts": {
-    "prepare": "npm run prepare --workspace packages/examples",
     "clean": "npm run clean --workspaces",
     "lint": "npm run lint --workspaces",
     "doc": "npm run doc --workspaces",
