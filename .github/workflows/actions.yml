@@ -19,4 +19,5 @@ jobs:
       run: |
         npm ci
         npm run build
-        npm --prefix packages/examples run build:production
+        ls -la node_modules/
+        // npm --prefix packages/examples run build:production
