@@ -50,12 +50,6 @@
     "node": "16.17.1",
     "npm": "8.19.2"
   },
-  "dependencies": {
-  },
-  "devDependencies": {
-    "typedoc": "^0.23.15",
-    "typedoc-plugin-markdown": "^3.13.6"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/kaisalmen/three-wtm",

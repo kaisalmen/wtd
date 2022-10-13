@@ -18,7 +18,5 @@ jobs:
       shell: bash
       run: |
         npm ci
-        ls -la node_modules/
-        npm run build --workspace packages/wtd-core
-        npm run build --workspace packages/wtd-three-ext
-        // npm --prefix packages/examples run build:production
+        npm run build
+        npm --prefix packages/examples run build:production
