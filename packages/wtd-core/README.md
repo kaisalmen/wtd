@@ -4,7 +4,7 @@ Worker Task Director Core Library.
 
 Please refer to the full [README.md](../../README.md) in main [repository](https://github.com/kaisalmen/wtd).
 
-# Usage
+## Usage
 
 ```javascript
 const workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector();
@@ -18,29 +18,31 @@ workerTaskDirector.registerTask(taskName, {
 });
 
 // init the worker task without any payload (worker init without function invocation on worker)
-workerTaskDirector.initTaskType(taskName)
-    .then((x: unknown) => {
-        // once the init Promise returns enqueue the execution
-        const execMessage = new WorkerTaskMessage({
-            id: 0,
-            name: taskName
-        });
-        workerTaskDirector.enqueueWorkerExecutionPlan({
-            taskTypeName: execMessage.name,
-            message: execMessage,
-            // decouple result evaluation ...
-            onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }
-        }).then((x: unknown) => {
-            // ... promise result handling
-            alert('Worker execution has been completed after.');
-        });
+await workerTaskDirector.initTaskType(taskName)
+    .then((x: unknown[]) => {
+        console.log(`init complete: ${x[0]}`);
     }).catch(
         // error handling
         (x: unknown) => console.error(x)
     );
+
+// once the init Promise returns enqueue the execution
+const execMessage = new WorkerTaskMessage({
+    id: 0,
+    name: taskName
+});
+await workerTaskDirector.enqueueWorkerExecutionPlan({
+    taskTypeName: execMessage.name,
+    message: execMessage,
+    // decouple result evaluation ...
+    onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }
+}).then((x: unknown) => {
+    // ... promise result handling
+    alert('Worker execution has been completed after.');
+});
 ```
 
-# Examples
+## Examples
 
 **wtd-core** related examples are found here:
 

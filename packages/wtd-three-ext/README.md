@@ -4,7 +4,7 @@ three.js DataPayload extensions od [wtd-core](https://www.npmjs.com/package/wtd-
 
 Please refer to the full [README.md](../../README.md) in main [repository](https://github.com/kaisalmen/wtd).
 
-# Examples
+## Examples
 
 **wtd-three-ext** related examples are found here:
 

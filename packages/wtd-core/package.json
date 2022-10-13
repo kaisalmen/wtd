@@ -1,19 +1,22 @@
 {
   "name": "wtd-core",
-  "version": "2.1.0-next.0",
+  "version": "2.1.0",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "module": "./dist/index.js",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./bundle": {
       "types": "./dist/index.d.ts",
       "module": "./bundle/index.js",
+      "import": "./bundle/index.js",
       "default": "./bundle/index.js"
     }
   },

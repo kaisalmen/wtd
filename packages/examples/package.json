@@ -3,12 +3,15 @@
   "type": "module",
   "private": "true",
   "scripts": {
-    "clean": "npx shx rm -fr ./dist && npx shx rm -fr tsconfig.tsbuildinfo",
+    "prepare": "npx shx mkdir -p ./src/worker/generated && npm run copy:worker:OBJLoader2Worker",
+    "clean": "npx shx rm -fr dist tsconfig.tsbuildinfo",
     "doc": "echo 'docs are not generated for examples'",
     "lint": "npx eslint src",
     "compile": "tsc -b",
     "watch": "tsc -w",
-    "build:worker:prepare": "npx shx mkdir -p ./src/worker/generated",
+    "dev": "vite",
+    "dev:debug": "vite --force --debug",
+    "copy:worker:OBJLoader2Worker": "npx shx cp -f ../../node_modules/wwobjloader2/lib/worker/OBJLoader2Worker*.js ./src/worker/generated",
     "build:worker:HelloWorldWorker": "npx shx rm -f ./src/worker/generated/HelloWorldWorker*.js && npx vite -c build/vite.config.HelloWorldWorker.ts build",
     "build:worker:HelloWorldThreeWorker": "npx shx rm -f ./src/worker/generated/HelloWorldThreeWorker*.js && npx vite -c build/vite.config.HelloWorldThreeWorker.ts build",
     "build:worker:InfiniteWorkerExternalGeometry": "npx shx rm -f ./src/worker/generated/InfiniteWorkerExternalGeometry*.js && npx vite -c build/vite.config.InfiniteWorkerExternalGeometry.ts build",
@@ -18,16 +21,18 @@
     "build:worker:TransferableWorkerTest2": "npx shx rm -f ./src/worker/generated/TransferableWorkerTest2*.js && npx vite -c build/vite.config.TransferableWorkerTest2.ts build",
     "build:worker:TransferableWorkerTest3": "npx shx rm -f ./src/worker/generated/TransferableWorkerTest3*.js && npx vite -c build/vite.config.TransferableWorkerTest3.ts build",
     "build:worker:TransferableWorkerTest4": "npx shx rm -f ./src/worker/generated/TransferableWorkerTest4*.js && npx vite -c build/vite.config.TransferableWorkerTest4.ts build",
-    "build:worker": "npm run build:worker:prepare && npm run build:worker:HelloWorldWorker && npm run build:worker:HelloWorldThreeWorker && npm run build:worker:InfiniteWorkerExternalGeometry && npm run build:worker:InfiniteWorkerInternalGeometry && npm run build:worker:OBJLoaderWorker && npm run build:worker:OBJLoader2Worker && npm run build:worker:TransferableWorkerTest1 && npm run build:worker:TransferableWorkerTest2 && npm run build:worker:TransferableWorkerTest3 && npm run build:worker:TransferableWorkerTest4",
+    "build:worker": "npm run build:worker:HelloWorldWorker && npm run build:worker:HelloWorldThreeWorker && npm run build:worker:InfiniteWorkerExternalGeometry && npm run build:worker:InfiniteWorkerInternalGeometry && npm run build:worker:OBJLoaderWorker && npm run build:worker:TransferableWorkerTest1 && npm run build:worker:TransferableWorkerTest2 && npm run build:worker:TransferableWorkerTest3 && npm run build:worker:TransferableWorkerTest4",
     "build": "npm run clean && npm run compile",
+    "clean:production": "npx shx rm -fr preview",
     "copy:assets:production": "npx shx mkdir -p ./preview/worker/generated && npx shx cp -f ./src/worker/generated/*.js ./preview/worker/generated && npx shx cp -f ./models/obj/female02/*.jpg ./preview/assets",
-    "build:production": "npm run build && npx vite build --debug && npm run build:worker && npm run copy:assets:production",
-    "preview:production": "npx vite build --debug && npm run copy:assets:production && http-server ./preview"
+    "build:production": "npm run build && npm run build:worker && npm run build:production:vite",
+    "build:production:vite": "npm run clean:production && npx vite build --debug && npm run copy:assets:production",
+    "preview": "http-server ./preview"
   },
   "dependencies": {
     "lil-gui": "^0.17.0",
-    "wtd-core": "2.1.0-next.0",
-    "wtd-three-ext": "2.1.0-next.0",
+    "wtd-core": "2.1.0",
+    "wtd-three-ext": "2.1.0",
     "wwobjloader2": "5.0.0-beta.7"
   },
   "devDependencies": {
