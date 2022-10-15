@@ -67,9 +67,9 @@ workerTaskDirector.initTaskType(taskName)
 
 There exist three possibilities:
 
+- Checkout the repository and run `npm install`, `npm run build` and then `npm run dev` to spin up the local Vite dev server
 - Press the `Gitpod` button above and start coding and using the examples directly in the browser
 - Checkout the repository and use `docker-compose up -d` to spin up local snowpack dev server
-- Checkout the repository and run `npm install`, `npm run build` and then `npm run dev` to spin up the local Vite dev server
 
 Whatever environment you choose to start [Vite](https://vitejs.dev/) is used to serve the code and the examples using it. With this setup you are able to change the code and examples without invoking an additional bundler. Vite ensures all imported npm modules are available if previously installed in local environment (see `npm install`).
 
