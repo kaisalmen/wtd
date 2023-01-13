@@ -1,11 +1,13 @@
 {
   "name": "wtd-workspace",
+  "version": "0.0.0",
   "description": "Worker Task Director Workspace",
   "author": {
     "name": "kaisalmen",
     "url": "https://www.kaisalmen.de"
   },
   "private": "true",
+  "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -18,30 +20,31 @@
     "clean": "npm run clean --workspaces",
     "lint": "npm run lint --workspaces",
     "doc": "npm run doc --workspaces",
-    "compile": "npm run compile --workspaces",
+    "compile": "npx tsc --build tsconfig.build.json",
+    "watch": "npx tsc --build tsconfig.build.json --watch",
     "build": "npm run build --workspaces",
     "build:libs": "npm run build --workspace packages/wtd-core && npm run build --workspace packages/wtd-three-ext",
-    "dev": "npm run dev --workspace packages/examples",
-    "dev:debug": "npm run dev:debug --workspace packages/examples",
+    "dev": "npx vite",
+    "dev:debug": "npx vite --debug --force",
     "prerelease": "npm run build && npm run doc",
     "test": "echo \\\"Error: no libs specified\\\" && exit 1"
   },
   "keywords": [],
   "homepage": "https://github.com/kaisalmen/three-wtm#README",
   "volta": {
-    "node": "16.17.1",
-    "npm": "8.19.2"
+    "node": "16.19.0",
+    "npm": "8.19.3"
   },
   "devDependencies": {
-    "@types/node": "^16.11.64",
-    "@typescript-eslint/eslint-plugin": "^5.40.0",
-    "editorconfig": "^0.15.3",
-    "eslint": "^8.25.0",
-    "shx": "^0.3.4",
-    "typedoc": "^0.23.16",
-    "typedoc-plugin-markdown": "^3.13.6",
-    "typescript": "^4.8.4",
-    "vite": "^3.1.8"
+    "@types/node": "~16.18.3",
+    "@typescript-eslint/eslint-plugin": "~5.48.1",
+    "editorconfig": "~1.0.1",
+    "eslint": "~8.31.0",
+    "shx": "~0.3.4",
+    "typedoc": "~0.23.24",
+    "typedoc-plugin-markdown": "~3.14.0",
+    "typescript": "~4.9.4",
+    "vite": "~4.0.4"
   },
   "workspaces": [
     "packages/wtd-core",

@@ -1,16 +1,16 @@
 import type {
     WorkerTaskMessageType
-} from './WorkerTaskMessage';
+} from './WorkerTaskMessage.js';
 import {
     WorkerTaskMessage
-} from './WorkerTaskMessage';
+} from './WorkerTaskMessage.js';
 import type {
     WorkerExecutionPlanType,
     WorkerRegistrationType
-} from './WorkerTask';
+} from './WorkerTask.js';
 import {
     WorkerTask
-} from './WorkerTask';
+} from './WorkerTask.js';
 
 type WorkerTaskRuntimeDesc = {
     workerTasks: Map<number, WorkerTask>;

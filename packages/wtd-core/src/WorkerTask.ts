@@ -1,9 +1,9 @@
 import type {
     WorkerTaskMessageType
-} from './WorkerTaskMessage';
+} from './WorkerTaskMessage.js';
 import {
     WorkerTaskMessage
-} from './WorkerTaskMessage';
+} from './WorkerTaskMessage.js';
 
 export type WorkerRegistrationType = {
     module: boolean;

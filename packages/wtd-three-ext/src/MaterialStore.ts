@@ -1,4 +1,4 @@
-import { MaterialUtils } from './MaterialUtils';
+import { MaterialUtils } from './MaterialUtils.js';
 import {
     MeshStandardMaterial,
     LineBasicMaterial,

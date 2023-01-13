@@ -1,41 +1,41 @@
 import type {
     WorkerTaskDirectorWorker
-} from './WorkerTaskDirector';
+} from './WorkerTaskDirector.js';
 
 import {
     WorkerTaskDirector,
     WorkerTaskDirectorDefaultWorker
-} from './WorkerTaskDirector';
+} from './WorkerTaskDirector.js';
 
 import type {
     WorkerExecutionPlanType,
     WorkerRegistrationType
-} from './WorkerTask';
+} from './WorkerTask.js';
 
 import {
     WorkerTask
-} from './WorkerTask';
+} from './WorkerTask.js';
 
 import type {
     DataPayloadType,
     PayloadHandlerType
-} from './DataPayload';
+} from './DataPayload.js';
 
 import {
     DataPayload,
     DataPayloadHandler,
     PayloadRegister
-} from './DataPayload';
+} from './DataPayload.js';
 
 import type {
     WorkerTaskMessageHeaderType,
     WorkerTaskMessageBodyType,
     WorkerTaskMessageType
-} from './WorkerTaskMessage';
+} from './WorkerTaskMessage.js';
 
 import {
     WorkerTaskMessage
-} from './WorkerTaskMessage';
+} from './WorkerTaskMessage.js';
 
 export {
     WorkerExecutionPlanType,

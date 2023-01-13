@@ -1,26 +1,26 @@
 import type {
     MaterialCloneInstructionsType
-} from './MaterialUtils';
+} from './MaterialUtils.js';
 import {
     MaterialUtils
-} from './MaterialUtils';
+} from './MaterialUtils.js';
 import {
     MaterialStore
-} from './MaterialStore';
+} from './MaterialStore.js';
 import type {
     MaterialsPayloadType
-} from './MaterialsPayload';
+} from './MaterialsPayload.js';
 import {
     MaterialsPayload,
     MaterialsPayloadHandler
-} from './MaterialsPayload';
+} from './MaterialsPayload.js';
 import type {
     MeshPayloadType
-} from './MeshPayload';
+} from './MeshPayload.js';
 import {
     MeshPayload,
     MeshPayloadHandler
-} from './MeshPayload';
+} from './MeshPayload.js';
 
 export {
     MaterialUtils,

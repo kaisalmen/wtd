@@ -1,7 +1,7 @@
 import {
     PayloadRegister,
     DataPayload
-} from './DataPayload';
+} from './DataPayload.js';
 
 export type WorkerTaskMessageHeaderType = {
     cmd?: string;

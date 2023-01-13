@@ -9,10 +9,10 @@ import {
 } from 'wtd-core';
 import type {
     MaterialCloneInstructionsType
-} from './MaterialUtils';
+} from './MaterialUtils.js';
 import {
     MaterialUtils
-} from './MaterialUtils';
+} from './MaterialUtils.js';
 import {
     Material,
     MaterialLoader,

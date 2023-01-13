@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+      { "path": "packages/wtd-core/tsconfig.json" },
+      { "path": "packages/wtd-three-ext/tsconfig.json" },
+      { "path": "packages/examples/tsconfig.json" }
+  ]
+}

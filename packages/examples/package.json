@@ -8,9 +8,7 @@
     "lint": "npx eslint src",
     "compile": "tsc -b",
     "watch": "tsc -w",
-    "dev": "vite",
-    "dev:debug": "vite --force --debug",
-    "copy:worker:OBJLoader2Worker": "npx shx mkdir -p ./src/worker/generated && npx shx cp -f ../../node_modules/wwobjloader2/lib/worker/OBJLoader2Worker*.js ./src/worker/generated",
+    "copy:worker:OBJLoader2Worker": "npx shx mkdir -p ./src/worker/generated && npx shx cp -f ../../node_modules/wwobjloader2/dist/worker/OBJLoader2Worker*.js ./src/worker/generated",
     "build:worker:HelloWorldWorker": "npx shx rm -f ./src/worker/generated/HelloWorldWorker*.js && npx vite -c build/vite.config.HelloWorldWorker.ts build",
     "build:worker:HelloWorldThreeWorker": "npx shx rm -f ./src/worker/generated/HelloWorldThreeWorker*.js && npx vite -c build/vite.config.HelloWorldThreeWorker.ts build",
     "build:worker:InfiniteWorkerExternalGeometry": "npx shx rm -f ./src/worker/generated/InfiniteWorkerExternalGeometry*.js && npx vite -c build/vite.config.InfiniteWorkerExternalGeometry.ts build",
@@ -25,17 +23,17 @@
     "clean:production": "npx shx rm -fr preview",
     "copy:assets:production": "npx shx mkdir -p ./preview/worker/generated && npx shx cp -f ./src/worker/generated/*.js ./preview/worker/generated && npx shx cp -f ./models/obj/female02/*.jpg ./preview/assets",
     "build:production": "npm run build && npm run build:worker && npm run build:production:vite",
-    "build:production:vite": "npm run clean:production && npx vite build --debug && npm run copy:assets:production",
+    "build:production:vite": "npm run clean:production && npx vite --config vite.config.production.ts build --debug && npm run copy:assets:production",
     "preview": "http-server ./preview"
   },
   "dependencies": {
-    "lil-gui": "^0.17.0",
-    "wtd-core": "2.1.0",
-    "wtd-three-ext": "2.1.0",
-    "wwobjloader2": "5.0.0"
+    "lil-gui": "~0.17.0",
+    "wtd-core": "2.2.0-next.0",
+    "wtd-three-ext": "2.2.0-next.0",
+    "wwobjloader2": "5.1.0-next.0"
   },
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "http-server": "~14.1.1"
   },
   "repository": {
     "type": "git",
