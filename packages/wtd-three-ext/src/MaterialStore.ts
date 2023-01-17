@@ -6,6 +6,8 @@ import {
     Material
 } from 'three';
 
+export type AssociatedMaterialArrayType = { [key: string]: Material }
+
 /**
  * Helper class around an object storing materials by name.
  * Optionally, create and store default materials.
@@ -55,7 +57,7 @@ export class MaterialStore {
         }
     }
 
-    addMaterialsFromObject(newMaterials: Record<string, Material>, forceOverrideExisting: boolean) {
+    addMaterialsFromObject(newMaterials: AssociatedMaterialArrayType, forceOverrideExisting: boolean) {
         if (newMaterials && newMaterials !== null && Object.keys(newMaterials).length > 0) {
             for (const [k, v] of Object.entries(newMaterials)) {
                 MaterialUtils.addMaterial(this.materials, k, v, forceOverrideExisting === true);

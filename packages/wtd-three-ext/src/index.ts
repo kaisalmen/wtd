@@ -4,6 +4,9 @@ import type {
 import {
     MaterialUtils
 } from './MaterialUtils.js';
+import type {
+    AssociatedMaterialArrayType
+} from './MaterialStore.js';
 import {
     MaterialStore
 } from './MaterialStore.js';
@@ -15,6 +18,7 @@ import {
     MaterialsPayloadHandler
 } from './MaterialsPayload.js';
 import type {
+    AssociatedBufferAttributeArrayType,
     MeshPayloadType
 } from './MeshPayload.js';
 import {
@@ -25,10 +29,12 @@ import {
 export {
     MaterialUtils,
     MaterialCloneInstructionsType,
+    AssociatedMaterialArrayType,
     MaterialStore,
     MaterialsPayloadType,
     MaterialsPayload,
     MaterialsPayloadHandler,
+    AssociatedBufferAttributeArrayType,
     MeshPayloadType,
     MeshPayload,
     MeshPayloadHandler

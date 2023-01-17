@@ -4,6 +4,7 @@ import {
 } from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
+    AssociatedArrayType,
     WorkerTaskDirectorDefaultWorker,
     WorkerTaskDirectorWorker,
     WorkerTaskMessage,
@@ -48,7 +49,7 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
         this.localData.objLoader = new OBJLoader();
         this.localData.objectId = message.id as number;
 
-        const materials: Record<string, unknown> = {};
+        const materials: AssociatedArrayType = {};
         materials.create = (name: string) => {
             return materials[name];
         };

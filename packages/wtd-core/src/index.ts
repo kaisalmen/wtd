@@ -17,6 +17,7 @@ import {
 } from './WorkerTask.js';
 
 import type {
+    AssociatedArrayType,
     DataPayloadType,
     PayloadHandlerType
 } from './DataPayload.js';
@@ -48,6 +49,7 @@ export {
     WorkerTaskMessageBodyType,
     WorkerTaskMessageType,
     WorkerTaskMessage,
+    AssociatedArrayType,
     DataPayloadType,
     DataPayload,
     DataPayloadHandler,

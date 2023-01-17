@@ -1,4 +1,5 @@
 import type {
+    AssociatedArrayType,
     DataPayloadType,
     PayloadHandlerType
 } from 'wtd-core';
@@ -16,9 +17,11 @@ import {
     Sphere
 } from 'three';
 
+export type AssociatedBufferAttributeArrayType = { [key: string]: BufferAttribute | InterleavedBufferAttribute }
+
 export type MeshPayloadType = DataPayloadType & {
     geometryType: 0 | 1 | 2;
-    bufferGeometry: BufferGeometry | Record<string, unknown> | undefined;
+    bufferGeometry: BufferGeometry | AssociatedArrayType | undefined;
     meshName: string | undefined;
 };
 
@@ -28,7 +31,7 @@ export class MeshPayload extends DataPayload implements MeshPayloadType {
     type = MeshPayload.TYPE;
     // 0: mesh, 1: line, 2: point
     geometryType: 0 | 1 | 2 = 0;
-    bufferGeometry: BufferGeometry | Record<string, unknown> | undefined;
+    bufferGeometry: BufferGeometry | AssociatedArrayType | undefined;
     meshName: string | undefined;
 
     /**
@@ -77,7 +80,7 @@ export class MeshPayloadHandler implements PayloadHandlerType {
 
     unpack(transportObject: MeshPayloadType, cloneBuffers: boolean) {
         const meshPayload = Object.assign(new MeshPayload(), transportObject);
-        meshPayload.bufferGeometry = MeshPayloadHandler.reconstructBuffer(cloneBuffers, meshPayload.bufferGeometry as Record<string, unknown>);
+        meshPayload.bufferGeometry = MeshPayloadHandler.reconstructBuffer(cloneBuffers, meshPayload.bufferGeometry as AssociatedArrayType);
         return meshPayload;
     }
 
@@ -110,7 +113,7 @@ export class MeshPayloadHandler implements PayloadHandlerType {
         }
     }
 
-    static reconstructBuffer(cloneBuffers: boolean, transferredGeometry: BufferGeometry | Record<string, unknown>): BufferGeometry {
+    static reconstructBuffer(cloneBuffers: boolean, transferredGeometry: BufferGeometry | AssociatedArrayType): BufferGeometry {
         const bufferGeometry = new BufferGeometry();
 
         // fast-fail: transferredGeometry is either rubbish or already a bufferGeometry
@@ -122,7 +125,7 @@ export class MeshPayloadHandler implements PayloadHandlerType {
         }
 
         if (transferredGeometry.attributes) {
-            const attr = transferredGeometry.attributes as Record<string, BufferAttribute | InterleavedBufferAttribute>;
+            const attr = transferredGeometry.attributes as AssociatedBufferAttributeArrayType;
             MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.position, 'position', cloneBuffers);
             MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.normal, 'normal', cloneBuffers);
             MeshPayloadHandler.assignAttributeFromTransfered(bufferGeometry, attr.uv, 'uv', cloneBuffers);
@@ -156,7 +159,7 @@ export class MeshPayloadHandler implements PayloadHandlerType {
         bufferGeometry.type = transferredGeometry.type as string;
         bufferGeometry.groups = transferredGeometry.groups as Array<{ start: number; count: number; materialIndex?: number | undefined }>;
         bufferGeometry.drawRange = transferredGeometry.drawRange as { start: number; count: number };
-        bufferGeometry.userData = transferredGeometry.userData as Record<string, unknown>;
+        bufferGeometry.userData = transferredGeometry.userData as AssociatedArrayType;
         return bufferGeometry;
     }
 

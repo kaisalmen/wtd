@@ -264,7 +264,6 @@ class TransferablesTestbed {
                         const dataPayload = payload;
                         if (dataPayload.params && Object.keys(dataPayload.params).length > 0 &&
                             dataPayload.params.geometry) {
-                            //  && (payload.params.geometry as Record<string, unknown>).type === 'TorusKnotGeometry'
                             const mesh = new THREE.Mesh(
                                 MeshPayloadHandler.reconstructBuffer(false, dataPayload.params.geometry as THREE.BufferGeometry),
                                 new THREE.MeshPhongMaterial({ color: new THREE.Color(0xff0000) })
