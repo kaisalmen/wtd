@@ -27,7 +27,7 @@
     "dev": "npx vite",
     "dev:debug": "npx vite --debug --force",
     "prerelease": "npm run build && npm run doc",
-    "test": "echo \\\"Error: no libs specified\\\" && exit 1"
+    "test": "vitest"
   },
   "keywords": [],
   "homepage": "https://github.com/kaisalmen/three-wtm#README",
@@ -44,7 +44,8 @@
     "typedoc": "~0.23.24",
     "typedoc-plugin-markdown": "~3.14.0",
     "typescript": "~4.9.4",
-    "vite": "~4.0.4"
+    "vite": "~4.0.4",
+    "vitest": "~0.27.2"
   },
   "workspaces": [
     "packages/wtd-core",

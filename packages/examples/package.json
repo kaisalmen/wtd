@@ -1,11 +1,12 @@
 {
   "name": "wtd-examples",
+  "version": "0.0.0",
   "type": "module",
   "private": "true",
   "scripts": {
-    "clean": "npx shx rm -fr dist tsconfig.tsbuildinfo",
+    "clean": "npx shx rm -fr dist && npx tsc --build --clean",
     "doc": "echo 'docs are not generated for examples'",
-    "lint": "npx eslint src",
+    "lint": "npx eslint src --ext .ts",
     "compile": "tsc -b",
     "watch": "tsc -w",
     "copy:worker:OBJLoader2Worker": "npx shx mkdir -p ./src/worker/generated && npx shx cp -f ../../node_modules/wwobjloader2/dist/worker/OBJLoader2Worker*.js ./src/worker/generated",

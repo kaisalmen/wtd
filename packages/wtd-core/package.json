@@ -1,6 +1,6 @@
 {
   "name": "wtd-core",
-  "version": "2.2.0-next.1",
+  "version": "2.2.0-next.2",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -38,9 +38,9 @@
     "README.md"
   ],
   "scripts": {
-    "clean": "npx shx rm -fr dist bundle tsconfig.tsbuildinfo",
+    "clean": "npx shx rm -fr dist bundle && npx tsc --build --clean",
     "doc": "npx shx rm -fr docs && npx typedoc --plugin typedoc-plugin-markdown --out docs src/index.ts",
-    "lint": "npx eslint src",
+    "lint": "npx eslint src test --ext .ts",
     "compile": "tsc -b",
     "watch": "tsc -w",
     "build:bundle": "vite --config vite.bundle.config.ts build",

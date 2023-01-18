@@ -181,7 +181,7 @@ class TransferablesTestbed {
     private initTask(task: ExampleTask) {
         // fast-fail: direct resolve a void Promise
         if (!task.execute) {
-            return new Promise<void>((resolve, _reject) => {
+            return new Promise<void>((resolve) => {
                 resolve();
             });
         }

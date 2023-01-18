@@ -71,11 +71,12 @@ export class DataPayloadHandler implements PayloadHandlerType {
     /**
      * Applies values from parameter object via set functions or via direct assignment.
      *
-     * @param {AssociatedArrayType} objToAlter The objToAlter instance
+     * @param {object} objToAlter The objToAlter instance
      * @param {AssociatedArrayType} params The parameter object
      * @param {boolean} forceCreation Force the creation of a property
      */
-    static applyProperties(objToAlter: AssociatedArrayType, params: AssociatedArrayType, forceCreation: boolean) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static applyProperties(objToAlter: any, params: AssociatedArrayType, forceCreation: boolean) {
         for (const [k, v] of Object.entries(params)) {
             const funcName = 'set' + k.substring(0, 1).toLocaleUpperCase() + k.substring(1);
 

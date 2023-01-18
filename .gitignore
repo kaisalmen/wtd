@@ -7,5 +7,5 @@ packages/examples/preview
 packages/examples/src/worker/external
 packages/examples/src/worker/generated
 
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 *.tgz

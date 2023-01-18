@@ -3,13 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "declarationDir": "dist"
+    "declarationDir": "dist",
+    "noEmit": false
   },
   "include": [
     "src/**/*.ts"
-  ],
-  "exclude": [
-    "./dist",
-    "./node_modules"
   ]
 }

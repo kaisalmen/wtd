@@ -93,7 +93,7 @@ export class WorkerTaskDirector {
             }));
         }
         if (executions.length === 0) {
-            executions.push(new Promise<void>((resolve, _reject) => {
+            executions.push(new Promise<void>((resolve) => {
                 resolve();
             }));
         }

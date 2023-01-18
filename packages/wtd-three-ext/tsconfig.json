@@ -6,7 +6,7 @@
     "declarationDir": "dist"
   },
   "references": [{
-    "path": "../wtd-core",
+    "path": "../wtd-core"
   }],
   "include": [
     "src/**/*.ts"

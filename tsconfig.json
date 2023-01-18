@@ -17,7 +17,7 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "noEmit": false,
+    "emitDeclarationOnly": false,
     "declaration": true,
     "declarationMap": true,
     "noUnusedLocals": true,
@@ -27,6 +27,11 @@
     "skipLibCheck": true
   },
   "include": [
-    "./src"
+    "**/src/**/*.ts",
+    "**/test/**/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**/*",
+    "**/dist/**/*"
   ]
 }
