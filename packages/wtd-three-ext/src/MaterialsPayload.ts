@@ -61,7 +61,7 @@ export class MaterialsPayload extends DataPayload implements MaterialsPayloadTyp
     }
 
     private cleanMaterial(material: Material): Material {
-        const objToAlter = material as unknown as AssociatedArrayType;
+        const objToAlter = material as unknown as AssociatedArrayType<unknown>;
         for (const [k, v] of Object.entries(objToAlter)) {
             if ((v instanceof Texture || v === null) && Object.prototype.hasOwnProperty.call(material, k)) {
                 objToAlter[k] = undefined;

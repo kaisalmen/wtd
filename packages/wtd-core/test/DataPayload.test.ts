@@ -71,13 +71,13 @@ describe('DataPayload applyProperties Tests', () => {
     }
 
     test('verify class', () => {
-        const testClassRef = new Class4ApplyProperties('columbian', 2, '0ml');
-        const testClassAlter = new Class4ApplyProperties('columbian', 2, '0ml');
+        const testClassRef = new Class4ApplyProperties('colombian', 2, '0ml');
+        const testClassAlter = new Class4ApplyProperties('colombian', 2, '0ml');
         const paramsWithProps = {
             'milk': '20ml',
             'sugar': 1
         };
-        const testClassTarget = new Class4ApplyProperties('columbian', 1, '20ml');
+        const testClassTarget = new Class4ApplyProperties('colombian', 1, '20ml');
 
         DataPayloadHandler.applyProperties(testClassAlter, paramsWithProps, false);
         expect(testClassAlter).toEqual(testClassTarget);

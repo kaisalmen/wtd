@@ -18,5 +18,6 @@
     ],
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
-    }
+    },
+    "vitest.enable": true
 }

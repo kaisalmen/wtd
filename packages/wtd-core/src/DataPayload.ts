@@ -1,15 +1,15 @@
-export type AssociatedArrayType = { [key: string]: unknown }
+export type AssociatedArrayType<T> = { [key: string]: T }
 
 export type DataPayloadType = {
     type: string;
-    params?: AssociatedArrayType;
+    params?: AssociatedArrayType<unknown>;
     buffers?: Map<string, ArrayBufferLike>;
 }
 
 export class DataPayload implements DataPayloadType {
     static TYPE = 'DataPayload';
     type = DataPayload.TYPE;
-    params?: AssociatedArrayType = {};
+    params?: AssociatedArrayType<unknown> = {};
     buffers: Map<string, ArrayBufferLike> = new Map();
     progress = 0;
 }
@@ -76,7 +76,7 @@ export class DataPayloadHandler implements PayloadHandlerType {
      * @param {boolean} forceCreation Force the creation of a property
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static applyProperties(objToAlter: any, params: AssociatedArrayType, forceCreation: boolean) {
+    static applyProperties(objToAlter: any, params: AssociatedArrayType<unknown | string | object>, forceCreation: boolean) {
         for (const [k, v] of Object.entries(params)) {
             const funcName = 'set' + k.substring(0, 1).toLocaleUpperCase() + k.substring(1);
 

@@ -49,7 +49,7 @@ class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerT
         this.localData.objLoader = new OBJLoader();
         this.localData.objectId = message.id as number;
 
-        const materials: AssociatedArrayType = {};
+        const materials: AssociatedArrayType<unknown> = {};
         materials.create = (name: string) => {
             return materials[name];
         };
