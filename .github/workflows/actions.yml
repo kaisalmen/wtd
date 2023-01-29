@@ -19,4 +19,15 @@ jobs:
       run: |
         npm ci
         npm run build
+    - name: Test
+      shell: bash
+      run: |
+        npm run test
+    - name: Build Production
+      shell: bash
+      run: |
         npm --prefix packages/examples run build:production
+    - name: Lint
+      shell: bash
+      run: |
+        npm run lint
