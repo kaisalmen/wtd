@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.0
+
+- `DataPayload#applyProperties` allows any object as input and the params are more relaxed. A first set of uit tests has been introduced.
+- Set compiler `target` and `module` to `ES2020`. `moduleResolution` is now `Node16` instead of `Node`,
+
 ## 2.1.0
 
 - Export an esm bundle along with raw code

@@ -8,7 +8,6 @@
     "doc": "echo 'docs are not generated for examples'",
     "lint": "npx eslint src --ext .ts",
     "compile": "tsc -b",
-    "watch": "tsc -w",
     "copy:worker:OBJLoader2Worker": "npx shx mkdir -p ./src/worker/generated && npx shx cp -f ../../node_modules/wwobjloader2/dist/worker/OBJLoader2Worker*.js ./src/worker/generated",
     "build:worker:HelloWorldWorker": "npx shx rm -f ./src/worker/generated/HelloWorldWorker*.js && npx vite -c build/vite.config.HelloWorldWorker.ts build",
     "build:worker:HelloWorldThreeWorker": "npx shx rm -f ./src/worker/generated/HelloWorldThreeWorker*.js && npx vite -c build/vite.config.HelloWorldThreeWorker.ts build",
@@ -29,7 +28,8 @@
   },
   "dependencies": {
     "lil-gui": "~0.17.0",
-    "wtd-three-ext": "2.2.0-next.3",
+    "wtd-core": "2.2.0",
+    "wtd-three-ext": "2.2.0",
     "wwobjloader2": "5.1.0-next.0"
   },
   "devDependencies": {

@@ -7,7 +7,6 @@
     "url": "https://www.kaisalmen.de"
   },
   "private": "true",
-  "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -36,16 +35,16 @@
     "npm": "8.19.3"
   },
   "devDependencies": {
-    "@types/node": "~16.18.3",
-    "@typescript-eslint/eslint-plugin": "~5.48.1",
+    "@types/node": "~16.18.11",
+    "@typescript-eslint/eslint-plugin": "~5.49.0",
     "editorconfig": "~1.0.1",
-    "eslint": "~8.31.0",
+    "eslint": "~8.33.0",
     "shx": "~0.3.4",
     "typedoc": "~0.23.24",
     "typedoc-plugin-markdown": "~3.14.0",
     "typescript": "~4.9.4",
     "vite": "~4.0.4",
-    "vitest": "~0.28.1"
+    "vitest": "~0.28.3"
   },
   "workspaces": [
     "packages/wtd-core",
