@@ -152,13 +152,14 @@ export class WorkerTaskDirector {
             const workerTaskRuntimeDesc = this.taskTypes.get(plan.taskTypeName);
             const workerTask = this.getUnusedWorkerTask(workerTaskRuntimeDesc);
             if (workerTask) {
-                workerTask.executeWorker(plan).then((message: unknown) => {
-                    plan.promiseFunctions?.resolve(message);
+                try {
+                    const result = workerTask.executeWorker(plan);
+                    plan.promiseFunctions?.resolve(result);
                     this.depleteWorkerExecutionPlans(taskTypeName);
-                }).catch((e) => {
+                } catch (e) {
                     plan.promiseFunctions?.reject(new Error('Execution error: ' + e));
                     this.depleteWorkerExecutionPlans(taskTypeName);
-                });
+                }
             }
             else {
                 planForType?.unshift(plan);

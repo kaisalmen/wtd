@@ -38,7 +38,7 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDirectorDefaultWorker imp
             if (geometry) {
                 geometry.name = 'tmProto' + message.id;
 
-                const vertexArray = geometry.getAttribute('position').array as number[];
+                const vertexArray = geometry.getAttribute('position').array;
                 for (let i = 0; i < vertexArray.length; i++) {
                     vertexArray[i] = vertexArray[i] + 10 * (Math.random() - 0.5);
                 }

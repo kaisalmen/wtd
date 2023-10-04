@@ -1,5 +1,3 @@
-'use strict';
-
 import * as THREE from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
@@ -354,37 +352,36 @@ class PotentiallyInfiniteExample {
         }
 
         if (awaiting.length > 0) {
-            await Promise.all(awaiting).then(async () => {
-                if (this.taskObjLoader2Worker.use) {
-                    const initMessage = new WorkerTaskMessage({
-                        id: 0,
-                        name: 'OBJLoader2WorkerModule'
-                    });
+            const results = await Promise.all(awaiting);
+            console.log(results);
 
-                    const dataPayload = new DataPayload();
-                    dataPayload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
-                    if (this.taskObjLoader2Worker.materialStore) {
-                        dataPayload.params = {
-                            materialNames: new Set(Array.from(this.taskObjLoader2Worker.materialStore?.getMaterials().keys()))
-                        };
-                    }
-                    initMessage.addPayload(dataPayload);
+            if (this.taskObjLoader2Worker.use) {
+                const initMessage = new WorkerTaskMessage({
+                    id: 0,
+                    name: 'OBJLoader2WorkerModule'
+                });
 
-                    const transferables = initMessage.pack(false);
-                    await this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables)
-                        .then(() => {
-                            console.timeEnd('All tasks have been initialized');
-                            this.executeWorkers();
-                        });
+                const dataPayload = new DataPayload();
+                dataPayload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
+                if (this.taskObjLoader2Worker.materialStore) {
+                    dataPayload.params = {
+                        materialNames: new Set(Array.from(this.taskObjLoader2Worker.materialStore?.getMaterials().keys()))
+                    };
                 }
-                else {
-                    console.timeEnd('All tasks have been initialized');
-                    this.executeWorkers();
-                }
-            }).catch(e => console.error(e));
+                initMessage.addPayload(dataPayload);
+
+                const transferables = initMessage.pack(false);
+                await this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables);
+                console.timeEnd('All tasks have been initialized');
+                this.executeWorkers();
+            }
+            else {
+                console.timeEnd('All tasks have been initialized');
+                this.executeWorkers();
+            }
         }
         else {
-            return new Promise((_resolve, reject) => { reject('No task type has been configured'); });
+            Promise.reject('No task type has been configured');
         }
     }
 
@@ -425,10 +422,9 @@ class PotentiallyInfiniteExample {
 
                 globalCount++;
             }
-            await Promise.all(this.executions).then(() => {
-                this.executions = [];
-                console.timeEnd('Completed ' + (this.maxPerLoop + j * this.maxPerLoop));
-            });
+            await Promise.all(this.executions);
+            this.executions = [];
+            console.timeEnd('Completed ' + (this.maxPerLoop + j * this.maxPerLoop));
         }
         this.workerTaskDirector.dispose();
         console.timeEnd('start');

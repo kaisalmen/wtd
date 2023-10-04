@@ -157,32 +157,24 @@ class WorkerTaskDirectorExample {
             return fileLoader.loadAsync(objFilename as unknown as string);
         };
 
-        let bufferExt: ArrayBufferLike;
-        awaiting.push(loadObj()
-            .then(async (buffer: string | ArrayBuffer) => {
-                bufferExt = buffer as ArrayBufferLike;
-            }));
-        await Promise.all(awaiting)
-            .then(async () => {
-                console.log('Loaded OBJ');
+        awaiting.push(loadObj());
+        const result = await Promise.all(awaiting);
+        console.log('Loaded OBJ');
 
-                const objLoaderDataPayload = new DataPayload();
-                objLoaderDataPayload.buffers.set('modelData', bufferExt);
+        const objLoaderDataPayload = new DataPayload();
+        objLoaderDataPayload.buffers.set('modelData', result[1] as ArrayBufferLike);
 
-                const materialsPayload = new MaterialsPayload();
-                materialsPayload.materials = this.materialStore.getMaterials();
-                materialsPayload.cleanMaterials();
+        const materialsPayload = new MaterialsPayload();
+        materialsPayload.materials = this.materialStore.getMaterials();
+        materialsPayload.cleanMaterials();
 
-                objLoaderInitMessage.addPayload(objLoaderDataPayload);
-                objLoaderInitMessage.addPayload(materialsPayload);
+        objLoaderInitMessage.addPayload(objLoaderDataPayload);
+        objLoaderInitMessage.addPayload(materialsPayload);
 
-                const transferables = objLoaderInitMessage.pack(false);
-                await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, objLoaderInitMessage, transferables)
-                    .then(() => {
-                        console.timeEnd('Init tasks');
-                        this.executeTasks();
-                    });
-            });
+        const transferables = objLoaderInitMessage.pack(false);
+        await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, objLoaderInitMessage, transferables);
+        console.timeEnd('Init tasks');
+        this.executeTasks();
     }
 
     /** Once all tasks are initialized a 1024 tasks are enqueued for execution by WorkerTaskDirector. */
@@ -220,11 +212,10 @@ class WorkerTaskDirectorExample {
                 taskToUseIndex = 0;
             }
         }
-        await Promise.all(executions).then(() => {
-            console.timeEnd('Execute tasks');
-            console.log('All worker executions have been completed');
-            this.workerTaskDirector.dispose();
-        });
+        await Promise.all(executions);
+        console.timeEnd('Execute tasks');
+        console.log('All worker executions have been completed');
+        this.workerTaskDirector.dispose();
     }
 
     /**

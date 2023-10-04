@@ -139,7 +139,7 @@ export class MeshPayloadHandler implements PayloadHandlerType {
         if (transferredGeometry.index !== null) {
             const indexAttr = transferredGeometry.index as BufferAttribute;
             if (indexAttr) {
-                const indexBuffer = cloneBuffers ? (indexAttr.array as number[]).slice(0) : indexAttr.array;
+                const indexBuffer = cloneBuffers ? indexAttr.array.slice(0) : indexAttr.array;
                 bufferGeometry.setIndex(new BufferAttribute(indexBuffer, indexAttr.itemSize, indexAttr.normalized));
             }
         }
@@ -156,7 +156,6 @@ export class MeshPayloadHandler implements PayloadHandlerType {
 
         bufferGeometry.uuid = transferredGeometry.uuid as string;
         bufferGeometry.name = transferredGeometry.name as string;
-        bufferGeometry.type = transferredGeometry.type as string;
         bufferGeometry.groups = transferredGeometry.groups as Array<{ start: number; count: number; materialIndex?: number | undefined }>;
         bufferGeometry.drawRange = transferredGeometry.drawRange as { start: number; count: number };
         bufferGeometry.userData = transferredGeometry.userData as AssociatedArrayType<unknown>;
@@ -166,7 +165,7 @@ export class MeshPayloadHandler implements PayloadHandlerType {
     static assignAttributeFromTransfered(bufferGeometry: BufferGeometry, input: BufferAttribute | InterleavedBufferAttribute | undefined,
         attrName: string, cloneBuffer: boolean): void {
         if (input) {
-            const arrayLike = cloneBuffer ? (input.array as number[]).slice(0) : input.array;
+            const arrayLike = cloneBuffer ? input.array.slice(0) : input.array;
             bufferGeometry.setAttribute(attrName, new BufferAttribute(arrayLike, input.itemSize, input.normalized));
         }
     }

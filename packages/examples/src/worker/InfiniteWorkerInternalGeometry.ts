@@ -27,7 +27,7 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker imp
         bufferGeometry.name = 'tmProto' + message.id;
 
         const vertexBA = bufferGeometry.getAttribute('position');
-        const vertexArray = vertexBA.array as number[];
+        const vertexArray = vertexBA.array;
         for (let i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertexArray[i] + 10 * (Math.random() - 0.5);
         }

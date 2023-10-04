@@ -1,6 +1,7 @@
 {
   "name": "wtd-workspace",
   "version": "0.0.0",
+  "type": "module",
   "description": "Worker Task Director Workspace",
   "author": {
     "name": "kaisalmen",
@@ -17,7 +18,8 @@
   },
   "scripts": {
     "clean": "npm run clean --workspaces",
-    "lint": "npm run lint --workspaces",
+    "lint": "eslint {**/src/**/*.ts,**/src/**/*.tsx,**/test/**/*.ts,**/test/**/*.tsx}",
+    "lint:fix": "eslint eslint {**/src/**/*.ts,**/src/**/*.tsx,**/test/**/*.ts,**/test/**/*.tsx} --fix",
     "doc": "npm run doc --workspaces",
     "compile": "npx tsc --build tsconfig.build.json",
     "watch": "npx tsc --build tsconfig.build.json --watch",
@@ -31,20 +33,20 @@
   "keywords": [],
   "homepage": "https://github.com/kaisalmen/three-wtm#README",
   "volta": {
-    "node": "16.19.0",
-    "npm": "8.19.3"
+    "node": "18.18.0",
+    "npm": "9.8.1"
   },
   "devDependencies": {
-    "@types/node": "~16.18.11",
-    "@typescript-eslint/eslint-plugin": "~5.49.0",
-    "editorconfig": "~1.0.1",
-    "eslint": "~8.33.0",
+    "@types/node": "~18.18.03",
+    "@typescript-eslint/eslint-plugin": "~6.7.4",
+    "editorconfig": "~2.0.0",
+    "eslint": "~8.50.0",
     "shx": "~0.3.4",
-    "typedoc": "~0.23.24",
-    "typedoc-plugin-markdown": "~3.14.0",
-    "typescript": "~4.9.4",
-    "vite": "~4.0.4",
-    "vitest": "~0.28.3"
+    "typedoc": "~0.25.1",
+    "typedoc-plugin-markdown": "~3.16.0",
+    "typescript": "~5.2.2",
+    "vite": "~4.4.10",
+    "vitest": "~0.34.6"
   },
   "workspaces": [
     "packages/wtd-core",

@@ -25,7 +25,7 @@ export class HelloWorlThreedWorker extends WorkerTaskDirectorDefaultWorker imple
 
         const bufferGeometry = new SphereGeometry(40, 64, 64);
         bufferGeometry.name = message.name ?? 'unknown' + message.id ?? 'unknown';
-        const vertexArray = bufferGeometry.getAttribute('position').array as number[];
+        const vertexArray = bufferGeometry.getAttribute('position').array;
         for (let i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
         }
