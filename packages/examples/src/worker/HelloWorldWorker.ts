@@ -1,14 +1,13 @@
 import {
     DataPayload,
-    WorkerTaskDirectorDefaultWorker,
-    WorkerTaskDirectorWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessage,
     WorkerTaskMessageType
 } from 'wtd-core';
 
 declare const self: DedicatedWorkerGlobalScope;
 
-export class HelloWorldWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+export class HelloWorldWorker extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');

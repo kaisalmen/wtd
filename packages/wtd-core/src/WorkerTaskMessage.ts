@@ -4,18 +4,21 @@ import {
 } from './DataPayload.js';
 
 export type WorkerTaskMessageHeaderType = {
-    cmd?: string;
     id?: number;
     name?: string;
     workerId?: number;
     progress?: number;
 }
 
+export type WorkerTaskCommandType = {
+    cmd: string;
+}
+
 export type WorkerTaskMessageBodyType = {
     payloads: DataPayload[]
 }
 
-export type WorkerTaskMessageType = WorkerTaskMessageHeaderType & WorkerTaskMessageBodyType
+export type WorkerTaskMessageType = WorkerTaskMessageHeaderType & WorkerTaskCommandType & WorkerTaskMessageBodyType
 
 export class WorkerTaskMessage implements WorkerTaskMessageType {
     cmd = 'unknown';
@@ -25,12 +28,11 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
     progress = 0;
     payloads: DataPayload[] = [];
 
-    constructor(config: WorkerTaskMessageHeaderType) {
-        this.cmd = config.cmd ?? this.cmd;
-        this.id = config.id ?? this.id;
-        this.name = config.name ?? this.name;
-        this.workerId = config.workerId ?? this.workerId;
-        this.progress = config.progress ?? this.progress;
+    constructor(config?: WorkerTaskMessageHeaderType) {
+        this.id = config?.id ?? this.id;
+        this.name = config?.name ?? this.name;
+        this.workerId = config?.workerId ?? this.workerId;
+        this.progress = config?.progress ?? this.progress;
     }
 
     addPayload(payload: DataPayload | DataPayload[] | undefined) {
@@ -64,6 +66,7 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
 
     static unpack(rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) {
         const instance = new WorkerTaskMessage(rawMessage);
+        instance.cmd = rawMessage.cmd;
 
         for (const payload of rawMessage.payloads) {
             const handler = PayloadRegister.handler.get(payload.type);

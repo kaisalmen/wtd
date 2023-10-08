@@ -41,8 +41,6 @@ type TaskDescription = {
     modelName?: string;
     filenameObj?: URL;
     filenameMtl?: URL;
-    buffer?: string | ArrayBuffer;
-    materialStore?: MaterialStore;
 };
 
 /**
@@ -125,10 +123,10 @@ class PotentiallyInfiniteExample {
         workerUrl: new URL(import.meta.env.DEV ? '../worker/generated/OBJLoader2WorkerClassic.js' : '../worker/generated/OBJLoader2WorkerModule.js', import.meta.url),
         workerCount: 2,
         filenameMtl: new URL('../../models/obj/female02/female02.mtl', import.meta.url),
-        filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url),
-        materialStore: new MaterialStore(true)
+        filenameObj: new URL('../../models/obj/female02/female02.obj', import.meta.url)
     } as TaskDescription;
 
+    private materialStore = new MaterialStore(true);
     private tasksToUse: TaskDescription[] = [];
     private executions: Array<Promise<unknown>> = [];
     private objectsUsed = new Map<number, { name: string, pos: THREE.Vector3 }>();
@@ -254,8 +252,8 @@ class PotentiallyInfiniteExample {
         this.renderer.render(this.scene, this.camera);
     }
 
-    run() {
-        this.initContent();
+    async run() {
+        await this.initContent();
     }
 
     /**
@@ -336,38 +334,32 @@ class PotentiallyInfiniteExample {
             const loadMtl = new Promise<MTLLoader.MaterialCreator>(resolve => {
                 const mtlLoader = new MTLLoader();
                 mtlLoader.load(taskDescr!.filenameMtl!.href, resolve);
-            }).then((materialCreator: MTLLoader.MaterialCreator) => {
-                materialCreator.preload();
-                this.taskObjLoader2Worker.materialStore?.addMaterialsFromObject(materialCreator.materials, false);
             });
             awaiting.push(loadMtl);
 
             const fileLoader = new THREE.FileLoader();
             fileLoader.setResponseType('arraybuffer');
-            const loadObj = fileLoader.loadAsync(taskDescr!.filenameObj!.href as string)
-                .then(async (buffer: string | ArrayBuffer) => {
-                    this.taskObjLoader2Worker.buffer = buffer as ArrayBufferLike;
-                });
+            const loadObj = fileLoader.loadAsync(taskDescr!.filenameObj!.href as string);
             awaiting.push(loadObj);
         }
 
         if (awaiting.length > 0) {
             const results = await Promise.all(awaiting);
-            console.log(results);
-
             if (this.taskObjLoader2Worker.use) {
+                const materialCreator = results[results.length - 2] as MTLLoader.MaterialCreator;
+                materialCreator.preload();
+                this.materialStore.addMaterialsFromObject(materialCreator.materials, false);
+                const buffer = results[results.length - 1] as string | ArrayBuffer;
+
                 const initMessage = new WorkerTaskMessage({
                     id: 0,
                     name: 'OBJLoader2WorkerModule'
                 });
-
                 const dataPayload = new DataPayload();
-                dataPayload.buffers.set('modelData', this.taskObjLoader2Worker.buffer as ArrayBufferLike);
-                if (this.taskObjLoader2Worker.materialStore) {
-                    dataPayload.params = {
-                        materialNames: new Set(Array.from(this.taskObjLoader2Worker.materialStore?.getMaterials().keys()))
-                    };
-                }
+                dataPayload.params = {
+                    materialNames: new Set(Array.from(this.materialStore.getMaterials().keys()))
+                };
+                dataPayload.buffers.set('modelData', buffer as ArrayBufferLike);
                 initMessage.addPayload(dataPayload);
 
                 const transferables = initMessage.pack(false);
@@ -381,7 +373,7 @@ class PotentiallyInfiniteExample {
             }
         }
         else {
-            Promise.reject('No task type has been configured');
+            Promise.reject('No task type has been configured. Unable to execute!');
         }
     }
 
@@ -479,7 +471,7 @@ class PotentiallyInfiniteExample {
                         const preparedMesh = dataPayloadOBJ?.params?.preparedMesh;
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
-                        mesh = OBJLoader2.buildThreeMesh(preparedMesh, taskDescr.materialStore?.getMaterials(), false) as THREE.Mesh;
+                        mesh = OBJLoader2.buildThreeMesh(preparedMesh, this.materialStore.getMaterials(), false) as THREE.Mesh;
                     } else {
                         meshPayload = wtm.payloads[0] as MeshPayload;
                         if (meshPayload.params?.color) {
@@ -490,7 +482,7 @@ class PotentiallyInfiniteExample {
 
                         if (wtm.payloads.length === 2) {
                             materialsPayload = wtm.payloads[1] as MaterialsPayload;
-                            const storedMaterials = taskDescr.materialStore ? taskDescr.materialStore.getMaterials() : new Map();
+                            const storedMaterials = this.materialStore.getMaterials();
                             material = materialsPayload.processMaterialTransport(storedMaterials, true);
                             if (!material) {
                                 material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
@@ -748,13 +740,13 @@ class GUIControls {
         this.controllers.set('resetExecution', controllerResetExecution);
     }
 
-    executeLoading() {
+    async executeLoading() {
         this.started = true;
         for (const controller of this.controllers.values()) {
             this.flipElement(controller, false);
         }
         this.flipElement(this.controllers.get('stopExecution'), true);
-        this.app.run();
+        await this.app.run();
     }
 
     stopExecution() {

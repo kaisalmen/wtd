@@ -2,8 +2,7 @@ import {
     BufferGeometry
 } from 'three';
 import {
-    WorkerTaskDirectorDefaultWorker,
-    WorkerTaskDirectorWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessage,
     WorkerTaskMessageType
 } from 'wtd-core';
@@ -13,7 +12,7 @@ import {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class InfiniteWorkerExternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
 
     private localData = {
         meshPayloadRaw: undefined as MeshPayloadType | undefined

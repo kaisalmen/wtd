@@ -4,8 +4,7 @@ import {
     MeshPhongMaterial
 } from 'three';
 import {
-    WorkerTaskDirectorDefaultWorker,
-    WorkerTaskDirectorWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessage,
     WorkerTaskMessageType
 } from 'wtd-core';
@@ -15,7 +14,7 @@ import {
     MaterialsPayload,
 } from 'wtd-three-ext';
 
-class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');

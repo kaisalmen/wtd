@@ -242,9 +242,8 @@ class TransferablesTestbed {
         execMessage.addPayload(dataPayload);
         const transferables = execMessage.pack(false);
 
-        return this.workerTaskDirector.enqueueWorkerExecutionPlan({
+        return this.workerTaskDirector.enqueueWorkerExecutionPlan(task.name, {
             message: execMessage,
-            taskTypeName: task.name,
             onComplete: (m: WorkerTaskMessageType) => {
                 this.processMessage(m);
             },

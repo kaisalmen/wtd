@@ -28,7 +28,8 @@
     "dev": "npx vite",
     "dev:debug": "npx vite --debug --force",
     "prerelease": "npm run build && npm run doc",
-    "test": "vitest"
+    "test": "vitest",
+    "reset:repo": "git clean -f -X -d"
   },
   "keywords": [],
   "homepage": "https://github.com/kaisalmen/three-wtm#README",

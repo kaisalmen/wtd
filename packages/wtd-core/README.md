@@ -21,13 +21,9 @@ workerTaskDirector.registerTask(taskName, {
 try {
     await workerTaskDirector.initTaskType(taskName)
     // once the init Promise returns enqueue the execution
-    const execMessage = new WorkerTaskMessage({
-        id: 0,
-        name: taskName
-    });
+    const execMessage = new WorkerTaskMessage();
 
-    await workerTaskDirector.enqueueWorkerExecutionPlan({
-        taskTypeName: execMessage.name,
+    await workerTaskDirector.enqueueWorkerExecutionPlan(taskName, {
         message: execMessage,
         // decouple result evaluation ...
         onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }

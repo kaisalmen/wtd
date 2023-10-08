@@ -4,10 +4,10 @@
   "type": "module",
   "private": "true",
   "scripts": {
-    "clean": "shx rm -fr *.tsbuildinfo dist",
+    "clean": "shx rm -fr *.tsbuildinfo dist src/worker/generated",
     "doc": "echo 'docs are not generated for examples'",
     "compile": "tsc -b",
-    "copy:worker:OBJLoader2Worker": "shx mkdir -p ./src/worker/generated && shx cp -f ../../node_modules/wwobjloader2/dist/worker/OBJLoader2Worker*.js ./src/worker/generated",
+    "copy:worker:OBJLoader2Worker": "shx mkdir -p ./src/worker/generated && shx cp -f ../../node_modules/wwobjloader2/lib/worker/OBJLoader2Worker*.js ./src/worker/generated",
     "build:worker:HelloWorldWorker": "shx rm -f ./src/worker/generated/HelloWorldWorker*.js && vite -c build/vite.config.HelloWorldWorker.ts build",
     "build:worker:HelloWorldThreeWorker": "shx rm -f ./src/worker/generated/HelloWorldThreeWorker*.js && vite -c build/vite.config.HelloWorldThreeWorker.ts build",
     "build:worker:InfiniteWorkerExternalGeometry": "shx rm -f ./src/worker/generated/InfiniteWorkerExternalGeometry*.js && vite -c build/vite.config.InfiniteWorkerExternalGeometry.ts build",
@@ -26,10 +26,9 @@
     "preview": "http-server ./preview"
   },
   "dependencies": {
-    "lil-gui": "~0.17.0",
-    "wtd-core": "2.2.0",
-    "wtd-three-ext": "2.2.0",
-    "wwobjloader2": "5.1.0-next.0"
+    "lil-gui": "~0.18.2",
+    "wtd-three-ext": "2.3.0-next.0",
+    "wwobjloader2": "~6.0.1"
   },
   "devDependencies": {
     "http-server": "~14.1.1"

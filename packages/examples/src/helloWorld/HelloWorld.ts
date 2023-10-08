@@ -31,12 +31,8 @@ class HelloWorldModuleWorkerExample {
 
             const t0 = performance.now();
             // once the init Promise returns enqueue the execution
-            const execMessage = new WorkerTaskMessage({
-                id: 0,
-                name: taskName
-            });
-            const resultExec = await this.workerTaskDirector.enqueueWorkerExecutionPlan({
-                taskTypeName: execMessage.name,
+            const execMessage = new WorkerTaskMessage();
+            const resultExec = await this.workerTaskDirector.enqueueWorkerExecutionPlan(taskName, {
                 message: execMessage,
                 // decouple result evaluation ...
                 onComplete: (m: WorkerTaskMessageType) => {
@@ -55,7 +51,7 @@ class HelloWorldModuleWorkerExample {
             console.log(msg);
             alert(msg);
             console.log('Done');
-        } catch (e: unknown) {
+        } catch (e) {
             console.error(e);
         }
     }

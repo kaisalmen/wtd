@@ -159,7 +159,7 @@ class WorkerTaskDirectorExample {
 
         awaiting.push(loadObj());
         const result = await Promise.all(awaiting);
-        console.log('Loaded OBJ');
+        console.log('Awaited all required init and data loading.');
 
         const objLoaderDataPayload = new DataPayload();
         objLoaderDataPayload.buffers.set('modelData', result[1] as ArrayBufferLike);
@@ -174,7 +174,7 @@ class WorkerTaskDirectorExample {
         const transferables = objLoaderInitMessage.pack(false);
         await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, objLoaderInitMessage, transferables);
         console.timeEnd('Init tasks');
-        this.executeTasks();
+        await this.executeTasks();
     }
 
     /** Once all tasks are initialized a 1024 tasks are enqueued for execution by WorkerTaskDirector. */
@@ -194,8 +194,7 @@ class WorkerTaskDirectorExample {
                 name: `${name}_${globalCount}`
             });
 
-            const voidPromise = this.workerTaskDirector.enqueueWorkerExecutionPlan({
-                taskTypeName: name ?? 'unknown',
+            const voidPromise = this.workerTaskDirector.enqueueWorkerExecutionPlan(name ?? 'unknown', {
                 message: execMessage,
                 onComplete: (m: WorkerTaskMessageType) => {
                     this.processMessage(m);

@@ -1,7 +1,6 @@
 import { TorusKnotGeometry } from 'three';
 import {
-    WorkerTaskDirectorWorker,
-    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     WorkerTaskMessage
 } from 'wtd-core';
@@ -11,7 +10,7 @@ import {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class TransferableWorkerTest4 extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest4#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);

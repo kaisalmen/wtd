@@ -18,11 +18,7 @@ class HelloWorldWorkerTaskExample {
             url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
         }, true);
 
-        const initMessage = new WorkerTaskMessage({
-            cmd: 'init',
-            id: 0,
-            name: taskName
-        });
+        const initMessage = new WorkerTaskMessage();
 
         try {
             // init the worker task without any payload (worker init without function invocation on worker)
@@ -31,12 +27,8 @@ class HelloWorldWorkerTaskExample {
 
             const t0 = performance.now();
             // once the init Promise returns enqueue the execution
-            const execMessage = new WorkerTaskMessage({
-                id: 0,
-                name: taskName
-            });
+            const execMessage = new WorkerTaskMessage();
             const resultExec = await workerTask.executeWorker({
-                taskTypeName: execMessage.name,
                 message: execMessage,
                 // decouple result evaluation ...
                 onComplete: (m: WorkerTaskMessageType) => {
@@ -55,7 +47,7 @@ class HelloWorldWorkerTaskExample {
             console.log(msg);
             alert(msg);
             console.log('Done');
-        } catch (e: unknown) {
+        } catch (e) {
             console.error(e);
         }
     }

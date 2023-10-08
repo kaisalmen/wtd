@@ -1,7 +1,6 @@
 import { SphereGeometry } from 'three';
 import {
-    WorkerTaskDirectorDefaultWorker,
-    WorkerTaskDirectorWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessage,
     WorkerTaskMessageType
 } from 'wtd-core';
@@ -11,7 +10,7 @@ import {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-export class HelloWorlThreedWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`HelloWorldWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);

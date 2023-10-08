@@ -12,7 +12,6 @@ export type WorkerRegistrationType = {
 }
 
 export type WorkerExecutionPlanType = {
-    taskTypeName: string;
     message: WorkerTaskMessage;
     onComplete: (message: WorkerTaskMessageType) => void;
     onIntermediate?: (message: WorkerTaskMessageType) => void;
@@ -156,6 +155,20 @@ export class WorkerTask {
                 this.worker.postMessage(plan.message, plan.transferables!);
             }
         });
+    }
+
+    /**
+     * This is only possible if the worker is already executing.
+     * @param message
+     * @param transferables
+     */
+    sentMessage(message: WorkerTaskMessage, transferables?: Transferable[]) {
+        if (this.isWorkerExecuting() && this.worker) {
+            message.cmd = 'intermediate';
+            message.workerId = this.workerId;
+            this.worker.postMessage(message, transferables!);
+        }
+
     }
 
     dispose() {

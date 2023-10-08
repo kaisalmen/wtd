@@ -1,6 +1,5 @@
 import {
-    WorkerTaskDirectorWorker,
-    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     WorkerTaskMessage,
     DataPayload
@@ -8,7 +7,7 @@ import {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class TransferableWorkerTest1 extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+class TransferableWorkerTest1 extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest1#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);

@@ -5,8 +5,7 @@ import {
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
     AssociatedArrayType,
-    WorkerTaskDirectorDefaultWorker,
-    WorkerTaskDirectorWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessage,
     WorkerTaskMessageType
 } from 'wtd-core';
@@ -18,7 +17,7 @@ import {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class OBJLoaderWorker extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+class OBJLoaderWorker extends WorkerTaskDefaultWorker {
 
     private localData = {
         objLoader: undefined as OBJLoader | undefined,
