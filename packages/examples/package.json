@@ -28,7 +28,7 @@
   "dependencies": {
     "lil-gui": "~0.18.2",
     "wtd-three-ext": "2.3.0-next.1",
-    "wwobjloader2": "~6.0.1"
+    "wwobjloader2": "~6.0.2-next.1"
   },
   "devDependencies": {
     "http-server": "~14.1.1"

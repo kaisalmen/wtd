@@ -169,7 +169,6 @@ export class WorkerTaskDirector {
         if (workerTaskRuntimeDesc) {
             for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 if (!workerTask.isWorkerExecuting()) {
-                    workerTask.markExecuting(true);
                     return workerTask;
                 }
             }
