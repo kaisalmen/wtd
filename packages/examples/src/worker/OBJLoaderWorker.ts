@@ -5,6 +5,7 @@ import {
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
     AssociatedArrayType,
+    DataPayload,
     WorkerTaskDefaultWorker,
     WorkerTaskMessage,
     WorkerTaskMessageType
@@ -31,7 +32,7 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
 
         const wtm = WorkerTaskMessage.unpack(message, true);
         if (wtm.payloads.length === 2) {
-            const dataPayload = wtm.payloads[0];
+            const dataPayload = wtm.payloads[0] as DataPayload;
             const materialsPayload = wtm.payloads[1] as MaterialsPayload;
 
             this.localData.buffer = dataPayload.buffers?.get('modelData');

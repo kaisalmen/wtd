@@ -27,8 +27,7 @@ export type MeshPayloadType = DataPayloadType & {
 
 export class MeshPayload extends DataPayload implements MeshPayloadType {
 
-    static TYPE = 'MeshPayload';
-    type = MeshPayload.TYPE;
+    $type = 'MeshPayload';
     // 0: mesh, 1: line, 2: point
     geometryType: 0 | 1 | 2 = 0;
     bufferGeometry: BufferGeometry | AssociatedArrayType<unknown> | undefined;
@@ -60,7 +59,7 @@ export class MeshPayload extends DataPayload implements MeshPayloadType {
 export class MeshPayloadHandler implements PayloadHandlerType {
 
     static pack(payload: MeshPayload, transferables: Transferable[], cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get(MeshPayload.TYPE);
+        const handler = PayloadRegister.handler.get('MeshPayload');
         return handler ? handler.pack(payload, transferables, cloneBuffers) : undefined;
     }
 
@@ -74,7 +73,7 @@ export class MeshPayloadHandler implements PayloadHandlerType {
     }
 
     static unpack(transportObject: MeshPayloadType, cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get(MeshPayload.TYPE);
+        const handler = PayloadRegister.handler.get('MeshPayload');
         return handler ? handler.unpack(transportObject, cloneBuffers) : undefined;
     }
 
@@ -172,4 +171,4 @@ export class MeshPayloadHandler implements PayloadHandlerType {
 }
 
 // register the Mesh related payload handler
-PayloadRegister.handler.set(MeshPayload.TYPE, new MeshPayloadHandler());
+PayloadRegister.handler.set('MeshPayload', new MeshPayloadHandler());

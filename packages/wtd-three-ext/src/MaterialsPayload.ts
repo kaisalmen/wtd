@@ -29,8 +29,7 @@ export type MaterialsPayloadType = DataPayloadType & {
 
 export class MaterialsPayload extends DataPayload implements MaterialsPayloadType {
 
-    static TYPE = 'MaterialsPayload';
-    type = MaterialsPayload.TYPE;
+    type = 'MaterialsPayload';
     materials: Map<string, Material> = new Map();
     materialsJson: Map<string, unknown> = new Map();
     multiMaterialNames: Map<number, string> = new Map();
@@ -126,7 +125,7 @@ export class MaterialsPayload extends DataPayload implements MaterialsPayloadTyp
 export class MaterialsPayloadHandler implements PayloadHandlerType {
 
     static pack(payload: MaterialsPayload, transferables: Transferable[], cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get(MaterialsPayload.TYPE);
+        const handler = PayloadRegister.handler.get('MaterialsPayload');
         return handler ? handler.pack(payload, transferables, cloneBuffers) : undefined;
     }
 
@@ -137,7 +136,7 @@ export class MaterialsPayloadHandler implements PayloadHandlerType {
     }
 
     static unpack(transportObject: MaterialsPayloadType, cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get(MaterialsPayload.TYPE);
+        const handler = PayloadRegister.handler.get('MaterialsPayload');
         return handler ? handler.unpack(transportObject, cloneBuffers) : undefined;
     }
 
@@ -158,4 +157,4 @@ export class MaterialsPayloadHandler implements PayloadHandlerType {
 }
 
 // register the Materials related payload handler
-PayloadRegister.handler.set(MaterialsPayload.TYPE, new MaterialsPayloadHandler());
+PayloadRegister.handler.set('MaterialsPayload', new MaterialsPayloadHandler());

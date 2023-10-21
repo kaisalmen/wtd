@@ -2,7 +2,8 @@ import { TorusKnotGeometry } from 'three';
 import {
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
-    WorkerTaskMessage
+    WorkerTaskMessage,
+    DataPayload
 } from 'wtd-core';
 import {
     MeshPayload
@@ -23,7 +24,7 @@ class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
 
         const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads.length === 1) {
-            const payload = wtm.payloads[0];
+            const payload = wtm.payloads[0] as DataPayload;
             const bufferGeometry = new TorusKnotGeometry(20, 3, payload.params?.segments as number, payload.params?.segments as number);
             bufferGeometry.name = wtm.name;
 

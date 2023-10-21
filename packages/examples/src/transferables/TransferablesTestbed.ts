@@ -261,8 +261,8 @@ class TransferablesTestbed {
                 if (wtm.payloads.length === 1) {
 
                     const payload = wtm.payloads[0];
-                    if (payload.type === DataPayload.TYPE) {
-                        const dataPayload = payload;
+                    if (payload.$type === 'DataPayload') {
+                        const dataPayload = payload as DataPayload;
                         if (dataPayload.params && Object.keys(dataPayload.params).length > 0 &&
                             dataPayload.params.geometry) {
                             const mesh = new THREE.Mesh(
@@ -277,7 +277,7 @@ class TransferablesTestbed {
                         }
                     }
 
-                    if (payload.type === MeshPayload.TYPE) {
+                    if (payload.$type === 'MeshPayload') {
                         const meshPayload = payload as MeshPayload;
                         if (meshPayload.bufferGeometry) {
                             const mesh = new THREE.Mesh(

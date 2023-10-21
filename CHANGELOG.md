@@ -1,6 +1,10 @@
 # Changelog
 
-## 2.3.0
+## 2.4.0 - 2023-10-2x
+
+- Added `RawPayload` and new `WorkerCom` example that demonstrates inter-worker communication.
+
+## 2.3.0 - 2023-10-21
 
 - Added the possiblity to sent intermediate message from main to the worker if the worker is still executing.
 - Usage of `await` everwhere instead of `Promise.then()`

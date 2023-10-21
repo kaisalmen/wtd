@@ -26,8 +26,7 @@ export class WorkerTaskDefaultWorker implements WorkerTaskWorker {
         console.log(`WorkerTaskDefaultWorker#execute: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    comRouting(message: MessageEvent<any>) {
+    comRouting(message: MessageEvent<unknown>) {
         const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
         if (wtmt) {
             if (wtmt.cmd === 'init') {

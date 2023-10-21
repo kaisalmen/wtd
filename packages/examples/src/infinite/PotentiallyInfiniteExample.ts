@@ -467,7 +467,7 @@ class PotentiallyInfiniteExample {
                 // were are getting raw vertex buffers here
                 if (wtm.payloads.length > 0) {
                     if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads.length === 1) {
-                        const dataPayloadOBJ = wtm.payloads[0];
+                        const dataPayloadOBJ = wtm.payloads[0] as DataPayload;
                         const preparedMesh = dataPayloadOBJ?.params?.preparedMesh;
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
@@ -599,10 +599,10 @@ class SimpleBlobWorker {
         }
 
         const dataPayload = {
+            $type: 'DataPayload',
             params: {
                 hello: 'say hello'
             },
-            type: 'dataPayload',
             buffers: new Map(),
             progress: 0
         };

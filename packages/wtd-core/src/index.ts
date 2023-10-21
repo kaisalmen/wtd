@@ -21,11 +21,14 @@ import {
 
 import type {
     AssociatedArrayType,
+    PayloadType,
+    RawPayloadType,
     DataPayloadType,
     PayloadHandlerType
 } from './DataPayload.js';
 
 import {
+    RawPayload,
     DataPayload,
     DataPayloadHandler,
     PayloadRegister
@@ -48,11 +51,14 @@ export {
     WorkerTaskDirector,
     WorkerTaskWorker,
     WorkerTaskDefaultWorker,
+    RawPayload,
     WorkerTaskMessageHeaderType,
     WorkerTaskMessageBodyType,
     WorkerTaskMessageType,
     WorkerTaskMessage,
     AssociatedArrayType,
+    PayloadType,
+    RawPayloadType,
     DataPayloadType,
     DataPayload,
     DataPayloadHandler,

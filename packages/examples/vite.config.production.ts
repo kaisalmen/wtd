@@ -14,7 +14,7 @@ export default defineConfig(({ command }) => {
                 input: {
                     main: path.resolve(__dirname, 'index.html'),
                     helloWorld: path.resolve(__dirname, 'helloWorld.html'),
-                    helloWorldStandard: path.resolve(__dirname, 'helloWorldStandard.html'),
+                    workerCom: path.resolve(__dirname, 'workerCom.html'),
                     helloWorldWorkerTask: path.resolve(__dirname, 'helloWorldWorkerTask.html'),
                     transferables: path.resolve(__dirname, 'transferables.html'),
                     threejs: path.resolve(__dirname, 'threejs.html'),

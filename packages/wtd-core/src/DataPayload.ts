@@ -1,14 +1,27 @@
 export type AssociatedArrayType<T> = { [key: string]: T }
 
-export type DataPayloadType = {
-    type: string;
+export type PayloadType = {
+    $type: string;
+}
+
+export type RawPayloadType = PayloadType & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    message: any;
+}
+
+export type DataPayloadType = PayloadType & {
     params?: AssociatedArrayType<unknown>;
     buffers?: Map<string, ArrayBufferLike>;
 }
 
+export class RawPayload implements RawPayloadType {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    message: any;
+    $type = 'RawPayload';
+}
+
 export class DataPayload implements DataPayloadType {
-    static TYPE = 'DataPayload';
-    type = DataPayload.TYPE;
+    $type = 'DataPayload';
     params?: AssociatedArrayType<unknown> = {};
     buffers: Map<string, ArrayBufferLike> = new Map();
     progress = 0;
@@ -30,7 +43,7 @@ export class PayloadRegister {
 export class DataPayloadHandler implements PayloadHandlerType {
 
     static pack(payload: DataPayload, transferables: Transferable[], cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get(DataPayload.TYPE);
+        const handler = PayloadRegister.handler.get('DataPayload');
         return handler ? handler.pack(payload, transferables, cloneBuffers) : undefined;
     }
 
@@ -54,7 +67,7 @@ export class DataPayloadHandler implements PayloadHandlerType {
     }
 
     static unpack(transportObject: DataPayloadType, cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get(DataPayload.TYPE);
+        const handler = PayloadRegister.handler.get('DataPayload');
         return handler ? handler.unpack(transportObject, cloneBuffers) : undefined;
     }
 
@@ -91,4 +104,4 @@ export class DataPayloadHandler implements PayloadHandlerType {
 }
 
 // register the default handler
-PayloadRegister.handler.set(DataPayload.TYPE, new DataPayloadHandler());
+PayloadRegister.handler.set('DataPayload', new DataPayloadHandler());

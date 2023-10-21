@@ -26,7 +26,7 @@ class HelloWorldWorkerTaskExample {
             console.log(`initTaskType then: ${resultInit}`);
 
             const t0 = performance.now();
-            // once the init Promise returns enqueue the execution
+            // once the init Promise is done enqueue the execution
             const execMessage = new WorkerTaskMessage();
             const resultExec = await workerTask.executeWorker({
                 message: execMessage,

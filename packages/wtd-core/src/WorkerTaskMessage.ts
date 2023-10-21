@@ -1,6 +1,7 @@
 import {
     PayloadRegister,
-    DataPayload
+    DataPayload,
+    RawPayload
 } from './DataPayload.js';
 
 export type WorkerTaskMessageHeaderType = {
@@ -15,7 +16,7 @@ export type WorkerTaskCommandType = {
 }
 
 export type WorkerTaskMessageBodyType = {
-    payloads: DataPayload[]
+    payloads: Array<DataPayload | RawPayload>;
 }
 
 export type WorkerTaskMessageType = WorkerTaskMessageHeaderType & WorkerTaskCommandType & WorkerTaskMessageBodyType
@@ -26,7 +27,7 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
     name = 'unnamed';
     workerId = 0;
     progress = 0;
-    payloads: DataPayload[] = [];
+    payloads: Array<DataPayload | RawPayload> = [];
 
     constructor(config?: WorkerTaskMessageHeaderType) {
         this.id = config?.id ?? this.id;
@@ -35,15 +36,13 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
         this.progress = config?.progress ?? this.progress;
     }
 
-    addPayload(payload: DataPayload | DataPayload[] | undefined) {
-        if (!payload) {
+    addPayload(payloads: Array<DataPayload | RawPayload> | DataPayload | RawPayload | undefined) {
+        if (!payloads) {
             return;
-        }
-        else if (Array.isArray(payload)) {
-            this.payloads = this.payloads.concat(payload);
-        }
-        else {
-            this.payloads.push(payload);
+        } else if (Array.isArray(payloads)) {
+            this.payloads = this.payloads.concat(payloads);
+        } else {
+            this.payloads.push(payloads);
         }
     }
 
@@ -58,10 +57,11 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
     pack(cloneBuffers: boolean): Transferable[] {
         const transferables: Transferable[] = [];
         for (const payload of this.payloads) {
-            const handler = PayloadRegister.handler.get(payload.type);
-            handler?.pack(payload, transferables, cloneBuffers);
+            const handler = PayloadRegister.handler.get(payload.$type);
+            handler?.pack(payload as DataPayload, transferables, cloneBuffers);
         }
         return transferables;
+
     }
 
     static unpack(rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) {
@@ -69,7 +69,7 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
         instance.cmd = rawMessage.cmd;
 
         for (const payload of rawMessage.payloads) {
-            const handler = PayloadRegister.handler.get(payload.type);
+            const handler = PayloadRegister.handler.get(payload.$type);
             instance.addPayload(handler?.unpack(payload, cloneBuffers));
         }
         return instance;

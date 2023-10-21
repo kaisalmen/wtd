@@ -21,7 +21,7 @@ class TransferableWorkerTest2 extends WorkerTaskDefaultWorker {
 
         const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads.length === 1) {
-            const payload = wtm.payloads[0];
+            const payload = wtm.payloads[0] as DataPayload;
             if (payload.params) {
                 const payloadOut = new DataPayload();
                 payloadOut.buffers.set('data', new Uint32Array(32 * 1024 * 1024));
