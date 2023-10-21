@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.0
+
+- Added the possiblity to sent intermediate message from main to the worker if the worker is still executing.
+- Usage of `await` everwhere instead of `Promise.then()`
+- Moved `WorkerTaskWorker` to its own file
+- Code Cleanup
+- Updated dependencies
+
 ## 2.2.0
 
 - `DataPayload#applyProperties` allows any object as input and the params are more relaxed. A first set of uit tests has been introduced.

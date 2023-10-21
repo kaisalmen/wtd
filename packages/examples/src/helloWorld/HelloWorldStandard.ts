@@ -19,9 +19,9 @@ class HelloWorldStandardWorkerExample {
 
         // register the standard worker
         this.workerTaskDirector.registerTask(taskName, {
-            module: false,
+            module: true,
             blob: false,
-            url: new URL(import.meta.env.DEV ? '../worker/generated/HelloWorldWorker-iife.js' : '../worker/generated/HelloWorldWorker-iife.js', import.meta.url)
+            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
         });
 
         try {
