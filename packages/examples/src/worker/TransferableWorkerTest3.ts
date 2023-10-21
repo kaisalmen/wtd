@@ -1,7 +1,6 @@
 import { BufferGeometry } from 'three';
 import {
-    WorkerTaskDirectorWorker,
-    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     WorkerTaskMessage,
     DataPayload
@@ -13,7 +12,7 @@ import {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-class TransferableWorkerTest3 extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
 
     private context = {
         initPayload: undefined as MeshPayload | undefined

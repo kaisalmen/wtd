@@ -159,10 +159,13 @@ class TransferablesTestbed {
 
     async run() {
         console.time('All tasks have been initialized');
-        await Promise.all(app.initTasks()).then(() => {
+        try {
+            await Promise.all(app.initTasks());
             console.timeEnd('All tasks have been initialized');
             app.executeTasks();
-        }).catch(x => alert(x));
+        } catch (e) {
+            alert(e);
+        }
     }
 
     /**
@@ -220,10 +223,9 @@ class TransferablesTestbed {
                 awaiting.push(this.executeWorker(task));
             }
         }
-        await Promise.all(awaiting).then(() => {
-            console.timeEnd('Execute tasks');
-            console.log('All worker executions have been completed');
-        });
+        await Promise.all(awaiting);
+        console.timeEnd('Execute tasks');
+        console.log('All worker executions have been completed');
     }
 
     private executeWorker(task: ExampleTask) {
@@ -240,9 +242,8 @@ class TransferablesTestbed {
         execMessage.addPayload(dataPayload);
         const transferables = execMessage.pack(false);
 
-        return this.workerTaskDirector.enqueueWorkerExecutionPlan({
+        return this.workerTaskDirector.enqueueWorkerExecutionPlan(task.name, {
             message: execMessage,
-            taskTypeName: task.name,
             onComplete: (m: WorkerTaskMessageType) => {
                 this.processMessage(m);
             },

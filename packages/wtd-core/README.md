@@ -18,28 +18,22 @@ workerTaskDirector.registerTask(taskName, {
 });
 
 // init the worker task without any payload (worker init without function invocation on worker)
-await workerTaskDirector.initTaskType(taskName)
-    .then((x: unknown[]) => {
-        console.log(`init complete: ${x[0]}`);
-    }).catch(
-        // error handling
-        (x: unknown) => console.error(x)
-    );
+try {
+    await workerTaskDirector.initTaskType(taskName)
+    // once the init Promise returns enqueue the execution
+    const execMessage = new WorkerTaskMessage();
 
-// once the init Promise returns enqueue the execution
-const execMessage = new WorkerTaskMessage({
-    id: 0,
-    name: taskName
-});
-await workerTaskDirector.enqueueWorkerExecutionPlan({
-    taskTypeName: execMessage.name,
-    message: execMessage,
-    // decouple result evaluation ...
-    onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }
-}).then((x: unknown) => {
+    await workerTaskDirector.enqueueWorkerExecutionPlan(taskName, {
+        message: execMessage,
+        // decouple result evaluation ...
+        onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }
+    });
     // ... promise result handling
     alert('Worker execution has been completed after.');
-});
+} catch (e) {
+    // error handling
+    console.error(e);
+}
 ```
 
 ## Examples

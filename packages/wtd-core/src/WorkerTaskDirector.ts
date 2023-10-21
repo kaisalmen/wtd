@@ -112,21 +112,19 @@ export class WorkerTaskDirector {
      */
     async enqueueForExecution(taskTypeName: string, message: WorkerTaskMessage, onComplete: (message: WorkerTaskMessageType) => void,
         onIntermediate?: (message: WorkerTaskMessageType) => void, transferables?: Transferable[]) {
-        const plan = {
-            taskTypeName: taskTypeName,
-            message: message,
-            onComplete: onComplete,
-            onIntermediate: onIntermediate,
-            transferables: transferables
-        };
-        return this.enqueueWorkerExecutionPlan(plan);
+        return this.enqueueWorkerExecutionPlan(taskTypeName, {
+            message,
+            onComplete,
+            onIntermediate,
+            transferables
+        });
     }
 
-    async enqueueWorkerExecutionPlan(plan: WorkerExecutionPlanType) {
+    async enqueueWorkerExecutionPlan(taskTypeName: string, plan: WorkerExecutionPlanType) {
         const promise = this.buildWorkerExecutionPlanPromise(plan);
-        const planForType = this.workerExecutionPlans.get(plan.taskTypeName);
+        const planForType = this.workerExecutionPlans.get(taskTypeName);
         planForType?.push(plan);
-        this.depleteWorkerExecutionPlans(plan.taskTypeName);
+        this.depleteWorkerExecutionPlans(taskTypeName);
         return promise;
     }
 
@@ -139,7 +137,7 @@ export class WorkerTaskDirector {
         });
     }
 
-    private depleteWorkerExecutionPlans(taskTypeName: string) {
+    private async depleteWorkerExecutionPlans(taskTypeName: string) {
         const planForType = this.workerExecutionPlans.get(taskTypeName);
         if (planForType?.length === 0) {
             if (this.config.verbose) {
@@ -149,16 +147,17 @@ export class WorkerTaskDirector {
         }
         const plan = planForType?.shift();
         if (plan) {
-            const workerTaskRuntimeDesc = this.taskTypes.get(plan.taskTypeName);
+            const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
             const workerTask = this.getUnusedWorkerTask(workerTaskRuntimeDesc);
             if (workerTask) {
-                workerTask.executeWorker(plan).then((message: unknown) => {
-                    plan.promiseFunctions?.resolve(message);
+                try {
+                    const result = await workerTask.executeWorker(plan);
+                    plan.promiseFunctions?.resolve(result);
                     this.depleteWorkerExecutionPlans(taskTypeName);
-                }).catch((e) => {
+                } catch (e) {
                     plan.promiseFunctions?.reject(new Error('Execution error: ' + e));
                     this.depleteWorkerExecutionPlans(taskTypeName);
-                });
+                }
             }
             else {
                 planForType?.unshift(plan);
@@ -170,7 +169,6 @@ export class WorkerTaskDirector {
         if (workerTaskRuntimeDesc) {
             for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 if (!workerTask.isWorkerExecuting()) {
-                    workerTask.markExecuting(true);
                     return workerTask;
                 }
             }
@@ -189,39 +187,5 @@ export class WorkerTaskDirector {
             }
         }
         return this;
-    }
-}
-
-export type WorkerTaskDirectorWorker = {
-
-    init(message: WorkerTaskMessageType): void;
-
-    execute(message: WorkerTaskMessageType): void;
-
-    comRouting(message: never): void;
-
-}
-
-export class WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
-
-    init(message: WorkerTaskMessageType): void {
-        console.log(`WorkerTaskDirectorDefaultWorker#init: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
-    }
-
-    execute(message: WorkerTaskMessageType): void {
-        console.log(`WorkerTaskDirectorDefaultWorker#execute: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    comRouting(message: MessageEvent<any>) {
-        const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
-        if (wtmt) {
-            if (wtmt.cmd === 'init') {
-                this.init(wtmt);
-            }
-            else if (wtmt.cmd === 'execute') {
-                this.execute(wtmt);
-            }
-        }
     }
 }

@@ -1,10 +1,13 @@
 import type {
-    WorkerTaskDirectorWorker
-} from './WorkerTaskDirector.js';
+    WorkerTaskWorker
+} from './WorkerTaskWorker.js';
+
+import {
+    WorkerTaskDefaultWorker
+} from './WorkerTaskWorker.js';
 
 import {
     WorkerTaskDirector,
-    WorkerTaskDirectorDefaultWorker
 } from './WorkerTaskDirector.js';
 
 import type {
@@ -43,8 +46,8 @@ export {
     WorkerRegistrationType,
     WorkerTask,
     WorkerTaskDirector,
-    WorkerTaskDirectorWorker,
-    WorkerTaskDirectorDefaultWorker,
+    WorkerTaskWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessageHeaderType,
     WorkerTaskMessageBodyType,
     WorkerTaskMessageType,

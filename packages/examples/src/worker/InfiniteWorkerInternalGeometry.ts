@@ -4,8 +4,7 @@ import {
     MeshPhongMaterial
 } from 'three';
 import {
-    WorkerTaskDirectorDefaultWorker,
-    WorkerTaskDirectorWorker,
+    WorkerTaskDefaultWorker,
     WorkerTaskMessage,
     WorkerTaskMessageType
 } from 'wtd-core';
@@ -15,7 +14,7 @@ import {
     MaterialsPayload,
 } from 'wtd-three-ext';
 
-class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker implements WorkerTaskDirectorWorker {
+class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
@@ -27,7 +26,7 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDirectorDefaultWorker imp
         bufferGeometry.name = 'tmProto' + message.id;
 
         const vertexBA = bufferGeometry.getAttribute('position');
-        const vertexArray = vertexBA.array as number[];
+        const vertexArray = vertexBA.array;
         for (let i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertexArray[i] + 10 * (Math.random() - 0.5);
         }
