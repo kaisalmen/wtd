@@ -1,4 +1,19 @@
-import * as THREE from 'three';
+import {
+    AmbientLight,
+    Color,
+    DirectionalLight,
+    FileLoader,
+    GridHelper,
+    Material,
+    Mesh,
+    MeshPhongMaterial,
+    MeshStandardMaterial,
+    PerspectiveCamera,
+    Scene,
+    TorusGeometry,
+    Vector3,
+    WebGLRenderer
+} from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
@@ -12,19 +27,21 @@ import {
     DataPayload,
     WorkerTaskMessage,
     WorkerTaskMessageType,
+    unpack,
+    pack,
 } from 'wtd-core';
 import {
     MaterialStore,
     MeshPayload,
     MaterialsPayload
 } from 'wtd-three-ext';
-import {
-    OBJLoader2
-} from 'wwobjloader2';
+// import {
+//     OBJLoader2
+// } from 'wwobjloader2';
 
 export type CameraDefaults = {
-    posCamera: THREE.Vector3;
-    posCameraTarget: THREE.Vector3;
+    posCamera: Vector3;
+    posCameraTarget: Vector3;
     near: number;
     far: number;
     fov: number;
@@ -66,14 +83,14 @@ type TaskDescription = {
  */
 class PotentiallyInfiniteExample {
 
-    private renderer: THREE.WebGLRenderer;
+    private renderer: WebGLRenderer;
     private canvas: HTMLElement;
-    private scene: THREE.Scene = new THREE.Scene();
-    private camera: THREE.PerspectiveCamera;
-    private cameraTarget: THREE.Vector3;
+    private scene: Scene = new Scene();
+    private camera: PerspectiveCamera;
+    private cameraTarget: Vector3;
     private cameraDefaults: CameraDefaults = {
-        posCamera: new THREE.Vector3(1000.0, 1000.0, 1000.0),
-        posCameraTarget: new THREE.Vector3(0, 0, 0),
+        posCamera: new Vector3(1000.0, 1000.0, 1000.0),
+        posCameraTarget: new Vector3(0, 0, 0),
         near: 0.1,
         far: 10000,
         fov: 45
@@ -129,7 +146,7 @@ class PotentiallyInfiniteExample {
     private materialStore = new MaterialStore(true);
     private tasksToUse: TaskDescription[] = [];
     private executions: Array<Promise<unknown>> = [];
-    private objectsUsed = new Map<number, { name: string, pos: THREE.Vector3 }>();
+    private objectsUsed = new Map<number, { name: string, pos: Vector3 }>();
     private meshesAdded: string[] = [];
     private removeCount = 50;
     numberOfMeshesToKeep = 750;
@@ -143,9 +160,9 @@ class PotentiallyInfiniteExample {
 
     // sphere positions
     private baseFactor = 750;
-    private baseVectorX = new THREE.Vector3(1, 0, 0);
-    private baseVectorY = new THREE.Vector3(0, 1, 0);
-    private baseVectorZ = new THREE.Vector3(0, 0, 1);
+    private baseVectorX = new Vector3(1, 0, 0);
+    private baseVectorY = new Vector3(0, 1, 0);
+    private baseVectorZ = new Vector3(0, 0, 1);
 
     abort = false;
 
@@ -158,21 +175,21 @@ class PotentiallyInfiniteExample {
         this.ui = new GUIControls(document.getElementById('lil-gui'), this);
 
         this.canvas = elementToBindTo;
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new WebGLRenderer({
             canvas: this.canvas,
             antialias: true
         });
         this.renderer.setClearColor(0x050505);
 
         this.cameraTarget = this.cameraDefaults.posCameraTarget;
-        this.camera = new THREE.PerspectiveCamera(this.cameraDefaults.fov, this.recalcAspectRatio(), this.cameraDefaults.near, this.cameraDefaults.far);
+        this.camera = new PerspectiveCamera(this.cameraDefaults.fov, this.recalcAspectRatio(), this.cameraDefaults.near, this.cameraDefaults.far);
         this.resetCamera();
 
         this.controls = new TrackballControls(this.camera, this.renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        const directionalLight1 = new THREE.DirectionalLight(0xC0C090);
-        const directionalLight2 = new THREE.DirectionalLight(0xC0C090);
+        const ambientLight = new AmbientLight(0x404040);
+        const directionalLight1 = new DirectionalLight(0xC0C090);
+        const directionalLight2 = new DirectionalLight(0xC0C090);
 
         directionalLight1.position.set(- 100, - 50, 100);
         directionalLight2.position.set(100, 50, - 100);
@@ -181,7 +198,7 @@ class PotentiallyInfiniteExample {
         this.scene.add(directionalLight2);
         this.scene.add(ambientLight);
 
-        const helper = new THREE.GridHelper(1000, 30, 0xFF4444, 0x404040);
+        const helper = new GridHelper(1000, 30, 0xFF4444, 0x404040);
         helper.name = 'grid';
         this.scene.add(helper);
     }
@@ -215,9 +232,9 @@ class PotentiallyInfiniteExample {
 
         // sphere positions
         this.baseFactor = 750;
-        this.baseVectorX = new THREE.Vector3(1, 0, 0);
-        this.baseVectorY = new THREE.Vector3(0, 1, 0);
-        this.baseVectorZ = new THREE.Vector3(0, 0, 1);
+        this.baseVectorX = new Vector3(1, 0, 0);
+        this.baseVectorY = new Vector3(0, 1, 0);
+        this.baseVectorZ = new Vector3(0, 0, 1);
     }
 
     resetUI() {
@@ -308,7 +325,7 @@ class PotentiallyInfiniteExample {
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
 
-            const torus = new THREE.TorusGeometry(25, 8, 16, 100);
+            const torus = new TorusGeometry(25, 8, 16, 100);
             torus.name = 'torus';
             const initMessage = new WorkerTaskMessage({
                 id: taskDescr.id,
@@ -318,7 +335,7 @@ class PotentiallyInfiniteExample {
             meshPayload.setBufferGeometry(torus, 0);
 
             initMessage.addPayload(meshPayload);
-            const transferables = initMessage.pack(false);
+            const transferables = pack(initMessage.payloads, false);
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage, transferables));
         }
 
@@ -337,7 +354,7 @@ class PotentiallyInfiniteExample {
             });
             awaiting.push(loadMtl);
 
-            const fileLoader = new THREE.FileLoader();
+            const fileLoader = new FileLoader();
             fileLoader.setResponseType('arraybuffer');
             const loadObj = fileLoader.loadAsync(taskDescr!.filenameObj!.href as string);
             awaiting.push(loadObj);
@@ -356,13 +373,13 @@ class PotentiallyInfiniteExample {
                     name: 'OBJLoader2WorkerModule'
                 });
                 const dataPayload = new DataPayload();
-                dataPayload.params = {
+                dataPayload.message.params = {
                     materialNames: new Set(Array.from(this.materialStore.getMaterials().keys()))
                 };
-                dataPayload.buffers.set('modelData', buffer as ArrayBufferLike);
+                dataPayload.message.buffers?.set('modelData', buffer as ArrayBufferLike);
                 initMessage.addPayload(dataPayload);
 
-                const transferables = initMessage.pack(false);
+                const transferables = pack(initMessage.payloads, false);
                 await this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables);
                 console.timeEnd('All tasks have been initialized');
                 this.executeWorkers();
@@ -402,7 +419,7 @@ class PotentiallyInfiniteExample {
                     id: globalCount
                 });
                 const dataPayload = new DataPayload();
-                dataPayload.params = {
+                dataPayload.message.params = {
                     modelName: taskDescr.name
                 };
                 execMessage.addPayload(dataPayload);
@@ -447,16 +464,16 @@ class PotentiallyInfiniteExample {
      * @private
      */
     private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessageType | Error) {
-        let material: THREE.Material | THREE.Material[] | undefined;
+        let material: Material | Material[] | undefined;
         let meshPayload: MeshPayload;
         let materialsPayload: MaterialsPayload;
-        let mesh: THREE.Mesh;
+        let mesh: Mesh;
         if (message instanceof Error) {
             console.error(message);
             return;
         }
 
-        const wtm = WorkerTaskMessage.unpack(message, false);
+        const wtm = unpack(message, false);
         switch (wtm.cmd) {
             case 'initComplete':
                 console.log('Init Completed: ' + wtm.id);
@@ -468,16 +485,16 @@ class PotentiallyInfiniteExample {
                 if (wtm.payloads.length > 0) {
                     if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads.length === 1) {
                         const dataPayloadOBJ = wtm.payloads[0] as DataPayload;
-                        const preparedMesh = dataPayloadOBJ?.params?.preparedMesh;
+                        const preparedMesh = dataPayloadOBJ?.message.params?.preparedMesh;
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
-                        mesh = OBJLoader2.buildThreeMesh(preparedMesh, this.materialStore.getMaterials(), false) as THREE.Mesh;
+                        mesh = OBJLoader2.buildThreeMesh(preparedMesh, this.materialStore.getMaterials(), false) as Mesh;
                     } else {
                         meshPayload = wtm.payloads[0] as MeshPayload;
-                        if (meshPayload.params?.color) {
-                            const pColor = meshPayload.params?.color as { r: number, g: number, b: number };
-                            const color = new THREE.Color(pColor.r, pColor.g, pColor.b);
-                            material = new THREE.MeshPhongMaterial({ color: color });
+                        if (meshPayload.message.params?.color) {
+                            const pColor = meshPayload.message.params?.color as { r: number, g: number, b: number };
+                            const color = new Color(pColor.r, pColor.g, pColor.b);
+                            material = new MeshPhongMaterial({ color: color });
                         }
 
                         if (wtm.payloads.length === 2) {
@@ -485,19 +502,19 @@ class PotentiallyInfiniteExample {
                             const storedMaterials = this.materialStore.getMaterials();
                             material = materialsPayload.processMaterialTransport(storedMaterials, true);
                             if (!material) {
-                                material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+                                material = new MeshStandardMaterial({ color: 0xFF0000 });
                             }
                         }
                         else {
                             const randArray = new Uint8Array(3);
                             window.crypto.getRandomValues(randArray);
-                            const color = new THREE.Color();
+                            const color = new Color();
                             color.r = randArray[0] / 255;
                             color.g = randArray[1] / 255;
                             color.b = randArray[2] / 255;
-                            material = new THREE.MeshPhongMaterial({ color: color });
+                            material = new MeshPhongMaterial({ color: color });
                         }
-                        mesh = new THREE.Mesh(meshPayload.bufferGeometry as THREE.BufferGeometry, material);
+                        mesh = new Mesh(meshPayload.message.bufferGeometry, material);
                     }
                     this.addMesh(mesh, wtm.id);
                 }
@@ -520,14 +537,14 @@ class PotentiallyInfiniteExample {
     /**
      * Add mesh at random position, but keep sub-meshes of an object together
      */
-    private addMesh(mesh: THREE.Mesh, id: number) {
+    private addMesh(mesh: Mesh, id: number) {
         const storedPos = this.objectsUsed.get(id);
         let pos;
         if (storedPos) {
             pos = storedPos.pos;
         }
         else {
-            pos = new THREE.Vector3(this.baseFactor * Math.random(), this.baseFactor * Math.random(), this.baseFactor * Math.random());
+            pos = new Vector3(this.baseFactor * Math.random(), this.baseFactor * Math.random(), this.baseFactor * Math.random());
             pos.applyAxisAngle(this.baseVectorX, 2 * Math.PI * Math.random());
             pos.applyAxisAngle(this.baseVectorY, 2 * Math.PI * Math.random());
             pos.applyAxisAngle(this.baseVectorZ, 2 * Math.PI * Math.random());
@@ -558,10 +575,10 @@ class PotentiallyInfiniteExample {
         let i = 0;
         while (deleteCount < deleteRange && i < this.meshesAdded.length) {
             const meshName = this.meshesAdded[i];
-            toBeRemoved = this.scene.getObjectByName(meshName) as THREE.Mesh;
+            toBeRemoved = this.scene.getObjectByName(meshName) as Mesh;
             if (toBeRemoved) {
                 toBeRemoved.geometry.dispose();
-                if (toBeRemoved.material instanceof THREE.Material) {
+                if (toBeRemoved.material instanceof Material) {
                     if (typeof toBeRemoved.material.dispose === 'function') {
                         toBeRemoved.material.dispose();
                     }
@@ -600,11 +617,13 @@ class SimpleBlobWorker {
 
         const dataPayload = {
             $type: 'DataPayload',
-            params: {
-                hello: 'say hello'
-            },
-            buffers: new Map(),
-            progress: 0
+            message: {
+                params: {
+                    hello: 'say hello'
+                },
+                buffers: new Map(),
+                progress: 0
+            }
         };
         message.payloads[0] = dataPayload;
 

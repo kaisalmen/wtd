@@ -1,5 +1,18 @@
 
-import * as THREE from 'three';
+import {
+    AmbientLight,
+    BufferGeometry,
+    Color,
+    DirectionalLight,
+    FileLoader,
+    GridHelper,
+    Mesh,
+    MeshPhongMaterial,
+    PerspectiveCamera,
+    Scene,
+    Vector3,
+    WebGLRenderer
+} from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 
 import {
@@ -7,6 +20,8 @@ import {
     WorkerTaskDirector,
     WorkerTaskMessage,
     WorkerTaskMessageType,
+    pack,
+    unpack,
 } from 'wtd-core';
 import {
     MaterialsPayload,
@@ -15,8 +30,8 @@ import {
 } from 'wtd-three-ext';
 
 export type CameraDefaults = {
-    posCamera: THREE.Vector3;
-    posCameraTarget: THREE.Vector3;
+    posCamera: Vector3;
+    posCameraTarget: Vector3;
     near: number;
     far: number;
     fov: number;
@@ -33,14 +48,14 @@ export type CameraDefaults = {
  */
 class WorkerTaskDirectorExample {
 
-    private renderer: THREE.WebGLRenderer;
+    private renderer: WebGLRenderer;
     private canvas: HTMLElement;
-    private scene: THREE.Scene = new THREE.Scene();
-    private camera: THREE.PerspectiveCamera;
-    private cameraTarget: THREE.Vector3;
+    private scene: Scene = new Scene();
+    private camera: PerspectiveCamera;
+    private cameraTarget: Vector3;
     private cameraDefaults: CameraDefaults = {
-        posCamera: new THREE.Vector3(1000.0, 1000.0, 1000.0),
-        posCameraTarget: new THREE.Vector3(0, 0, 0),
+        posCamera: new Vector3(1000.0, 1000.0, 1000.0),
+        posCameraTarget: new Vector3(0, 0, 0),
         near: 0.1,
         far: 10000,
         fov: 45
@@ -51,7 +66,7 @@ class WorkerTaskDirectorExample {
         verbose: true
     });
 
-    private objectsUsed: Map<number, THREE.Vector3> = new Map();
+    private objectsUsed: Map<number, Vector3> = new Map();
     private tasksToUse: string[] = [];
     private materialStore = new MaterialStore(true);
 
@@ -61,21 +76,21 @@ class WorkerTaskDirectorExample {
         }
 
         this.canvas = elementToBindTo;
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new WebGLRenderer({
             canvas: this.canvas,
             antialias: true
         });
         this.renderer.setClearColor(0x050505);
 
         this.cameraTarget = this.cameraDefaults.posCameraTarget;
-        this.camera = new THREE.PerspectiveCamera(this.cameraDefaults.fov, this.recalcAspectRatio(), this.cameraDefaults.near, this.cameraDefaults.far);
+        this.camera = new PerspectiveCamera(this.cameraDefaults.fov, this.recalcAspectRatio(), this.cameraDefaults.near, this.cameraDefaults.far);
         this.resetCamera();
 
         this.controls = new TrackballControls(this.camera, this.renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        const directionalLight1 = new THREE.DirectionalLight(0xC0C090);
-        const directionalLight2 = new THREE.DirectionalLight(0xC0C090);
+        const ambientLight = new AmbientLight(0x404040);
+        const directionalLight1 = new DirectionalLight(0xC0C090);
+        const directionalLight2 = new DirectionalLight(0xC0C090);
 
         directionalLight1.position.set(- 100, - 50, 100);
         directionalLight2.position.set(100, 50, - 100);
@@ -84,7 +99,7 @@ class WorkerTaskDirectorExample {
         this.scene.add(directionalLight2);
         this.scene.add(ambientLight);
 
-        const helper = new THREE.GridHelper(1000, 30, 0xFF4444, 0x404040);
+        const helper = new GridHelper(1000, 30, 0xFF4444, 0x404040);
         helper.name = 'grid';
         this.scene.add(helper);
     }
@@ -150,7 +165,7 @@ class WorkerTaskDirectorExample {
         this.tasksToUse.push(objLoaderInitMessage.name);
 
         const loadObj = async function() {
-            const fileLoader = new THREE.FileLoader();
+            const fileLoader = new FileLoader();
             fileLoader.setResponseType('arraybuffer');
 
             const objFilename = new URL('../../models/obj/female02/female02_vertex_colors.obj', import.meta.url);
@@ -162,16 +177,16 @@ class WorkerTaskDirectorExample {
         console.log('Awaited all required init and data loading.');
 
         const objLoaderDataPayload = new DataPayload();
-        objLoaderDataPayload.buffers.set('modelData', result[1] as ArrayBufferLike);
+        objLoaderDataPayload.message.buffers?.set('modelData', result[1] as ArrayBufferLike);
 
         const materialsPayload = new MaterialsPayload();
-        materialsPayload.materials = this.materialStore.getMaterials();
+        materialsPayload.message.materials = this.materialStore.getMaterials();
         materialsPayload.cleanMaterials();
 
         objLoaderInitMessage.addPayload(objLoaderDataPayload);
         objLoaderInitMessage.addPayload(materialsPayload);
 
-        const transferables = objLoaderInitMessage.pack(false);
+        const transferables = pack(objLoaderInitMessage.payloads, false);
         await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, objLoaderInitMessage, transferables);
         console.timeEnd('Init tasks');
         await this.executeTasks();
@@ -223,7 +238,7 @@ class WorkerTaskDirectorExample {
      * @private
      */
     private processMessage(message: WorkerTaskMessageType) {
-        const wtm = WorkerTaskMessage.unpack(message, false);
+        const wtm = unpack(message, false);
         switch (wtm.cmd) {
             case 'intermediate':
             case 'execComplete':
@@ -249,28 +264,28 @@ class WorkerTaskDirectorExample {
         if (!materialsPayload) {
             const randArray = new Uint8Array(3);
             window.crypto.getRandomValues(randArray);
-            const color = new THREE.Color(randArray[0] / 255, randArray[1] / 255, randArray[2] / 255);
-            material = new THREE.MeshPhongMaterial({ color: color });
+            const color = new Color(randArray[0] / 255, randArray[1] / 255, randArray[2] / 255);
+            material = new MeshPhongMaterial({ color: color });
         }
         else {
             material = materialsPayload.processMaterialTransport(this.materialStore.getMaterials(), true);
         }
-        if (meshPayload.bufferGeometry) {
-            const mesh = new THREE.Mesh(meshPayload.bufferGeometry as THREE.BufferGeometry, material as THREE.Material);
+        if (meshPayload.message.bufferGeometry) {
+            const mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
             this.addMesh(mesh, id);
         }
     }
 
     /** Add mesh at random position, but keep sub-meshes of an object together, therefore we need */
-    private addMesh(mesh: THREE.Mesh, id: number) {
+    private addMesh(mesh: Mesh, id: number) {
         let pos = this.objectsUsed.get(id);
         if (!pos) {
             // sphere positions
             const baseFactor = 750;
-            pos = new THREE.Vector3(baseFactor * Math.random(), baseFactor * Math.random(), baseFactor * Math.random());
-            pos.applyAxisAngle(new THREE.Vector3(1, 0, 0), 2 * Math.PI * Math.random());
-            pos.applyAxisAngle(new THREE.Vector3(0, 1, 0), 2 * Math.PI * Math.random());
-            pos.applyAxisAngle(new THREE.Vector3(0, 0, 1), 2 * Math.PI * Math.random());
+            pos = new Vector3(baseFactor * Math.random(), baseFactor * Math.random(), baseFactor * Math.random());
+            pos.applyAxisAngle(new Vector3(1, 0, 0), 2 * Math.PI * Math.random());
+            pos.applyAxisAngle(new Vector3(0, 1, 0), 2 * Math.PI * Math.random());
+            pos.applyAxisAngle(new Vector3(0, 0, 1), 2 * Math.PI * Math.random());
             this.objectsUsed.set(id, pos);
         }
         mesh.position.set(pos.x, pos.y, pos.z);

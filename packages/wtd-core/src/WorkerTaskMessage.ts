@@ -1,8 +1,4 @@
-import {
-    PayloadRegister,
-    DataPayload,
-    RawPayload
-} from './DataPayload.js';
+import { Payload, PayloadRegister } from './Payload.js';
 
 export type WorkerTaskMessageHeaderType = {
     id?: number;
@@ -16,7 +12,7 @@ export type WorkerTaskCommandType = {
 }
 
 export type WorkerTaskMessageBodyType = {
-    payloads: Array<DataPayload | RawPayload>;
+    payloads: Payload[];
 }
 
 export type WorkerTaskMessageType = WorkerTaskMessageHeaderType & WorkerTaskCommandType & WorkerTaskMessageBodyType
@@ -27,7 +23,7 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
     name = 'unnamed';
     workerId = 0;
     progress = 0;
-    payloads: Array<DataPayload | RawPayload> = [];
+    payloads: Payload[] = [];
 
     constructor(config?: WorkerTaskMessageHeaderType) {
         this.id = config?.id ?? this.id;
@@ -36,7 +32,7 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
         this.progress = config?.progress ?? this.progress;
     }
 
-    addPayload(payloads: Array<DataPayload | RawPayload> | DataPayload | RawPayload | undefined) {
+    addPayload(payloads?: Payload[] | Payload) {
         if (!payloads) {
             return;
         } else if (Array.isArray(payloads)) {
@@ -45,33 +41,32 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
             this.payloads.push(payloads);
         }
     }
-
-    static createFromExisting(message: WorkerTaskMessageType, cmd?: string) {
-        const wtm = new WorkerTaskMessage(message);
-        if (cmd) {
-            wtm.cmd = cmd;
-        }
-        return wtm;
-    }
-
-    pack(cloneBuffers: boolean): Transferable[] {
-        const transferables: Transferable[] = [];
-        for (const payload of this.payloads) {
-            const handler = PayloadRegister.handler.get(payload.$type);
-            handler?.pack(payload as DataPayload, transferables, cloneBuffers);
-        }
-        return transferables;
-
-    }
-
-    static unpack(rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) {
-        const instance = new WorkerTaskMessage(rawMessage);
-        instance.cmd = rawMessage.cmd;
-
-        for (const payload of rawMessage.payloads) {
-            const handler = PayloadRegister.handler.get(payload.$type);
-            instance.addPayload(handler?.unpack(payload, cloneBuffers));
-        }
-        return instance;
-    }
 }
+
+export const createFromExisting = (message: WorkerTaskMessageType, cmd?: string) => {
+    const wtm = new WorkerTaskMessage(message);
+    if (cmd) {
+        wtm.cmd = cmd;
+    }
+    return wtm;
+};
+
+export const pack = (payloads: Payload[], cloneBuffers: boolean): Transferable[] => {
+    const transferables: Transferable[] = [];
+    for (const payload of payloads) {
+        const handler = PayloadRegister.handler.get(payload.$type);
+        handler?.pack(payload, transferables, cloneBuffers);
+    }
+    return transferables;
+};
+
+export const unpack = (rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) => {
+    const instance = new WorkerTaskMessage(rawMessage);
+    instance.cmd = rawMessage.cmd;
+
+    for (const payload of rawMessage.payloads) {
+        const handler = PayloadRegister.handler.get(payload.$type);
+        instance.addPayload(handler?.unpack(payload, cloneBuffers));
+    }
+    return instance;
+};

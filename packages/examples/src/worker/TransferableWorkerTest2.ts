@@ -1,8 +1,10 @@
 import {
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
-    WorkerTaskMessage,
-    DataPayload
+    DataPayload,
+    createFromExisting,
+    unpack,
+    pack
 } from 'wtd-core';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -12,25 +14,25 @@ class TransferableWorkerTest2 extends WorkerTaskDefaultWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest2#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, 'initComplete');
         self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest2#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const wtm = WorkerTaskMessage.unpack(message, false);
+        const wtm = unpack(message, false);
         if (wtm.payloads.length === 1) {
             const payload = wtm.payloads[0] as DataPayload;
-            if (payload.params) {
+            if (payload.message.params) {
                 const payloadOut = new DataPayload();
-                payloadOut.buffers.set('data', new Uint32Array(32 * 1024 * 1024));
+                payloadOut.message.buffers?.set('data', new Uint32Array(32 * 1024 * 1024));
 
-                const execComplete = WorkerTaskMessage.createFromExisting(wtm, 'execComplete');
-                execComplete.name = payload.params.name as string;
+                const execComplete = createFromExisting(wtm, 'execComplete');
+                execComplete.name = payload.message.params.name as string;
                 execComplete.addPayload(payloadOut);
 
-                const transferables = execComplete.pack(false);
+                const transferables = pack(execComplete.payloads, false);
                 self.postMessage(execComplete, transferables);
             }
         }

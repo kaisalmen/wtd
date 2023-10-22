@@ -34,18 +34,18 @@ class HelloWorldStandardWorkerExample {
 
             const execCom1 = new WorkerTaskMessage();
             const payload1 = new RawPayload();
-            payload1.message = { port: channel.port1 };
+            payload1.message.raw = { port: channel.port1 };
             execCom1.addPayload(payload1);
 
             const execCom2 = new WorkerTaskMessage();
             const payload2 = new RawPayload();
-            payload2.message = { port: channel.port2 };
+            payload2.message.raw = { port: channel.port2 };
             execCom2.addPayload(payload2);
 
             const onComplete = (message: WorkerTaskMessageType) => {
                 console.log('Received final command: ' + message.cmd);
                 const rawPayload = message.payloads[0] as RawPayload;
-                console.log(`Worker said onComplete: ${rawPayload.message.hello}`);
+                console.log(`Worker said onComplete: ${rawPayload.message.raw.hello}`);
             };
 
             const resultExecCom1 = workerTaskCom1.executeWorker({

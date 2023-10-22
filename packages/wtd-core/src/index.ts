@@ -21,17 +21,33 @@ import {
 
 import type {
     AssociatedArrayType,
-    PayloadType,
-    RawPayloadType,
-    DataPayloadType,
-    PayloadHandlerType
+    Payload,
+    PayloadHandler
+} from './Payload.js';
+
+import {
+    PayloadRegister,
+    applyProperties,
+    fillTransferables
+} from './Payload.js';
+
+import type {
+    RawMessage,
+    RawPayloadAdditions
+} from './RawPayload.js';
+
+import {
+    RawPayload
+} from './RawPayload.js';
+
+import type {
+    ParameterizedMessage,
+    DataPayloadAdditions
 } from './DataPayload.js';
 
 import {
-    RawPayload,
     DataPayload,
-    DataPayloadHandler,
-    PayloadRegister
+    DataPayloadHandler
 } from './DataPayload.js';
 
 import type {
@@ -41,7 +57,10 @@ import type {
 } from './WorkerTaskMessage.js';
 
 import {
-    WorkerTaskMessage
+    WorkerTaskMessage,
+    createFromExisting,
+    pack,
+    unpack
 } from './WorkerTaskMessage.js';
 
 export {
@@ -51,17 +70,24 @@ export {
     WorkerTaskDirector,
     WorkerTaskWorker,
     WorkerTaskDefaultWorker,
-    RawPayload,
     WorkerTaskMessageHeaderType,
     WorkerTaskMessageBodyType,
     WorkerTaskMessageType,
     WorkerTaskMessage,
+    createFromExisting,
+    pack,
+    unpack,
     AssociatedArrayType,
-    PayloadType,
-    RawPayloadType,
-    DataPayloadType,
+    Payload,
+    ParameterizedMessage,
+    PayloadRegister,
+    DataPayloadAdditions,
+    RawMessage,
+    PayloadHandler,
+    RawPayloadAdditions,
+    RawPayload,
     DataPayload,
     DataPayloadHandler,
-    PayloadHandlerType,
-    PayloadRegister
+    applyProperties,
+    fillTransferables
 };

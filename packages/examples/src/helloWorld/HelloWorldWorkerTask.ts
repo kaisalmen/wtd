@@ -1,7 +1,8 @@
 import {
     WorkerTask,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageType,
+    unpack
 } from 'wtd-core';
 
 /**
@@ -32,7 +33,7 @@ class HelloWorldWorkerTaskExample {
                 message: execMessage,
                 // decouple result evaluation ...
                 onComplete: (m: WorkerTaskMessageType) => {
-                    const wtm = WorkerTaskMessage.unpack(m, false);
+                    const wtm = unpack(m, false);
                     console.log(wtm);
                     if (wtm.payloads.length === 1) {
                         console.log(wtm.payloads[0]);

@@ -1,105 +1,44 @@
-export type AssociatedArrayType<T> = { [key: string]: T }
+import { AssociatedArrayType, Payload, PayloadHandler, PayloadRegister, fillTransferables } from './Payload.js';
 
-export type PayloadType = {
-    $type: string;
-}
-
-export type RawPayloadType = PayloadType & {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any;
-}
-
-export type DataPayloadType = PayloadType & {
+export type ParameterizedMessage = {
     params?: AssociatedArrayType<unknown>;
     buffers?: Map<string, ArrayBufferLike>;
 }
 
-export class RawPayload implements RawPayloadType {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any;
-    $type = 'RawPayload';
+export type DataPayloadAdditions = Payload & {
+    message: ParameterizedMessage;
 }
 
-export class DataPayload implements DataPayloadType {
+export class DataPayload implements DataPayloadAdditions {
     $type = 'DataPayload';
-    params?: AssociatedArrayType<unknown> = {};
-    buffers: Map<string, ArrayBufferLike> = new Map();
+    message: ParameterizedMessage = {
+        buffers: new Map(),
+        params: {}
+    };
     progress = 0;
 }
 
-export interface PayloadHandlerType {
+export class DataPayloadHandler implements PayloadHandler {
 
-    pack(payload: DataPayload, transferable: Transferable[], cloneBuffers: boolean): Transferable[];
-
-    unpack(transportObject: DataPayloadType, cloneBuffers: boolean): DataPayload;
-
-}
-
-export class PayloadRegister {
-
-    static handler = new Map<string, PayloadHandlerType>();
-}
-
-export class DataPayloadHandler implements PayloadHandlerType {
-
-    static pack(payload: DataPayload, transferables: Transferable[], cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get('DataPayload');
-        return handler ? handler.pack(payload, transferables, cloneBuffers) : undefined;
-    }
-
-    pack(payload: DataPayload, transferables: Transferable[], cloneBuffers: boolean): Transferable[] {
-        DataPayloadHandler.fillTransferables(payload.buffers.values(), transferables, cloneBuffers);
+    pack(payload: Payload, transferables: Transferable[], cloneBuffers: boolean): Transferable[] {
+        const dp = payload as DataPayload;
+        if (dp.message.buffers) {
+            fillTransferables(dp.message.buffers?.values(), transferables, cloneBuffers);
+        }
         return transferables;
     }
 
-    static fillTransferables(buffers: IterableIterator<ArrayBufferLike>, transferables: Transferable[], cloneBuffers: boolean) {
-        for (const buffer of buffers) {
-            const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
-
-            const outputBuffer = (potentialClone as Uint8Array).buffer;
-            if (outputBuffer) {
-                transferables.push(outputBuffer);
-            }
-            else {
-                transferables.push(potentialClone);
-            }
-        }
-    }
-
-    static unpack(transportObject: DataPayloadType, cloneBuffers: boolean) {
-        const handler = PayloadRegister.handler.get('DataPayload');
-        return handler ? handler.unpack(transportObject, cloneBuffers) : undefined;
-    }
-
-    unpack(transportObject: DataPayloadType, cloneBuffers: boolean): DataPayload {
+    unpack(transportObject: Payload, cloneBuffers: boolean): DataPayload {
+        const dp = transportObject as DataPayload;
         const dtp = Object.assign(new DataPayload(), transportObject);
-        if (transportObject.buffers) {
-            for (const [name, buffer] of transportObject.buffers.entries()) {
-                dtp.buffers.set(name, cloneBuffers ? buffer.slice(0) : buffer);
+        if (dp.message.buffers) {
+            for (const [name, buffer] of dp.message.buffers.entries()) {
+                if (dtp.message.buffers) {
+                    dtp.message.buffers.set(name, cloneBuffers ? buffer.slice(0) : buffer);
+                }
             }
         }
         return dtp;
-    }
-
-    /**
-     * Applies values from parameter object via set functions or via direct assignment.
-     *
-     * @param {object} objToAlter The objToAlter instance
-     * @param {AssociatedArrayType} params The parameter object
-     * @param {boolean} forceCreation Force the creation of a property
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static applyProperties(objToAlter: any, params: AssociatedArrayType<unknown | string | object>, forceCreation: boolean) {
-        for (const [k, v] of Object.entries(params)) {
-            const funcName = 'set' + k.substring(0, 1).toLocaleUpperCase() + k.substring(1);
-
-            if (Object.prototype.hasOwnProperty.call(objToAlter, funcName) && typeof objToAlter[funcName] === 'function') {
-                objToAlter[funcName] = v;
-            }
-            else if (Object.prototype.hasOwnProperty.call(objToAlter, k) || forceCreation) {
-                objToAlter[k] = v;
-            }
-        }
     }
 }
 

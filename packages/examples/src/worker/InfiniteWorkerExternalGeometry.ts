@@ -4,10 +4,12 @@ import {
 import {
     WorkerTaskDefaultWorker,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageType,
+    createFromExisting,
+    pack
 } from 'wtd-core';
 import {
-    MeshPayload, MeshPayloadHandler, MeshPayloadType,
+    MeshPayload, MeshPayloadHandler
 } from 'wtd-three-ext';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -15,13 +17,13 @@ declare const self: DedicatedWorkerGlobalScope;
 class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
 
     private localData = {
-        meshPayloadRaw: undefined as MeshPayloadType | undefined
+        meshPayloadRaw: undefined as MeshPayload | undefined
     };
 
     init(message: WorkerTaskMessage) {
         this.localData.meshPayloadRaw = message.payloads[0] as MeshPayload;
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, 'initComplete');
         self.postMessage(initComplete);
     }
 
@@ -31,8 +33,8 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
         }
         else {
             // unpack for every usage to ensure Transferables are not re-used
-            const meshPayload = MeshPayloadHandler.unpack(this.localData.meshPayloadRaw, true) as MeshPayload;
-            const geometry = meshPayload.bufferGeometry as BufferGeometry;
+            const meshPayload = new MeshPayloadHandler().unpack(this.localData.meshPayloadRaw, true) as MeshPayload;
+            const geometry = meshPayload.message.bufferGeometry as BufferGeometry;
 
             if (geometry) {
                 geometry.name = 'tmProto' + message.id;
@@ -47,7 +49,7 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
 
                 const randArray = new Uint8Array(3);
                 self.crypto.getRandomValues(randArray);
-                meshPayload.params = {
+                meshPayload.message.params = {
                     color: {
                         r: randArray[0] / 255,
                         g: randArray[1] / 255,
@@ -55,10 +57,10 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
                     }
                 };
 
-                const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+                const execComplete = createFromExisting(message, 'execComplete');
                 execComplete.addPayload(meshPayload);
 
-                const transferables = execComplete.pack(false);
+                const transferables = pack(execComplete.payloads, false);
                 self.postMessage(execComplete, transferables);
             }
         }

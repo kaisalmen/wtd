@@ -1,8 +1,8 @@
 import {
     DataPayload,
     WorkerTaskDefaultWorker,
-    WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageType,
+    createFromExisting
 } from 'wtd-core';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -10,7 +10,7 @@ declare const self: DedicatedWorkerGlobalScope;
 export class HelloWorldWorker extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, 'initComplete');
         self.postMessage(initComplete);
     }
 
@@ -22,11 +22,11 @@ export class HelloWorldWorker extends WorkerTaskDefaultWorker {
         }
 
         const dataPayload = new DataPayload();
-        dataPayload.params = {
+        dataPayload.message.params = {
             hello: 'say hello'
         };
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        const execComplete = createFromExisting(message, 'execComplete');
         execComplete.addPayload(dataPayload);
 
         // no need to pack as there aren't any buffers used

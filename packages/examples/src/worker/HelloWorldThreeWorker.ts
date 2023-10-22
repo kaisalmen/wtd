@@ -1,8 +1,9 @@
 import { SphereGeometry } from 'three';
 import {
     WorkerTaskDefaultWorker,
-    WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageType,
+    createFromExisting,
+    pack
 } from 'wtd-core';
 import {
     MeshPayload
@@ -15,7 +16,7 @@ export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`HelloWorldWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, 'initComplete');
         self.postMessage(initComplete);
     }
 
@@ -32,10 +33,10 @@ export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        const execComplete = createFromExisting(message, 'execComplete');
         execComplete.addPayload(meshPayload);
 
-        const transferables = execComplete.pack(false);
+        const transferables = pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 

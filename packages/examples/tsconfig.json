@@ -7,16 +7,17 @@
     "noEmit": false
   },
   "references": [{
-    "path": "../wtd-core",
+    "path": "../wtd-core/tsconfig.json",
   },
   {
-    "path": "../wtd-three-ext"
+    "path": "../wtd-three-ext/tsconfig.json"
   }],
   "include": [
     "src/**/*.ts"
   ],
   "exclude": [
     "dist",
-    "node_modules"
+    "node_modules",
+    "src/infinite/**/*.ts",
   ]
 }

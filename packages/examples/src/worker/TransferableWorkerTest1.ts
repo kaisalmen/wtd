@@ -1,8 +1,10 @@
 import {
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
-    WorkerTaskMessage,
-    DataPayload
+    DataPayload,
+    createFromExisting,
+    pack,
+    unpack
 } from 'wtd-core';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -12,24 +14,24 @@ class TransferableWorkerTest1 extends WorkerTaskDefaultWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest1#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, 'initComplete');
         self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest1#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const wtm = WorkerTaskMessage.unpack(message, false);
+        const wtm = unpack(message, false);
 
         const dataPayload = new DataPayload();
-        dataPayload.params = {
+        dataPayload.message.params = {
             data: new Uint32Array(32 * 1024 * 1024)
         };
 
-        const execComplete = WorkerTaskMessage.createFromExisting(wtm, 'execComplete');
+        const execComplete = createFromExisting(wtm, 'execComplete');
         execComplete.addPayload(dataPayload);
 
-        const transferables = execComplete.pack(false);
+        const transferables = pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 

@@ -5,8 +5,9 @@ import {
 } from 'three';
 import {
     WorkerTaskDefaultWorker,
-    WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageType,
+    createFromExisting,
+    pack
 } from 'wtd-core';
 import {
     MaterialUtils,
@@ -17,7 +18,7 @@ import {
 class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, 'initComplete');
         self.postMessage(initComplete);
     }
 
@@ -40,17 +41,17 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
         const material = new MeshPhongMaterial({ color: color });
 
         const materialsPayload = new MaterialsPayload();
-        MaterialUtils.addMaterial(materialsPayload.materials, 'randomColor' + message.id, material, false, false);
+        MaterialUtils.addMaterial(materialsPayload.message.materials, 'randomColor' + message.id, material, false, false);
         materialsPayload.cleanMaterials();
 
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 2);
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        const execComplete = createFromExisting(message, 'execComplete');
         execComplete.addPayload(meshPayload);
         execComplete.addPayload(materialsPayload);
 
-        const transferables = execComplete.pack(false);
+        const transferables = pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 }
