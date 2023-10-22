@@ -17,7 +17,6 @@
   ],
   "exclude": [
     "dist",
-    "node_modules",
-    "src/infinite/**/*.ts",
+    "node_modules"
   ]
 }

@@ -3,38 +3,35 @@ import {
 } from 'three';
 import {
     WorkerTaskDefaultWorker,
-    WorkerTaskMessage,
     WorkerTaskMessageType,
     createFromExisting,
-    pack
+    pack,
+    unpack
 } from 'wtd-core';
 import {
-    MeshPayload, MeshPayloadHandler
+    MeshPayload
 } from 'wtd-three-ext';
 
 declare const self: DedicatedWorkerGlobalScope;
 
 class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
 
-    private localData = {
-        meshPayloadRaw: undefined as MeshPayload | undefined
-    };
+    private bufferGeometry?: BufferGeometry = undefined;
 
-    init(message: WorkerTaskMessage) {
-        this.localData.meshPayloadRaw = message.payloads[0] as MeshPayload;
+    init(message: WorkerTaskMessageType) {
+        const wtm = unpack(message, true);
+        this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
 
         const initComplete = createFromExisting(message, 'initComplete');
         self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
-        if (!this.localData.meshPayloadRaw) {
+        if (!this.bufferGeometry) {
             self.postMessage(new Error('No initial payload available'));
-        }
-        else {
-            // unpack for every usage to ensure Transferables are not re-used
-            const meshPayload = new MeshPayloadHandler().unpack(this.localData.meshPayloadRaw, true) as MeshPayload;
-            const geometry = meshPayload.message.bufferGeometry as BufferGeometry;
+        } else {
+            // clone before re-using as othewise transferables can not be obtained
+            const geometry = this.bufferGeometry.clone();
 
             if (geometry) {
                 geometry.name = 'tmProto' + message.id;
@@ -64,7 +61,6 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
                 self.postMessage(execComplete, transferables);
             }
         }
-
     }
 }
 

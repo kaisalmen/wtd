@@ -20,8 +20,7 @@
     "build:worker:TransferableWorkerTest3": "shx rm -f ./src/worker/generated/TransferableWorkerTest3*.js && vite -c build/vite.config.TransferableWorkerTest3.ts build",
     "build:worker:TransferableWorkerTest4": "shx rm -f ./src/worker/generated/TransferableWorkerTest4*.js && vite -c build/vite.config.TransferableWorkerTest4.ts build",
     "build:worker": "npm run build:worker:HelloWorldWorker && npm run build:worker:Com1Worker && npm run build:worker:Com2Worker && npm run build:worker:HelloWorldThreeWorker && npm run build:worker:InfiniteWorkerExternalGeometry && npm run build:worker:InfiniteWorkerInternalGeometry && npm run build:worker:OBJLoaderWorker && npm run build:worker:TransferableWorkerTest1 && npm run build:worker:TransferableWorkerTest2 && npm run build:worker:TransferableWorkerTest3 && npm run build:worker:TransferableWorkerTest4",
-    "_build": "npm run clean && npm run copy:worker:OBJLoader2Worker && npm run compile",
-    "build": "npm run clean && npm run compile",
+    "build": "npm run clean && npm run copy:worker:OBJLoader2Worker && npm run compile",
     "clean:production": "shx rm -fr preview",
     "copy:assets:production": "shx mkdir -p ./preview/worker/generated && shx cp -f ./src/worker/generated/*.js ./preview/worker/generated && shx cp -f ./models/obj/female02/*.jpg ./preview/assets",
     "build:production": "npm run build && npm run build:worker && npm run build:production:vite",
@@ -31,7 +30,8 @@
   "dependencies": {
     "lil-gui": "~0.18.2",
     "wtd-core": "~2.4.0-next.0",
-    "wtd-three-ext": "~2.4.0-next.0"
+    "wtd-three-ext": "~2.4.0-next.0",
+    "wwobjloader2": "6.2.0-next.0"
   },
   "devDependencies": {
     "http-server": "~14.1.1"

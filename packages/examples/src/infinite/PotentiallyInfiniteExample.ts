@@ -1,5 +1,6 @@
 import {
     AmbientLight,
+    BufferGeometry,
     Color,
     DirectionalLight,
     FileLoader,
@@ -35,9 +36,9 @@ import {
     MeshPayload,
     MaterialsPayload
 } from 'wtd-three-ext';
-// import {
-//     OBJLoader2
-// } from 'wwobjloader2';
+import {
+    OBJLoader2
+} from 'wwobjloader2';
 
 export type CameraDefaults = {
     posCamera: Vector3;
@@ -514,7 +515,7 @@ class PotentiallyInfiniteExample {
                             color.b = randArray[2] / 255;
                             material = new MeshPhongMaterial({ color: color });
                         }
-                        mesh = new Mesh(meshPayload.message.bufferGeometry, material);
+                        mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
                     }
                     this.addMesh(mesh, wtm.id);
                 }
