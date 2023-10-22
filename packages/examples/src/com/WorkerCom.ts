@@ -25,10 +25,11 @@ class HelloWorldStandardWorkerExample {
         try {
             const channel = new MessageChannel();
 
-            const resultInitCom1 = await workerTaskCom1.initWorker(new WorkerTaskMessage()) as MessageEvent<unknown>;
-            const resultInitCom2 = await workerTaskCom2.initWorker(new WorkerTaskMessage()) as MessageEvent<unknown>;
-            console.log(`initCom1 then: ${(resultInitCom1.data as WorkerTaskMessage).cmd}`);
-            console.log(`initCom2 then: ${(resultInitCom2.data as WorkerTaskMessage).cmd}`);
+            // no need to send an init message, just await all init
+            const promisesinit = [];
+            promisesinit.push(workerTaskCom1.initWorker());
+            promisesinit.push(workerTaskCom2.initWorker());
+            await Promise.all(promisesinit);
 
             const t0 = performance.now();
 
@@ -48,18 +49,19 @@ class HelloWorldStandardWorkerExample {
                 console.log(`Worker said onComplete: ${rawPayload.message.raw.hello}`);
             };
 
-            const resultExecCom1 = workerTaskCom1.executeWorker({
+            const promisesExec = [];
+            promisesExec.push(workerTaskCom1.executeWorker({
                 message: execCom1,
                 transferables: [channel.port1],
                 onComplete
-            });
-            const resultExecCom2 = workerTaskCom2.executeWorker({
+            }));
+            promisesExec.push(workerTaskCom2.executeWorker({
                 message: execCom2,
                 transferables: [channel.port2],
                 onComplete
-            });
+            }));
 
-            const result = await Promise.all([resultExecCom1, resultExecCom2]);
+            const result = await Promise.all(promisesExec);
             console.log(`Overall result: ${result}`);
 
             const t1 = performance.now();
