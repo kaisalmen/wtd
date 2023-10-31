@@ -1,5 +1,6 @@
 import { SphereGeometry } from 'three';
 import {
+    WorkerTaskCommandResponse,
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     createFromExisting,
@@ -16,7 +17,7 @@ export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`HelloWorldWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const initComplete = createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -33,7 +34,7 @@ export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-        const execComplete = createFromExisting(message, 'execComplete');
+        const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
         execComplete.addPayload(meshPayload);
 
         const transferables = pack(execComplete.payloads, false);

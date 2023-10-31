@@ -4,6 +4,7 @@ import {
     MeshPhongMaterial
 } from 'three';
 import {
+    WorkerTaskCommandResponse,
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     createFromExisting,
@@ -18,7 +19,7 @@ import {
 class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
-        const initComplete = createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -47,7 +48,7 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 2);
 
-        const execComplete = createFromExisting(message, 'execComplete');
+        const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
         execComplete.addPayload(meshPayload);
         execComplete.addPayload(materialsPayload);
 

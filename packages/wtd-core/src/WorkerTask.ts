@@ -2,6 +2,8 @@ import type {
     WorkerTaskMessageType
 } from './WorkerTaskMessage.js';
 import {
+    WorkerTaskCommandRequest,
+    WorkerTaskCommandResponse,
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 
@@ -14,8 +16,9 @@ export type WorkerRegistrationType = {
 export type WorkerExecutionPlanType = {
     message: WorkerTaskMessage;
     onComplete: (message: WorkerTaskMessageType) => void;
-    onIntermediate?: (message: WorkerTaskMessageType) => void;
+    onIntermediateConfirm?: (message: WorkerTaskMessageType) => void;
     transferables?: Transferable[];
+    copyTransferables?: boolean;
     promiseFunctions?: {
         resolve: (value: unknown) => void,
         reject: (reason?: unknown) => void | undefined
@@ -63,7 +66,7 @@ export class WorkerTask {
         });
     }
 
-    async initWorker(message?: WorkerTaskMessage, transferables?: Transferable[]) {
+    async initWorker(message?: WorkerTaskMessage, transferables?: Transferable[], copyTransferables?: boolean) {
         return new Promise((resolve, reject) => {
             this.worker = this.createWorker();
             if (this.verbose) {
@@ -90,15 +93,19 @@ export class WorkerTask {
                     }
                     reject(m);
                 };
-                message.cmd = 'init';
+                message.cmd = WorkerTaskCommandRequest.INIT;
                 message.workerId = this.workerId;
                 if (transferables) {
                     // ensure all transferables are copies to all workers on init!
-                    const transferablesToWorker = [];
-                    for (const transferable of transferables) {
-                        transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
+                    if (copyTransferables === true) {
+                        const transferablesToWorker = [];
+                        for (const transferable of transferables) {
+                            transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
+                        }
+                        this.worker.postMessage(message, transferablesToWorker);
+                    } else {
+                        this.worker.postMessage(message);
                     }
-                    this.worker.postMessage(message, transferablesToWorker);
                 }
                 else {
                     this.worker.postMessage(message);
@@ -129,9 +136,9 @@ export class WorkerTask {
                 this.markExecuting(true);
                 this.worker.onmessage = message => {
                     // allow intermediate asset provision before flagging execComplete
-                    if (message.data.cmd === 'intermediate') {
-                        if (typeof plan.onIntermediate === 'function') {
-                            plan.onIntermediate(message.data);
+                    if (message.data.cmd === WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM) {
+                        if (typeof plan.onIntermediateConfirm === 'function') {
+                            plan.onIntermediateConfirm(message.data);
                         }
                     } else {
                         const completionMsg = `Execution Completed: ${plan.message.name}: ${message.data.id}`;
@@ -150,9 +157,13 @@ export class WorkerTask {
                     reject(message);
                     this.markExecuting(false);
                 };
-                plan.message.cmd = 'execute';
+                plan.message.cmd = WorkerTaskCommandRequest.EXECUTE;
                 plan.message.workerId = this.workerId;
-                this.worker.postMessage(plan.message, plan.transferables!);
+                if (plan.transferables) {
+                    this.worker.postMessage(plan.message, plan.transferables);
+                } else {
+                    this.worker.postMessage(plan.message);
+                }
             }
         });
     }
@@ -164,7 +175,7 @@ export class WorkerTask {
      */
     sentMessage(message: WorkerTaskMessage, transferables?: Transferable[]) {
         if (this.isWorkerExecuting() && this.worker) {
-            message.cmd = 'intermediate';
+            message.cmd = WorkerTaskCommandRequest.INTERMEDIATE;
             message.workerId = this.workerId;
             this.worker.postMessage(message, transferables!);
         }

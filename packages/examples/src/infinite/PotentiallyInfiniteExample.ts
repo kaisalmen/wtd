@@ -30,6 +30,7 @@ import {
     WorkerTaskMessageType,
     unpack,
     pack,
+    WorkerTaskCommandResponse,
 } from 'wtd-core';
 import {
     MaterialStore,
@@ -476,12 +477,12 @@ class PotentiallyInfiniteExample {
 
         const wtm = unpack(message, false);
         switch (wtm.cmd) {
-            case 'initComplete':
+            case WorkerTaskCommandResponse.INIT_COMPLETE:
                 console.log('Init Completed: ' + wtm.id);
                 break;
 
-            case 'execComplete':
-            case 'intermediate':
+            case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
+            case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
                 // were are getting raw vertex buffers here
                 if (wtm.payloads.length > 0) {
                     if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads.length === 1) {
@@ -520,7 +521,7 @@ class PotentiallyInfiniteExample {
                     this.addMesh(mesh, wtm.id);
                 }
                 else {
-                    if (wtm.cmd !== 'execComplete') {
+                    if (wtm.cmd !== WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
                         // This is the end-point for the execution
                         //console.log(`DataTransport: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
                         console.error('Provided payload.type did not match: ' + wtm.cmd);
@@ -606,7 +607,7 @@ class PotentiallyInfiniteExample {
 class SimpleBlobWorker {
 
     init(message: WorkerTaskMessageType) {
-        message.cmd = 'initComplete';
+        message.cmd = WorkerTaskCommandResponse.INIT_COMPLETE;
         self.postMessage(message);
     }
 
@@ -628,7 +629,7 @@ class SimpleBlobWorker {
         };
         message.payloads[0] = dataPayload;
 
-        message.cmd = 'execComplete';
+        message.cmd = WorkerTaskCommandResponse.EXECUTE_COMPLETE;
         self.postMessage(message);
     }
 

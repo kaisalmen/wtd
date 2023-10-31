@@ -6,6 +6,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
     AssociatedArrayType,
     DataPayload,
+    WorkerTaskCommandResponse,
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     createFromExisting,
@@ -32,7 +33,7 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`OBJLoaderWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const wtm = unpack(message, true);
+        const wtm = unpack(message, false);
         if (wtm.payloads.length === 2) {
             const dataPayload = wtm.payloads[0] as DataPayload;
             const materialsPayload = wtm.payloads[1] as MaterialsPayload;
@@ -40,7 +41,7 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
             this.localData.buffer = dataPayload.message.buffers?.get('modelData');
             this.localData.materials = materialsPayload.message.materials;
 
-            const initComplete = createFromExisting(wtm, 'initComplete');
+            const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
             self.postMessage(initComplete);
         }
     }
@@ -70,7 +71,7 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
             mesh.name = mesh.name + message.id;
 
             // signal intermediate feedback
-            const intermediate = createFromExisting(message, 'intermediate');
+            const intermediate = createFromExisting(message, WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM);
 
             const meshPayload = new MeshPayload();
             meshPayload.setMesh(mesh, 0);
@@ -88,7 +89,7 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
         }
 
         // signal complete
-        const execComplete = createFromExisting(message, 'execComplete');
+        const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
         self.postMessage(execComplete);
     }
 

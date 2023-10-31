@@ -51,16 +51,16 @@ import {
 } from './DataPayload.js';
 
 import type {
-    WorkerTaskMessageHeaderType,
-    WorkerTaskMessageBodyType,
-    WorkerTaskMessageType
+    WorkerTaskMessageType,
 } from './WorkerTaskMessage.js';
 
 import {
     WorkerTaskMessage,
     createFromExisting,
     pack,
-    unpack
+    unpack,
+    WorkerTaskCommandRequest,
+    WorkerTaskCommandResponse
 } from './WorkerTaskMessage.js';
 
 export {
@@ -70,9 +70,9 @@ export {
     WorkerTaskDirector,
     WorkerTaskWorker,
     WorkerTaskDefaultWorker,
-    WorkerTaskMessageHeaderType,
-    WorkerTaskMessageBodyType,
     WorkerTaskMessageType,
+    WorkerTaskCommandRequest,
+    WorkerTaskCommandResponse,
     WorkerTaskMessage,
     createFromExisting,
     pack,

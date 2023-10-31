@@ -5,7 +5,8 @@ import {
     DataPayload,
     createFromExisting,
     unpack,
-    pack
+    pack,
+    WorkerTaskCommandResponse
 } from 'wtd-core';
 import {
     MeshPayload,
@@ -28,7 +29,7 @@ class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
             this.context.initPayload = wtm.payloads[0] as MeshPayload;
         }
 
-        const initComplete = createFromExisting(wtm, 'initComplete');
+        const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -48,7 +49,7 @@ class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
                 packGeometryBuffers(false, bufferGeometry as BufferGeometry, dataPayload.message.buffers);
             }
 
-            const execComplete = createFromExisting(wtm, 'execComplete');
+            const execComplete = createFromExisting(wtm, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
             execComplete.addPayload(dataPayload);
 
             const transferables = pack(execComplete.payloads, false);

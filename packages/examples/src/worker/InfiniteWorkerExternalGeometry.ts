@@ -2,6 +2,7 @@ import {
     BufferGeometry
 } from 'three';
 import {
+    WorkerTaskCommandResponse,
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     createFromExisting,
@@ -19,10 +20,10 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
     private bufferGeometry?: BufferGeometry = undefined;
 
     init(message: WorkerTaskMessageType) {
-        const wtm = unpack(message, true);
+        const wtm = unpack(message, false);
         this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
 
-        const initComplete = createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -54,7 +55,7 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
                     }
                 };
 
-                const execComplete = createFromExisting(message, 'execComplete');
+                const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
                 execComplete.addPayload(meshPayload);
 
                 const transferables = pack(execComplete.payloads, false);

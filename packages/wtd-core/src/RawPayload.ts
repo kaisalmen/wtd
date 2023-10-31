@@ -15,5 +15,10 @@ export class RawPayload implements RawPayloadAdditions {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         raw: {} as any
     };
-    handler = undefined;
+
+    constructor(raw?: unknown) {
+        if (raw) {
+            this.message.raw = raw;
+        }
+    }
 }

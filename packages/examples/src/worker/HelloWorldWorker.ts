@@ -1,5 +1,6 @@
 import {
     DataPayload,
+    WorkerTaskCommandResponse,
     WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     createFromExisting
@@ -10,7 +11,7 @@ declare const self: DedicatedWorkerGlobalScope;
 export class HelloWorldWorker extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
-        const initComplete = createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -26,7 +27,7 @@ export class HelloWorldWorker extends WorkerTaskDefaultWorker {
             hello: 'say hello'
         };
 
-        const execComplete = createFromExisting(message, 'execComplete');
+        const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
         execComplete.addPayload(dataPayload);
 
         // no need to pack as there aren't any buffers used

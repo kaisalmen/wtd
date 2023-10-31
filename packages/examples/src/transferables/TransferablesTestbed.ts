@@ -16,6 +16,7 @@ import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls
 
 import {
     DataPayload,
+    WorkerTaskCommandResponse,
     WorkerTaskDirector,
     WorkerTaskMessage,
     WorkerTaskMessageType,
@@ -268,7 +269,7 @@ class TransferablesTestbed {
     private processMessage(message: WorkerTaskMessageType) {
         let wtm;
         switch (message.cmd) {
-            case 'execComplete':
+            case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
                 console.log(`TransferableTestbed#execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
                 wtm = unpack(message, false);

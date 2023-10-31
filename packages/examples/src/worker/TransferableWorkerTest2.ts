@@ -4,7 +4,8 @@ import {
     DataPayload,
     createFromExisting,
     unpack,
-    pack
+    pack,
+    WorkerTaskCommandResponse
 } from 'wtd-core';
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -14,7 +15,7 @@ class TransferableWorkerTest2 extends WorkerTaskDefaultWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest2#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const initComplete = createFromExisting(message, 'initComplete');
+        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -28,7 +29,7 @@ class TransferableWorkerTest2 extends WorkerTaskDefaultWorker {
                 const payloadOut = new DataPayload();
                 payloadOut.message.buffers?.set('data', new Uint32Array(32 * 1024 * 1024));
 
-                const execComplete = createFromExisting(wtm, 'execComplete');
+                const execComplete = createFromExisting(wtm, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
                 execComplete.name = payload.message.params.name as string;
                 execComplete.addPayload(payloadOut);
 

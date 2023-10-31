@@ -77,25 +77,21 @@ export class WorkerTaskDirector {
      * @param {string} taskTypeName The name of the registered task type.
      * @param {WorkerTaskMessage} [message] Optional intt message to be sent
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
+     * @param {boolean} [copyTransferables] Tell if transferables should be copied
      */
-    async initTaskType(taskTypeName: string, message?: WorkerTaskMessage, transferables?: Transferable[]) {
+    async initTaskType(taskTypeName: string, message?: WorkerTaskMessage, transferables?: Transferable[], copyTransferables?: boolean) {
         const executions = [];
         const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
         if (workerTaskRuntimeDesc) {
             this.workerExecutionPlans.set(taskTypeName, []);
             for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
-                executions.push(workerTask.initWorker(message, transferables));
+                executions.push(workerTask.initWorker(message, transferables, copyTransferables));
             }
-        }
-        else {
-            executions.push(new Promise<void>((_resolve, reject) => {
-                reject();
-            }));
+        } else {
+            executions.push(Promise.reject());
         }
         if (executions.length === 0) {
-            executions.push(new Promise<void>((resolve) => {
-                resolve();
-            }));
+            executions.push(Promise.resolve());
         }
         return Promise.all(executions);
     }
@@ -106,17 +102,18 @@ export class WorkerTaskDirector {
      * @param {string} taskTypeName The name of the registered task type.
      * @param {WorkerTaskMessage} message Configuration properties as serializable string.
      * @param {(message: WorkerTaskMessageType) => void} onComplete Invoke this function if everything is completed
-     * @param {(message: WorkerTaskMessageType) => void} onIntermediate Invoke this function if an asset become intermediately available
+     * @param {(message: WorkerTaskMessageType) => void} onIntermediateConfirm Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
     async enqueueForExecution(taskTypeName: string, message: WorkerTaskMessage, onComplete: (message: WorkerTaskMessageType) => void,
-        onIntermediate?: (message: WorkerTaskMessageType) => void, transferables?: Transferable[]) {
+        onIntermediateConfirm?: (message: WorkerTaskMessageType) => void, transferables?: Transferable[], copyTransferables?: boolean) {
         return this.enqueueWorkerExecutionPlan(taskTypeName, {
             message,
             onComplete,
-            onIntermediate,
-            transferables
+            onIntermediateConfirm,
+            transferables,
+            copyTransferables
         });
     }
 

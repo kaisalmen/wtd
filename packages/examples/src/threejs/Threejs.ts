@@ -17,6 +17,7 @@ import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls
 
 import {
     DataPayload,
+    WorkerTaskCommandResponse,
     WorkerTaskDirector,
     WorkerTaskMessage,
     WorkerTaskMessageType,
@@ -214,7 +215,7 @@ class WorkerTaskDirectorExample {
                 onComplete: (m: WorkerTaskMessageType) => {
                     this.processMessage(m);
                 },
-                onIntermediate: (m: WorkerTaskMessageType) => {
+                onIntermediateConfirm: (m: WorkerTaskMessageType) => {
                     this.processMessage(m);
                 }
             });
@@ -240,15 +241,15 @@ class WorkerTaskDirectorExample {
     private processMessage(message: WorkerTaskMessageType) {
         const wtm = unpack(message, false);
         switch (wtm.cmd) {
-            case 'intermediate':
-            case 'execComplete':
+            case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
+            case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
                 if (wtm.payloads.length === 1) {
                     this.buildMesh(wtm.id, wtm.payloads[0] as MeshPayload);
                 }
                 else if (wtm.payloads.length === 2) {
                     this.buildMesh(wtm.id, wtm.payloads[0] as MeshPayload, wtm.payloads[1] as MaterialsPayload);
                 }
-                if (wtm.cmd === 'execComplete') {
+                if (wtm.cmd === WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
                     console.log(`execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
                 }
                 break;
