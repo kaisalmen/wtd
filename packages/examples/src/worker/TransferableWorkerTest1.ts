@@ -8,15 +8,13 @@ import {
     WorkerTaskCommandResponse
 } from 'wtd-core';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 class TransferableWorkerTest1 extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest1#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        self.postMessage(initComplete);
+        this.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -33,7 +31,7 @@ class TransferableWorkerTest1 extends WorkerTaskDefaultWorker {
         execComplete.addPayload(dataPayload);
 
         const transferables = pack(execComplete.payloads, false);
-        self.postMessage(execComplete, transferables);
+        this.postMessage(execComplete, transferables);
     }
 
 }

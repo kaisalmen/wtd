@@ -20,7 +20,7 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        self.postMessage(initComplete);
+        this.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -53,7 +53,7 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
         execComplete.addPayload(materialsPayload);
 
         const transferables = pack(execComplete.payloads, false);
-        self.postMessage(execComplete, transferables);
+        this.postMessage(execComplete, transferables);
     }
 }
 

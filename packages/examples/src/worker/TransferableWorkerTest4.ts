@@ -12,14 +12,12 @@ import {
     MeshPayload
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest4#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
         message.cmd = WorkerTaskCommandResponse.INIT_COMPLETE;
-        self.postMessage(message);
+        this.postMessage(message);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -38,7 +36,7 @@ class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
             execComplete.addPayload(meshPayload);
 
             const transferables = pack(execComplete.payloads, false);
-            self.postMessage(execComplete, transferables);
+            this.postMessage(execComplete, transferables);
         }
     }
 

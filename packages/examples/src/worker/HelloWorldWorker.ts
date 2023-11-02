@@ -6,13 +6,11 @@ import {
     createFromExisting
 } from 'wtd-core';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 export class HelloWorldWorker extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        self.postMessage(initComplete);
+        this.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -31,7 +29,7 @@ export class HelloWorldWorker extends WorkerTaskDefaultWorker {
         execComplete.addPayload(dataPayload);
 
         // no need to pack as there aren't any buffers used
-        self.postMessage(execComplete);
+        this.postMessage(execComplete);
     }
 
 }

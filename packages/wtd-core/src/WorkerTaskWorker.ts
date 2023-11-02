@@ -2,8 +2,6 @@ import { Payload } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
 import { WorkerTaskCommandRequest, WorkerTaskMessageType } from './WorkerTaskMessage.js';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 export type WorkerTaskWorker = {
 
     init(message: WorkerTaskMessageType): void;
@@ -82,8 +80,12 @@ export class WorkerTaskDefaultWorker implements InterComWorker {
         }
     }
 
-    postMessage(message: WorkerTaskMessageType, options?: StructuredSerializeOptions) {
-        self.postMessage(message, options);
+    postMessage(message: unknown, options?: StructuredSerializeOptions | Transferable[]) {
+        if (Array.isArray(options)) {
+            self.postMessage(message, options);
+        } else {
+            self.postMessage(message, options);
+        }
     }
 
     registerPort(name: string, payload: Payload | undefined) {

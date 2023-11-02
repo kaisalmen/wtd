@@ -10,15 +10,13 @@ import {
     MeshPayload
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`HelloWorldWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        self.postMessage(initComplete);
+        this.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -38,7 +36,7 @@ export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
         execComplete.addPayload(meshPayload);
 
         const transferables = pack(execComplete.payloads, false);
-        self.postMessage(execComplete, transferables);
+        this.postMessage(execComplete, transferables);
     }
 
 }

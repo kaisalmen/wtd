@@ -13,8 +13,6 @@ import {
     packGeometryBuffers
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
 
     private context = {
@@ -30,7 +28,7 @@ class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
         }
 
         const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
-        self.postMessage(initComplete);
+        this.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -53,7 +51,7 @@ class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
             execComplete.addPayload(dataPayload);
 
             const transferables = pack(execComplete.payloads, false);
-            self.postMessage(execComplete, transferables);
+            this.postMessage(execComplete, transferables);
         }
     }
 }

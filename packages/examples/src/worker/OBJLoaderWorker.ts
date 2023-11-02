@@ -19,8 +19,6 @@ import {
     MeshPayload,
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 class OBJLoaderWorker extends WorkerTaskDefaultWorker {
 
     private localData = {
@@ -42,7 +40,7 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
             this.localData.materials = materialsPayload.message.materials;
 
             const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
-            self.postMessage(initComplete);
+            this.postMessage(initComplete);
         }
     }
 
@@ -85,12 +83,12 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
             }
 
             const transferables = pack(intermediate.payloads, false);
-            self.postMessage(intermediate, transferables);
+            this.postMessage(intermediate, transferables);
         }
 
         // signal complete
         const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
-        self.postMessage(execComplete);
+        this.postMessage(execComplete);
     }
 
 }

@@ -607,7 +607,7 @@ class PotentiallyInfiniteExample {
 class SimpleBlobWorker {
 
     init(message: WorkerTaskMessageType) {
-        message.cmd = WorkerTaskCommandResponse.INIT_COMPLETE;
+        message.cmd = 'initComplete';
         self.postMessage(message);
     }
 
@@ -629,7 +629,7 @@ class SimpleBlobWorker {
         };
         message.payloads[0] = dataPayload;
 
-        message.cmd = WorkerTaskCommandResponse.EXECUTE_COMPLETE;
+        message.cmd = 'executeComplete';
         self.postMessage(message);
     }
 

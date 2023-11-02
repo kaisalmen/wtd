@@ -28,11 +28,11 @@
     "preview": "http-server ./preview"
   },
   "dependencies": {
-    "lil-gui": "~0.18.2",
+    "lil-gui": "~0.19.0",
     "three": "~0.158.0",
-    "wtd-core": "~2.4.0-next.1",
-    "wtd-three-ext": "~2.4.0-next.1",
-    "wwobjloader2": "6.2.0-next.0"
+    "wtd-core": "~2.4.0-next.2",
+    "wtd-three-ext": "~2.4.0-next.2",
+    "wwobjloader2": "6.2.0-next.2"
   },
   "devDependencies": {
     "@types/three": "~0.158.1",

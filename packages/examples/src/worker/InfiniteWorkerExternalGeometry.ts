@@ -13,8 +13,6 @@ import {
     MeshPayload
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
-
 class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
 
     private bufferGeometry?: BufferGeometry = undefined;
@@ -24,12 +22,12 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
         this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
 
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        self.postMessage(initComplete);
+        this.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
         if (!this.bufferGeometry) {
-            self.postMessage(new Error('No initial payload available'));
+            this.postMessage(new Error('No initial payload available'));
         } else {
             // clone before re-using as othewise transferables can not be obtained
             const geometry = this.bufferGeometry.clone();
@@ -59,7 +57,7 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
                 execComplete.addPayload(meshPayload);
 
                 const transferables = pack(execComplete.payloads, false);
-                self.postMessage(execComplete, transferables);
+                this.postMessage(execComplete, transferables);
             }
         }
     }
