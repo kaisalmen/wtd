@@ -1,105 +1,88 @@
 import { Payload } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
-import { WorkerTaskCommandRequest, WorkerTaskMessageType } from './WorkerTaskMessage.js';
+import { WorkerTaskCommandRequest, WorkerTaskCommandResponse, WorkerTaskMessageType } from './WorkerTaskMessage.js';
 
 export type WorkerTaskWorker = {
 
-    init(message: WorkerTaskMessageType): void;
+    init?(message: WorkerTaskMessageType): void;
 
-    intermediate(message: WorkerTaskMessageType): void;
+    intermediate?(message: WorkerTaskMessageType): void;
 
     execute(message: WorkerTaskMessageType): void;
-
-    comRouting(message: never): void;
 }
 
-export type InterComWorker = WorkerTaskWorker & {
+export type InterComWorker = {
 
-    interComInit(message: WorkerTaskMessageType): void;
+    interComInit?(message: WorkerTaskMessageType): void;
 
-    interComIntermediate(message: WorkerTaskMessageType): void;
+    interComInitComplete?(message: WorkerTaskMessageType): void;
 
-    interComExecute(message: WorkerTaskMessageType): void;
+    interComIntermediate?(message: WorkerTaskMessageType): void;
+
+    interComIntermediateConfirm?(message: WorkerTaskMessageType): void;
+
+    interComExecute?(message: WorkerTaskMessageType): void;
+
+    interComExecuteComplete?(message: WorkerTaskMessageType): void;
 }
 
-export class WorkerTaskDefaultWorker implements InterComWorker {
+export class InterComPortHandler {
 
     private ports: Map<string, MessagePort> = new Map();
 
-    init(message: WorkerTaskMessageType): void {
-        this.printDefaultMessage(WorkerTaskCommandRequest.INIT, message);
-    }
-
-    intermediate(message: WorkerTaskMessageType): void {
-        this.printDefaultMessage(WorkerTaskCommandRequest.INTERMEDIATE, message);
-    }
-
-    execute(message: WorkerTaskMessageType): void {
-        this.printDefaultMessage(WorkerTaskCommandRequest.EXECUTE, message);
-    }
-
-    interComInit(message: WorkerTaskMessageType): void {
-        this.printDefaultMessage(WorkerTaskCommandRequest.INTERCOM_INIT, message);
-    }
-
-    interComIntermediate(message: WorkerTaskMessageType): void {
-        this.printDefaultMessage(WorkerTaskCommandRequest.INTERCOM_INTERMEDIATE, message);
-    }
-
-    interComExecute(message: WorkerTaskMessageType): void {
-        this.printDefaultMessage(WorkerTaskCommandRequest.INTERCOM_EXECUTE, message);
-    }
-
-    private printDefaultMessage(funcName: string, message: WorkerTaskMessageType): void {
-        console.log(`WorkerTaskDefaultWorker#${funcName}: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
-    }
-
-    comRouting(message: MessageEvent<unknown>) {
-        const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
-        if (wtmt) {
-            switch (wtmt.cmd) {
-                case WorkerTaskCommandRequest.INIT:
-                    this.init(wtmt);
-                    break;
-                case WorkerTaskCommandRequest.INTERMEDIATE:
-                    this.intermediate(wtmt);
-                    break;
-                case WorkerTaskCommandRequest.EXECUTE:
-                    this.execute(wtmt);
-                    break;
-                case WorkerTaskCommandRequest.INTERCOM_INIT:
-                    this.interComInit(wtmt);
-                    break;
-                case WorkerTaskCommandRequest.INTERCOM_INTERMEDIATE:
-                    this.interComIntermediate(wtmt);
-                    break;
-                case WorkerTaskCommandRequest.INTERCOM_EXECUTE:
-                    this.interComExecute(wtmt);
-                    break;
-            }
-        }
-    }
-
-    postMessage(message: unknown, options?: StructuredSerializeOptions | Transferable[]) {
-        if (Array.isArray(options)) {
-            self.postMessage(message, options);
-        } else {
-            self.postMessage(message, options);
-        }
-    }
-
-    registerPort(name: string, payload: Payload | undefined) {
+    registerPort(name: string, payload: Payload | undefined, onmessage: (message: MessageEvent<unknown>) => void) {
         const port = payload ? (payload as RawPayload).message.raw.port as MessagePort : undefined;
         if (!port) {
             throw new Error(`${payload?.message ?? 'undefined'} is not a RawPayload. Unable to extract a port.`);
         }
         this.ports.set(name, port);
-        port.onmessage = (message: MessageEvent<unknown>) => {
-            this.comRouting(message);
-        };
+        port.onmessage = onmessage;
     }
 
     postMessageOnPort(target: string, message: WorkerTaskMessageType, options?: StructuredSerializeOptions) {
         this.ports.get(target)?.postMessage(message, options);
     }
 }
+
+export const printDefaultMessage = (funcName: string, message: WorkerTaskMessageType) => {
+    console.log(`WorkerTaskDefaultWorker#${funcName}: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
+};
+
+export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>) => {
+    const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
+    if (wtmt) {
+        const wtw = workerImpl as WorkerTaskWorker;
+        const icw = workerImpl as InterComWorker;
+        switch (wtmt.cmd) {
+            case WorkerTaskCommandRequest.INIT:
+                wtw.init?.(wtmt);
+                break;
+            case WorkerTaskCommandRequest.INTERMEDIATE:
+                wtw.intermediate?.(wtmt);
+                break;
+            case WorkerTaskCommandRequest.EXECUTE:
+                wtw.execute?.(wtmt);
+                break;
+            case WorkerTaskCommandRequest.INTERCOM_INIT:
+                icw.interComInit?.(wtmt);
+                break;
+            case WorkerTaskCommandResponse.INTERCOM_INIT_COMPLETE:
+                icw.interComInitComplete?.(wtmt);
+                break;
+            case WorkerTaskCommandRequest.INTERCOM_INTERMEDIATE:
+                icw.interComIntermediate?.(wtmt);
+                break;
+            case WorkerTaskCommandResponse.INTERCOM_INTERMEDIATE_CONFIRM:
+                icw.interComIntermediateConfirm?.(wtmt);
+                break;
+            case WorkerTaskCommandRequest.INTERCOM_EXECUTE:
+                icw.interComExecute?.(wtmt);
+                break;
+            case WorkerTaskCommandResponse.INTERCOM_EXECUTE_COMPLETE:
+                icw.interComExecuteComplete?.(wtmt);
+                break;
+            default:
+                break;
+        }
+    }
+};

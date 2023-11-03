@@ -19,11 +19,11 @@ class HelloWorldWorkerTaskExample {
             url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
         }, true);
 
-        const initMessage = new WorkerTaskMessage();
+        const message = new WorkerTaskMessage();
 
         try {
             // init the worker task without any payload (worker init without function invocation on worker)
-            const resultInit = await workerTask.initWorker(initMessage);
+            const resultInit = await workerTask.initWorker({ message });
             console.log(`initTaskType then: ${resultInit}`);
 
             const t0 = performance.now();

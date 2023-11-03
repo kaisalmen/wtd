@@ -31,6 +31,7 @@ export enum WorkerTaskCommandResponse {
     INTERMEDIATE_CONFIRM = 'intermediateConfirm',
     EXECUTE_COMPLETE = 'executeComplete',
     INTERCOM_INIT_COMPLETE = 'interComInitComplete',
+    INTERCOM_INTERMEDIATE_CONFIRM = 'interComIntermediateConfirm',
     INTERCOM_EXECUTE_COMPLETE = 'interComExecuteComplete'
 }
 

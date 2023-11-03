@@ -1,8 +1,9 @@
 import { SphereGeometry } from 'three';
 import {
     WorkerTaskCommandResponse,
-    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
+    WorkerTaskWorker,
+    comRouting,
     createFromExisting,
     pack
 } from 'wtd-core';
@@ -10,13 +11,13 @@ import {
     MeshPayload
 } from 'wtd-three-ext';
 
-export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
+export class HelloWorlThreedWorker implements WorkerTaskWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`HelloWorldWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        this.postMessage(initComplete);
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -36,10 +37,10 @@ export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
         execComplete.addPayload(meshPayload);
 
         const transferables = pack(execComplete.payloads, false);
-        this.postMessage(execComplete, transferables);
+        self.postMessage(execComplete, transferables);
     }
 
 }
 
 const worker = new HelloWorlThreedWorker();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

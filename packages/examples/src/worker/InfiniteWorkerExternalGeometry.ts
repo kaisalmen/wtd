@@ -3,8 +3,9 @@ import {
 } from 'three';
 import {
     WorkerTaskCommandResponse,
-    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
+    WorkerTaskWorker,
+    comRouting,
     createFromExisting,
     pack,
     unpack
@@ -13,7 +14,7 @@ import {
     MeshPayload
 } from 'wtd-three-ext';
 
-class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
+class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
 
     private bufferGeometry?: BufferGeometry = undefined;
 
@@ -22,12 +23,12 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
         this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
 
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        this.postMessage(initComplete);
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
         if (!this.bufferGeometry) {
-            this.postMessage(new Error('No initial payload available'));
+            self.postMessage(new Error('No initial payload available'));
         } else {
             // clone before re-using as othewise transferables can not be obtained
             const geometry = this.bufferGeometry.clone();
@@ -57,11 +58,11 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
                 execComplete.addPayload(meshPayload);
 
                 const transferables = pack(execComplete.payloads, false);
-                this.postMessage(execComplete, transferables);
+                self.postMessage(execComplete, transferables);
             }
         }
     }
 }
 
 const worker = new InfiniteWorkerExternalGeometry();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

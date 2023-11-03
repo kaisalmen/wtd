@@ -5,8 +5,9 @@ import {
 } from 'three';
 import {
     WorkerTaskCommandResponse,
-    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
+    WorkerTaskWorker,
+    comRouting,
     createFromExisting,
     pack
 } from 'wtd-core';
@@ -16,11 +17,11 @@ import {
     MaterialsPayload,
 } from 'wtd-three-ext';
 
-class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
+class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
 
     init(message: WorkerTaskMessageType) {
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        this.postMessage(initComplete);
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -53,9 +54,9 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
         execComplete.addPayload(materialsPayload);
 
         const transferables = pack(execComplete.payloads, false);
-        this.postMessage(execComplete, transferables);
+        self.postMessage(execComplete, transferables);
     }
 }
 
 const worker = new InfiniteWorkerInternalGeometry();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

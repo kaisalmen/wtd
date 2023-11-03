@@ -223,10 +223,16 @@ class TransferablesTestbed {
             initMessage.addPayload(meshPayload);
 
             const transferables = pack(initMessage.payloads, false);
-            return this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables);
+            return this.workerTaskDirector.initTaskType(initMessage.name, {
+                message: initMessage,
+                transferables,
+                copyTransferables: true
+            });
         }
         else {
-            return this.workerTaskDirector.initTaskType(initMessage.name, initMessage);
+            return this.workerTaskDirector.initTaskType(initMessage.name, {
+                message: initMessage
+            });
         }
     }
 

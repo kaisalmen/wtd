@@ -299,7 +299,9 @@ class PotentiallyInfiniteExample {
                 id: taskDescr.id,
                 name: taskDescr.name
             });
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
+                message: initMessage
+            }));
         }
 
         taskDescr = this.taskInfiniteWorkerInternalGeometry;
@@ -315,7 +317,9 @@ class PotentiallyInfiniteExample {
                 id: taskDescr.id,
                 name: taskDescr.name
             });
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
+                message: initMessage
+            }));
         }
 
         taskDescr = this.taskInfiniteWorkerExternalGeometry;
@@ -338,7 +342,11 @@ class PotentiallyInfiniteExample {
 
             initMessage.addPayload(meshPayload);
             const transferables = pack(initMessage.payloads, false);
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage, transferables));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
+                message: initMessage,
+                transferables,
+                copyTransferables: true
+            }));
         }
 
         taskDescr = this.taskObjLoader2Worker;
@@ -382,7 +390,11 @@ class PotentiallyInfiniteExample {
                 initMessage.addPayload(dataPayload);
 
                 const transferables = pack(initMessage.payloads, false);
-                await this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables);
+                await this.workerTaskDirector.initTaskType(initMessage.name, {
+                    message: initMessage,
+                    transferables,
+                    copyTransferables: true
+                });
                 console.timeEnd('All tasks have been initialized');
                 this.executeWorkers();
             }

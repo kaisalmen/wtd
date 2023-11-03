@@ -1,23 +1,24 @@
 import { TorusKnotGeometry } from 'three';
 import {
-    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     DataPayload,
     createFromExisting,
     unpack,
     pack,
-    WorkerTaskCommandResponse
+    WorkerTaskCommandResponse,
+    WorkerTaskWorker,
+    comRouting
 } from 'wtd-core';
 import {
     MeshPayload
 } from 'wtd-three-ext';
 
-class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
+class TransferableWorkerTest4 implements WorkerTaskWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest4#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
         message.cmd = WorkerTaskCommandResponse.INIT_COMPLETE;
-        this.postMessage(message);
+        self.postMessage(message);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -36,11 +37,11 @@ class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
             execComplete.addPayload(meshPayload);
 
             const transferables = pack(execComplete.payloads, false);
-            this.postMessage(execComplete, transferables);
+            self.postMessage(execComplete, transferables);
         }
     }
 
 }
 
 const worker = new TransferableWorkerTest4();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

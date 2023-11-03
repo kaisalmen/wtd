@@ -7,13 +7,19 @@ import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 
-export type WorkerRegistrationType = {
+export type WorkerRegistration = {
     module: boolean;
     blob: boolean;
     url: URL | string | undefined;
 }
 
-export type WorkerExecutionPlanType = {
+export type WorkerInitPlan = {
+    message?: WorkerTaskMessage;
+    transferables?: Transferable[];
+    copyTransferables?: boolean;
+}
+
+export type WorkerExecutionPlan = {
     message: WorkerTaskMessage;
     onComplete: (message: WorkerTaskMessageType) => void;
     onIntermediateConfirm?: (message: WorkerTaskMessageType) => void;
@@ -31,7 +37,7 @@ export class WorkerTask {
     private workerId: number;
     private verbose: boolean;
 
-    private workerRegistration: WorkerRegistrationType = {
+    private workerRegistration: WorkerRegistration = {
         module: true,
         blob: false,
         url: undefined
@@ -40,7 +46,7 @@ export class WorkerTask {
     private worker: Worker | undefined;
     private executing = false;
 
-    constructor(taskTypeName: string, workerId: number, workerRegistration: WorkerRegistrationType, verbose?: boolean) {
+    constructor(taskTypeName: string, workerId: number, workerRegistration: WorkerRegistration, verbose?: boolean) {
         this.taskTypeName = taskTypeName;
         this.workerId = workerId;
         this.workerRegistration = workerRegistration;
@@ -66,7 +72,7 @@ export class WorkerTask {
         });
     }
 
-    async initWorker(message?: WorkerTaskMessage, transferables?: Transferable[], copyTransferables?: boolean) {
+    async initWorker(plan: WorkerInitPlan) {
         return new Promise((resolve, reject) => {
             this.worker = this.createWorker();
             if (this.verbose) {
@@ -77,6 +83,7 @@ export class WorkerTask {
                 reject(new Error('No worker was created before initWorker was called.'));
             }
             else {
+                const message = plan.message;
                 if (!message) {
                     resolve('WorkerTask#initWorker: No Payload provided => No init required');
                     return;
@@ -95,16 +102,16 @@ export class WorkerTask {
                 };
                 message.cmd = WorkerTaskCommandRequest.INIT;
                 message.workerId = this.workerId;
-                if (transferables) {
-                    // ensure all transferables are copies to all workers on init!
-                    if (copyTransferables === true) {
+                if (plan.transferables) {
+                    // copy transferables if wanted
+                    if (plan.copyTransferables === true) {
                         const transferablesToWorker = [];
-                        for (const transferable of transferables) {
+                        for (const transferable of plan.transferables) {
                             transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
                         }
                         this.worker.postMessage(message, transferablesToWorker);
                     } else {
-                        this.worker.postMessage(message);
+                        this.worker.postMessage(message, plan.transferables);
                     }
                 }
                 else {
@@ -127,7 +134,7 @@ export class WorkerTask {
         return undefined;
     }
 
-    executeWorker(plan: WorkerExecutionPlanType) {
+    executeWorker(plan: WorkerExecutionPlan) {
         return new Promise((resolve, reject) => {
             if (!this.worker) {
                 reject(new Error('Execution error: Worker is undefined.'));

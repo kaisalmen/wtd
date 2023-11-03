@@ -1,20 +1,21 @@
 import {
-    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     DataPayload,
     createFromExisting,
     pack,
     unpack,
-    WorkerTaskCommandResponse
+    WorkerTaskCommandResponse,
+    comRouting,
+    WorkerTaskWorker
 } from 'wtd-core';
 
-class TransferableWorkerTest1 extends WorkerTaskDefaultWorker {
+class TransferableWorkerTest1 implements WorkerTaskWorker {
 
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest1#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
-        this.postMessage(initComplete);
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -31,10 +32,10 @@ class TransferableWorkerTest1 extends WorkerTaskDefaultWorker {
         execComplete.addPayload(dataPayload);
 
         const transferables = pack(execComplete.payloads, false);
-        this.postMessage(execComplete, transferables);
+        self.postMessage(execComplete, transferables);
     }
 
 }
 
 const worker = new TransferableWorkerTest1();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

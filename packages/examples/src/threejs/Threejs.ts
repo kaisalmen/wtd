@@ -151,7 +151,9 @@ class WorkerTaskDirectorExample {
             url: new URL(import.meta.env.DEV ? '../worker/HelloWorldThreeWorker.ts' : '../worker/generated/HelloWorldThreeWorker-es.js', import.meta.url)
         });
         this.tasksToUse.push(helloWorldInitMessage.name);
-        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldInitMessage.name, helloWorldInitMessage));
+        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldInitMessage.name, {
+            message: helloWorldInitMessage
+        }));
 
         const objLoaderInitMessage = new WorkerTaskMessage({
             id: 0,
@@ -188,7 +190,11 @@ class WorkerTaskDirectorExample {
         objLoaderInitMessage.addPayload(materialsPayload);
 
         const transferables = pack(objLoaderInitMessage.payloads, false);
-        await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, objLoaderInitMessage, transferables);
+        await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, {
+            message: objLoaderInitMessage,
+            transferables,
+            copyTransferables: true
+        });
         console.timeEnd('Init tasks');
         await this.executeTasks();
     }

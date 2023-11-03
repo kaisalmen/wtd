@@ -25,39 +25,42 @@ class HelloWorldStandardWorkerExample {
         try {
             const channel = new MessageChannel();
 
-            // no need to send an init message, just await all init
+            const initCom1 = new WorkerTaskMessage();
+            const payload1 = new RawPayload();
+            payload1.message.raw = { port: channel.port1 };
+            initCom1.addPayload(payload1);
+
+            const initCom2 = new WorkerTaskMessage();
+            const payload2 = new RawPayload();
+            payload2.message.raw = { port: channel.port2 };
+            initCom2.addPayload(payload2);
+
             const promisesinit = [];
-            promisesinit.push(workerTaskCom1.initWorker());
-            promisesinit.push(workerTaskCom2.initWorker());
+            promisesinit.push(workerTaskCom1.initWorker({
+                message: initCom1,
+                transferables: [channel.port1]
+            }));
+            promisesinit.push(workerTaskCom2.initWorker({
+                message: initCom2,
+                transferables: [channel.port2],
+            }));
             await Promise.all(promisesinit);
 
             const t0 = performance.now();
 
-            const execCom1 = new WorkerTaskMessage();
-            const payload1 = new RawPayload();
-            payload1.message.raw = { port: channel.port1 };
-            execCom1.addPayload(payload1);
-
-            const execCom2 = new WorkerTaskMessage();
-            const payload2 = new RawPayload();
-            payload2.message.raw = { port: channel.port2 };
-            execCom2.addPayload(payload2);
-
             const onComplete = (message: WorkerTaskMessageType) => {
                 console.log('Received final command: ' + message.cmd);
                 const rawPayload = message.payloads[0] as RawPayload;
-                console.log(`Worker said onComplete: ${rawPayload.message.raw.hello}`);
+                console.log(`Worker said onComplete: ${rawPayload.message.raw.finished}`);
             };
 
             const promisesExec = [];
             promisesExec.push(workerTaskCom1.executeWorker({
-                message: execCom1,
-                transferables: [channel.port1],
+                message: new WorkerTaskMessage(),
                 onComplete
             }));
             promisesExec.push(workerTaskCom2.executeWorker({
-                message: execCom2,
-                transferables: [channel.port2],
+                message: new WorkerTaskMessage(),
                 onComplete
             }));
 

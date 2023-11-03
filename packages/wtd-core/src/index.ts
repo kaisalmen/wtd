@@ -1,9 +1,12 @@
 import type {
-    WorkerTaskWorker
+    WorkerTaskWorker,
+    InterComWorker
 } from './WorkerTaskWorker.js';
 
 import {
-    WorkerTaskDefaultWorker
+    InterComPortHandler,
+    printDefaultMessage,
+    comRouting
 } from './WorkerTaskWorker.js';
 
 import {
@@ -11,8 +14,9 @@ import {
 } from './WorkerTaskDirector.js';
 
 import type {
-    WorkerExecutionPlanType,
-    WorkerRegistrationType
+    WorkerExecutionPlan,
+    WorkerInitPlan,
+    WorkerRegistration
 } from './WorkerTask.js';
 
 import {
@@ -64,12 +68,16 @@ import {
 } from './WorkerTaskMessage.js';
 
 export {
-    WorkerExecutionPlanType,
-    WorkerRegistrationType,
+    WorkerExecutionPlan,
+    WorkerInitPlan,
+    WorkerRegistration,
     WorkerTask,
     WorkerTaskDirector,
     WorkerTaskWorker,
-    WorkerTaskDefaultWorker,
+    InterComWorker,
+    InterComPortHandler,
+    printDefaultMessage,
+    comRouting,
     WorkerTaskMessageType,
     WorkerTaskCommandRequest,
     WorkerTaskCommandResponse,

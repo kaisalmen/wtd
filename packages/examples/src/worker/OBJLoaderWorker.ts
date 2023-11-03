@@ -7,8 +7,9 @@ import {
     AssociatedArrayType,
     DataPayload,
     WorkerTaskCommandResponse,
-    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
+    WorkerTaskWorker,
+    comRouting,
     createFromExisting,
     pack,
     unpack
@@ -19,7 +20,7 @@ import {
     MeshPayload,
 } from 'wtd-three-ext';
 
-class OBJLoaderWorker extends WorkerTaskDefaultWorker {
+class OBJLoaderWorker implements WorkerTaskWorker {
 
     private localData = {
         objLoader: undefined as OBJLoader | undefined,
@@ -40,7 +41,7 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
             this.localData.materials = materialsPayload.message.materials;
 
             const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
-            this.postMessage(initComplete);
+            self.postMessage(initComplete);
         }
     }
 
@@ -83,15 +84,15 @@ class OBJLoaderWorker extends WorkerTaskDefaultWorker {
             }
 
             const transferables = pack(intermediate.payloads, false);
-            this.postMessage(intermediate, transferables);
+            self.postMessage(intermediate, transferables);
         }
 
         // signal complete
         const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
-        this.postMessage(execComplete);
+        self.postMessage(execComplete);
     }
 
 }
 
 const worker = new OBJLoaderWorker();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

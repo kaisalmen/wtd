@@ -1,19 +1,20 @@
 import { BufferGeometry } from 'three';
 import {
-    WorkerTaskDefaultWorker,
     WorkerTaskMessageType,
     DataPayload,
     createFromExisting,
     unpack,
     pack,
-    WorkerTaskCommandResponse
+    WorkerTaskCommandResponse,
+    comRouting,
+    WorkerTaskWorker
 } from 'wtd-core';
 import {
     MeshPayload,
     packGeometryBuffers
 } from 'wtd-three-ext';
 
-class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
+class TransferableWorkerTest3 implements WorkerTaskWorker {
 
     private context = {
         initPayload: undefined as MeshPayload | undefined
@@ -28,7 +29,7 @@ class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
         }
 
         const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
-        this.postMessage(initComplete);
+        self.postMessage(initComplete);
     }
 
     execute(message: WorkerTaskMessageType) {
@@ -51,10 +52,10 @@ class TransferableWorkerTest3 extends WorkerTaskDefaultWorker {
             execComplete.addPayload(dataPayload);
 
             const transferables = pack(execComplete.payloads, false);
-            this.postMessage(execComplete, transferables);
+            self.postMessage(execComplete, transferables);
         }
     }
 }
 
 const worker = new TransferableWorkerTest3();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);
