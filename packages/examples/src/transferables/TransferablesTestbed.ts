@@ -19,9 +19,7 @@ import {
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
-    pack,
-    unpack
+    WorkerTaskMessageType
 } from 'wtd-core';
 import {
     MeshPayload, reconstructBuffer
@@ -222,7 +220,7 @@ class TransferablesTestbed {
             meshPayload.setBufferGeometry(torus, 0);
             initMessage.addPayload(meshPayload);
 
-            const transferables = pack(initMessage.payloads, false);
+            const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
             return this.workerTaskDirector.initTaskType(initMessage.name, {
                 message: initMessage,
                 transferables,
@@ -261,7 +259,7 @@ class TransferablesTestbed {
             segments: task.segments
         };
         execMessage.addPayload(dataPayload);
-        const transferables = pack(execMessage.payloads, false);
+        const transferables = WorkerTaskMessage.pack(execMessage.payloads, false);
 
         return this.workerTaskDirector.enqueueWorkerExecutionPlan(task.name, {
             message: execMessage,
@@ -278,7 +276,7 @@ class TransferablesTestbed {
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
                 console.log(`TransferableTestbed#execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-                wtm = unpack(message, false);
+                wtm = WorkerTaskMessage.unpack(message, false);
                 if (wtm.payloads.length === 1) {
 
                     const payload = wtm.payloads[0];

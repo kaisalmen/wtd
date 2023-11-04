@@ -4,15 +4,13 @@ import {
 } from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import {
+    comRouting,
     AssociatedArrayType,
     DataPayload,
     WorkerTaskCommandResponse,
+    WorkerTaskMessage,
     WorkerTaskMessageType,
-    WorkerTaskWorker,
-    comRouting,
-    createFromExisting,
-    pack,
-    unpack
+    WorkerTaskWorker
 } from 'wtd-core';
 import {
     MaterialsPayload,
@@ -32,7 +30,7 @@ class OBJLoaderWorker implements WorkerTaskWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`OBJLoaderWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const wtm = unpack(message, false);
+        const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads.length === 2) {
             const dataPayload = wtm.payloads[0] as DataPayload;
             const materialsPayload = wtm.payloads[1] as MaterialsPayload;
@@ -40,7 +38,7 @@ class OBJLoaderWorker implements WorkerTaskWorker {
             this.localData.buffer = dataPayload.message.buffers?.get('modelData');
             this.localData.materials = materialsPayload.message.materials;
 
-            const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
+            const initComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
             self.postMessage(initComplete);
         }
     }
@@ -70,7 +68,7 @@ class OBJLoaderWorker implements WorkerTaskWorker {
             mesh.name = mesh.name + message.id;
 
             // signal intermediate feedback
-            const intermediate = createFromExisting(message, WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM);
+            const intermediate = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM);
 
             const meshPayload = new MeshPayload();
             meshPayload.setMesh(mesh, 0);
@@ -83,12 +81,12 @@ class OBJLoaderWorker implements WorkerTaskWorker {
                 intermediate.addPayload(materialPayload);
             }
 
-            const transferables = pack(intermediate.payloads, false);
+            const transferables = WorkerTaskMessage.pack(intermediate.payloads, false);
             self.postMessage(intermediate, transferables);
         }
 
         // signal complete
-        const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
         self.postMessage(execComplete);
     }
 

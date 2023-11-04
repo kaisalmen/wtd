@@ -61,32 +61,33 @@ export class WorkerTaskMessage implements WorkerTaskMessageType {
             this.payloads.push(payloads);
         }
     }
+
+    static createFromExisting(message: WorkerTaskMessageType, cmd?: WorkerTaskCommands) {
+        const wtm = new WorkerTaskMessage(message);
+        if (cmd) {
+            wtm.cmd = cmd;
+        }
+        return wtm;
+    }
+
+    static pack(payloads: Payload[], cloneBuffers: boolean): Transferable[] {
+        const transferables: Transferable[] = [];
+        for (const payload of payloads) {
+            const handler = PayloadRegister.handler.get(payload.$type);
+            handler?.pack(payload, transferables, cloneBuffers);
+        }
+        return transferables;
+    }
+
+    static unpack(rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) {
+        const instance = new WorkerTaskMessage(rawMessage);
+        instance.cmd = rawMessage.cmd;
+
+        for (const payload of rawMessage.payloads) {
+            const handler = PayloadRegister.handler.get(payload.$type);
+            instance.addPayload(handler?.unpack(payload, cloneBuffers));
+        }
+        return instance;
+    }
+
 }
-
-export const createFromExisting = (message: WorkerTaskMessageType, cmd?: WorkerTaskCommands) => {
-    const wtm = new WorkerTaskMessage(message);
-    if (cmd) {
-        wtm.cmd = cmd;
-    }
-    return wtm;
-};
-
-export const pack = (payloads: Payload[], cloneBuffers: boolean): Transferable[] => {
-    const transferables: Transferable[] = [];
-    for (const payload of payloads) {
-        const handler = PayloadRegister.handler.get(payload.$type);
-        handler?.pack(payload, transferables, cloneBuffers);
-    }
-    return transferables;
-};
-
-export const unpack = (rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) => {
-    const instance = new WorkerTaskMessage(rawMessage);
-    instance.cmd = rawMessage.cmd;
-
-    for (const payload of rawMessage.payloads) {
-        const handler = PayloadRegister.handler.get(payload.$type);
-        instance.addPayload(handler?.unpack(payload, cloneBuffers));
-    }
-    return instance;
-};

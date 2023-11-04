@@ -4,12 +4,11 @@ import {
     MeshPhongMaterial
 } from 'three';
 import {
-    WorkerTaskCommandResponse,
-    WorkerTaskMessageType,
-    WorkerTaskWorker,
     comRouting,
-    createFromExisting,
-    pack
+    WorkerTaskCommandResponse,
+    WorkerTaskMessage,
+    WorkerTaskMessageType,
+    WorkerTaskWorker
 } from 'wtd-core';
 import {
     MaterialUtils,
@@ -20,7 +19,7 @@ import {
 class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
 
     init(message: WorkerTaskMessageType) {
-        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -49,11 +48,11 @@ class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 2);
 
-        const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
         execComplete.addPayload(meshPayload);
         execComplete.addPayload(materialsPayload);
 
-        const transferables = pack(execComplete.payloads, false);
+        const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 }

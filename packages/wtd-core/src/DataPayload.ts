@@ -1,4 +1,5 @@
-import { AssociatedArrayType, Payload, PayloadHandler, PayloadRegister, fillTransferables } from './Payload.js';
+import { AssociatedArrayType, Payload, PayloadHandler, PayloadRegister } from './Payload.js';
+import { fillTransferables } from './utiilies.js';
 
 export type ParameterizedMessage = {
     params?: AssociatedArrayType<unknown>;

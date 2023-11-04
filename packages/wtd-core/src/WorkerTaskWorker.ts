@@ -1,6 +1,6 @@
 import { Payload } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
-import { WorkerTaskCommandRequest, WorkerTaskCommandResponse, WorkerTaskMessageType } from './WorkerTaskMessage.js';
+import { WorkerTaskMessageType } from './WorkerTaskMessage.js';
 
 export type WorkerTaskWorker = {
 
@@ -44,45 +44,14 @@ export class InterComPortHandler {
     }
 }
 
-export const printDefaultMessage = (funcName: string, message: WorkerTaskMessageType) => {
-    console.log(`WorkerTaskDefaultWorker#${funcName}: name: ${message.name} id: ${message.id} workerId: ${message.workerId}`);
-};
-
 export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>) => {
     const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
     if (wtmt) {
-        const wtw = workerImpl as WorkerTaskWorker;
-        const icw = workerImpl as InterComWorker;
-        switch (wtmt.cmd) {
-            case WorkerTaskCommandRequest.INIT:
-                wtw.init?.(wtmt);
-                break;
-            case WorkerTaskCommandRequest.INTERMEDIATE:
-                wtw.intermediate?.(wtmt);
-                break;
-            case WorkerTaskCommandRequest.EXECUTE:
-                wtw.execute?.(wtmt);
-                break;
-            case WorkerTaskCommandRequest.INTERCOM_INIT:
-                icw.interComInit?.(wtmt);
-                break;
-            case WorkerTaskCommandResponse.INTERCOM_INIT_COMPLETE:
-                icw.interComInitComplete?.(wtmt);
-                break;
-            case WorkerTaskCommandRequest.INTERCOM_INTERMEDIATE:
-                icw.interComIntermediate?.(wtmt);
-                break;
-            case WorkerTaskCommandResponse.INTERCOM_INTERMEDIATE_CONFIRM:
-                icw.interComIntermediateConfirm?.(wtmt);
-                break;
-            case WorkerTaskCommandRequest.INTERCOM_EXECUTE:
-                icw.interComExecute?.(wtmt);
-                break;
-            case WorkerTaskCommandResponse.INTERCOM_EXECUTE_COMPLETE:
-                icw.interComExecuteComplete?.(wtmt);
-                break;
-            default:
-                break;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const obj = (workerImpl as any);
+        const funcName = wtmt.cmd;
+        if (typeof obj[funcName] === 'function') {
+            obj[funcName](wtmt);
         }
     }
 };

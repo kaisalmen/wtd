@@ -20,9 +20,7 @@ import {
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
-    pack,
-    unpack,
+    WorkerTaskMessageType
 } from 'wtd-core';
 import {
     MaterialsPayload,
@@ -189,7 +187,7 @@ class WorkerTaskDirectorExample {
         objLoaderInitMessage.addPayload(objLoaderDataPayload);
         objLoaderInitMessage.addPayload(materialsPayload);
 
-        const transferables = pack(objLoaderInitMessage.payloads, false);
+        const transferables = WorkerTaskMessage.pack(objLoaderInitMessage.payloads, false);
         await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, {
             message: objLoaderInitMessage,
             transferables,
@@ -245,7 +243,7 @@ class WorkerTaskDirectorExample {
      * @private
      */
     private processMessage(message: WorkerTaskMessageType) {
-        const wtm = unpack(message, false);
+        const wtm = WorkerTaskMessage.unpack(message, false);
         switch (wtm.cmd) {
             case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:

@@ -5,7 +5,6 @@ import type {
 
 import {
     InterComPortHandler,
-    printDefaultMessage,
     comRouting
 } from './WorkerTaskWorker.js';
 
@@ -30,9 +29,7 @@ import type {
 } from './Payload.js';
 
 import {
-    PayloadRegister,
-    applyProperties,
-    fillTransferables
+    PayloadRegister
 } from './Payload.js';
 
 import type {
@@ -60,31 +57,31 @@ import type {
 
 import {
     WorkerTaskMessage,
-    createFromExisting,
-    pack,
-    unpack,
     WorkerTaskCommandRequest,
     WorkerTaskCommandResponse
 } from './WorkerTaskMessage.js';
+
+import {
+    applyProperties,
+    createWorkerBlob,
+    fillTransferables
+} from './utiilies.js';
 
 export {
     WorkerExecutionPlan,
     WorkerInitPlan,
     WorkerRegistration,
     WorkerTask,
+    createWorkerBlob,
     WorkerTaskDirector,
     WorkerTaskWorker,
     InterComWorker,
     InterComPortHandler,
-    printDefaultMessage,
     comRouting,
     WorkerTaskMessageType,
     WorkerTaskCommandRequest,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    createFromExisting,
-    pack,
-    unpack,
     AssociatedArrayType,
     Payload,
     ParameterizedMessage,

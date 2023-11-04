@@ -1,12 +1,10 @@
 import { BufferGeometry } from 'three';
 import {
-    WorkerTaskMessageType,
-    DataPayload,
-    createFromExisting,
-    unpack,
-    pack,
-    WorkerTaskCommandResponse,
     comRouting,
+    DataPayload,
+    WorkerTaskCommandResponse,
+    WorkerTaskMessage,
+    WorkerTaskMessageType,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -23,12 +21,12 @@ class TransferableWorkerTest3 implements WorkerTaskWorker {
     init(message: WorkerTaskMessageType) {
         console.log(`TransferableWorkerTest3#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const wtm = unpack(message, false);
+        const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads.length > 0) {
             this.context.initPayload = wtm.payloads[0] as MeshPayload;
         }
 
-        const initComplete = createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
+        const initComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -36,7 +34,7 @@ class TransferableWorkerTest3 implements WorkerTaskWorker {
         console.log(`TransferableWorkerTest3#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         if (this.context.initPayload) {
-            const wtm = unpack(message, false);
+            const wtm = WorkerTaskMessage.unpack(message, false);
 
             // just put the buffers into the buffers of a DataPayload
             const bufferGeometry = this.context.initPayload.message.bufferGeometry;
@@ -48,10 +46,10 @@ class TransferableWorkerTest3 implements WorkerTaskWorker {
                 packGeometryBuffers(false, bufferGeometry as BufferGeometry, dataPayload.message.buffers);
             }
 
-            const execComplete = createFromExisting(wtm, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+            const execComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
             execComplete.addPayload(dataPayload);
 
-            const transferables = pack(execComplete.payloads, false);
+            const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
             self.postMessage(execComplete, transferables);
         }
     }

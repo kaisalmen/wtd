@@ -61,17 +61,6 @@ export class WorkerTask {
         this.executing = executing;
     }
 
-    static createWorkerBlob(code: string[]) {
-        const simpleWorkerBlob = new Blob(code, { type: 'application/javascript' });
-        return window.URL.createObjectURL(simpleWorkerBlob);
-    }
-
-    static async wait(milliseconds: number) {
-        return new Promise(resolve => {
-            setTimeout(resolve, milliseconds);
-        });
-    }
-
     async initWorker(plan: WorkerInitPlan) {
         return new Promise((resolve, reject) => {
             this.worker = this.createWorker();

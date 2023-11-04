@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applyProperties } from '../src/Payload.js';
+import { applyProperties } from 'wtd-core';
 
 describe('DataPayload applyProperties Tests', () => {
     test('verify empty', () => {

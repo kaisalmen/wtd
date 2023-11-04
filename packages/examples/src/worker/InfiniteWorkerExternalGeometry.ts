@@ -3,12 +3,10 @@ import {
 } from 'three';
 import {
     WorkerTaskCommandResponse,
+    WorkerTaskMessage,
     WorkerTaskMessageType,
     WorkerTaskWorker,
-    comRouting,
-    createFromExisting,
-    pack,
-    unpack
+    comRouting
 } from 'wtd-core';
 import {
     MeshPayload
@@ -19,10 +17,10 @@ class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
     private bufferGeometry?: BufferGeometry = undefined;
 
     init(message: WorkerTaskMessageType) {
-        const wtm = unpack(message, false);
+        const wtm = WorkerTaskMessage.unpack(message, false);
         this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
 
-        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -54,10 +52,10 @@ class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
                     }
                 };
 
-                const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+                const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
                 execComplete.addPayload(meshPayload);
 
-                const transferables = pack(execComplete.payloads, false);
+                const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
                 self.postMessage(execComplete, transferables);
             }
         }

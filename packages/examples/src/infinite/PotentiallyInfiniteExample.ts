@@ -23,14 +23,12 @@ import {
     GUI
 } from 'lil-gui';
 import {
-    WorkerTask,
     WorkerTaskDirector,
     DataPayload,
     WorkerTaskMessage,
     WorkerTaskMessageType,
-    unpack,
-    pack,
     WorkerTaskCommandResponse,
+    createWorkerBlob,
 } from 'wtd-core';
 import {
     MaterialStore,
@@ -107,7 +105,7 @@ class PotentiallyInfiniteExample {
         use: true,
         module: true,
         blob: true,
-        workerUrl: WorkerTask.createWorkerBlob([`${SimpleBlobWorker.toString()}
+        workerUrl: createWorkerBlob([`${SimpleBlobWorker.toString()}
 
         worker = new SimpleBlobWorker();
         self.onmessage = message => worker.comRouting(message);
@@ -341,7 +339,7 @@ class PotentiallyInfiniteExample {
             meshPayload.setBufferGeometry(torus, 0);
 
             initMessage.addPayload(meshPayload);
-            const transferables = pack(initMessage.payloads, false);
+            const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
                 message: initMessage,
                 transferables,
@@ -389,7 +387,7 @@ class PotentiallyInfiniteExample {
                 dataPayload.message.buffers?.set('modelData', buffer as ArrayBufferLike);
                 initMessage.addPayload(dataPayload);
 
-                const transferables = pack(initMessage.payloads, false);
+                const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
                 await this.workerTaskDirector.initTaskType(initMessage.name, {
                     message: initMessage,
                     transferables,
@@ -487,7 +485,7 @@ class PotentiallyInfiniteExample {
             return;
         }
 
-        const wtm = unpack(message, false);
+        const wtm = WorkerTaskMessage.unpack(message, false);
         switch (wtm.cmd) {
             case WorkerTaskCommandResponse.INIT_COMPLETE:
                 console.log('Init Completed: ' + wtm.id);

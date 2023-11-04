@@ -1,16 +1,16 @@
 import {
+    comRouting,
     DataPayload,
     WorkerTaskCommandResponse,
+    WorkerTaskMessage,
     WorkerTaskMessageType,
-    WorkerTaskWorker,
-    comRouting,
-    createFromExisting
+    WorkerTaskWorker
 } from 'wtd-core';
 
 export class HelloWorldWorker implements WorkerTaskWorker {
 
     init(message: WorkerTaskMessageType) {
-        const initComplete = createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
@@ -26,7 +26,7 @@ export class HelloWorldWorker implements WorkerTaskWorker {
             hello: 'say hello'
         };
 
-        const execComplete = createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
         execComplete.addPayload(dataPayload);
 
         // no need to pack as there aren't any buffers used

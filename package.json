@@ -26,7 +26,7 @@
     "build": "npm run build --workspaces",
     "dev": "vite",
     "dev:debug": "vite --debug --force",
-    "release:prepare": "npm run reset:repo && npm ci && npm run build && npm run doc",
+    "release:prepare": "npm run reset:repo && npm ci && npm run lint && npm run build && npm run doc",
     "test": "vitest",
     "reset:repo:dry": "git clean -f -d -x --dry-run",
     "reset:repo": "git clean -f -d -x"
