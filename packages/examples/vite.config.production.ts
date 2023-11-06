@@ -9,7 +9,7 @@ export default defineConfig(({ command }) => {
     console.log(`Running: ${command}`);
     return {
         build: {
-            target: ['es2020'],
+            target: ['es2022'],
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, 'index.html'),
@@ -35,7 +35,7 @@ export default defineConfig(({ command }) => {
         },
         optimizeDeps: {
             esbuildOptions: {
-                target: 'es2020'
+                target: 'es2022'
             }
         }
     };
