@@ -30,8 +30,8 @@
   "dependencies": {
     "lil-gui": "~0.19.0",
     "three": "~0.158.0",
-    "wtd-core": "~2.4.0-next.4",
-    "wtd-three-ext": "~2.4.0-next.4",
+    "wtd-core": "~2.4.0-next.5",
+    "wtd-three-ext": "~2.4.0-next.5",
     "wwobjloader2": "6.2.0-next.4"
   },
   "devDependencies": {

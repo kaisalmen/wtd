@@ -77,18 +77,21 @@ export class WorkerTask {
                     resolve('WorkerTask#initWorker: No Payload provided => No init required');
                     return;
                 }
-                this.worker.onmessage = m => {
-                    if (this.verbose) {
-                        console.log(`Init Completed: ${message.name}: ${m.data.id}`);
+                this.worker.addEventListener('message', async (answer) => {
+                    // only process WorkerTaskMessage
+                    if (answer.data.cmd) {
+                        if (this.verbose) {
+                            console.log(`Init Completed: ${message.name}: ${answer.data.id}`);
+                        }
+                        resolve(answer);
                     }
-                    resolve(m);
-                };
-                this.worker.onerror = m => {
+                });
+                this.worker.addEventListener('error', async (answer) => {
                     if (this.verbose) {
-                        console.log(`Init Aborted: ${message.name}: ${m.error}`);
+                        console.log(`Init Aborted: ${message.name}: ${answer.error}`);
                     }
-                    reject(m);
-                };
+                    reject(answer);
+                });
                 message.cmd = WorkerTaskCommandRequest.INIT;
                 message.workerId = this.workerId;
                 if (plan.transferables) {
@@ -130,29 +133,32 @@ export class WorkerTask {
             }
             else {
                 this.markExecuting(true);
-                this.worker.onmessage = message => {
-                    // allow intermediate asset provision before flagging execComplete
-                    if (message.data.cmd === WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM) {
-                        if (typeof plan.onIntermediateConfirm === 'function') {
-                            plan.onIntermediateConfirm(message.data);
+                this.worker.addEventListener('message', async (answer) => {
+                    // only process WorkerTaskMessage
+                    if (answer.data.cmd) {
+                        // allow intermediate asset provision before flagging execComplete
+                        if (answer.data.cmd === WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM) {
+                            if (typeof plan.onIntermediateConfirm === 'function') {
+                                plan.onIntermediateConfirm(answer.data);
+                            }
+                        } else {
+                            const completionMsg = `Execution Completed: ${plan.message.name}: ${answer.data.id}`;
+                            if (this.verbose) {
+                                console.log(completionMsg);
+                            }
+                            plan.onComplete((answer as MessageEvent).data);
+                            resolve(completionMsg);
+                            this.markExecuting(false);
                         }
-                    } else {
-                        const completionMsg = `Execution Completed: ${plan.message.name}: ${message.data.id}`;
-                        if (this.verbose) {
-                            console.log(completionMsg);
-                        }
-                        plan.onComplete((message as MessageEvent).data);
-                        resolve(completionMsg);
-                        this.markExecuting(false);
                     }
-                };
-                this.worker.onerror = message => {
+                });
+                this.worker.addEventListener('error', async (answer) => {
                     if (this.verbose) {
-                        console.log(`Execution Aborted: ${plan.message.name}: ${message.error}`);
+                        console.log(`Execution Aborted: ${plan.message.name}: ${answer.error}`);
                     }
-                    reject(message);
+                    reject(answer);
                     this.markExecuting(false);
-                };
+                });
                 plan.message.cmd = WorkerTaskCommandRequest.EXECUTE;
                 plan.message.workerId = this.workerId;
                 if (plan.transferables) {
