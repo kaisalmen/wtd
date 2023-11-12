@@ -4,7 +4,7 @@ import {
 import {
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskWorker,
     comRouting
 } from 'wtd-core';
@@ -16,15 +16,17 @@ class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
 
     private bufferGeometry?: BufferGeometry = undefined;
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         const wtm = WorkerTaskMessage.unpack(message, false);
-        this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
+        if (wtm.payloads && wtm.payloads?.length > 0) {
+            this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
+        }
 
         const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         if (!this.bufferGeometry) {
             self.postMessage(new Error('No initial payload available'));
         } else {

@@ -3,20 +3,20 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 
 class TransferableWorkerTest1 implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         console.log(`TransferableWorkerTest1#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         console.log(`TransferableWorkerTest1#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);

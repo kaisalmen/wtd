@@ -1,5 +1,5 @@
 import type {
-    WorkerTaskMessageType
+    WorkerTaskMessageConfig
 } from './WorkerTaskMessage.js';
 import {
     WorkerTaskCommandRequest,
@@ -21,8 +21,8 @@ export type WorkerInitPlan = {
 
 export type WorkerExecutionPlan = {
     message: WorkerTaskMessage;
-    onComplete: (message: WorkerTaskMessageType) => void;
-    onIntermediateConfirm?: (message: WorkerTaskMessageType) => void;
+    onComplete: (message: WorkerTaskMessageConfig) => void;
+    onIntermediateConfirm?: (message: WorkerTaskMessageConfig) => void;
     transferables?: Transferable[];
     copyTransferables?: boolean;
     promiseFunctions?: {
@@ -181,7 +181,6 @@ export class WorkerTask {
             message.workerId = this.workerId;
             this.worker.postMessage(message, transferables!);
         }
-
     }
 
     dispose() {

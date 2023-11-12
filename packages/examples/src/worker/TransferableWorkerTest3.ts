@@ -4,7 +4,7 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -18,11 +18,11 @@ class TransferableWorkerTest3 implements WorkerTaskWorker {
         initPayload: undefined as MeshPayload | undefined
     };
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         console.log(`TransferableWorkerTest3#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
-        if (wtm.payloads.length > 0) {
+        if (wtm.payloads && wtm.payloads?.length > 0) {
             this.context.initPayload = wtm.payloads[0] as MeshPayload;
         }
 
@@ -30,7 +30,7 @@ class TransferableWorkerTest3 implements WorkerTaskWorker {
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         console.log(`TransferableWorkerTest3#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         if (this.context.initPayload) {

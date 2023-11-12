@@ -9,7 +9,7 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -27,11 +27,11 @@ class OBJLoaderWorker implements WorkerTaskWorker {
         objectId: 0
     };
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         console.log(`OBJLoaderWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
-        if (wtm.payloads.length === 2) {
+        if (wtm.payloads?.length === 2) {
             const dataPayload = wtm.payloads[0] as DataPayload;
             const materialsPayload = wtm.payloads[1] as MaterialsPayload;
 
@@ -43,7 +43,7 @@ class OBJLoaderWorker implements WorkerTaskWorker {
         }
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         console.log(`OBJLoaderWorker#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         this.localData.objLoader = new OBJLoader();

@@ -19,7 +19,7 @@ import {
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageConfig
 } from 'wtd-core';
 import {
     MeshPayload, reconstructBuffer
@@ -221,14 +221,14 @@ class TransferablesTestbed {
             initMessage.addPayload(meshPayload);
 
             const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
-            return this.workerTaskDirector.initTaskType(initMessage.name, {
+            return this.workerTaskDirector.initTaskType(initMessage.name!, {
                 message: initMessage,
                 transferables,
                 copyTransferables: true
             });
         }
         else {
-            return this.workerTaskDirector.initTaskType(initMessage.name, {
+            return this.workerTaskDirector.initTaskType(initMessage.name!, {
                 message: initMessage
             });
         }
@@ -263,21 +263,21 @@ class TransferablesTestbed {
 
         return this.workerTaskDirector.enqueueWorkerExecutionPlan(task.name, {
             message: execMessage,
-            onComplete: (m: WorkerTaskMessageType) => {
+            onComplete: (m: WorkerTaskMessageConfig) => {
                 this.processMessage(m);
             },
             transferables: transferables
         });
     }
 
-    private processMessage(message: WorkerTaskMessageType) {
+    private processMessage(message: WorkerTaskMessageConfig) {
         let wtm;
         switch (message.cmd) {
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
                 console.log(`TransferableTestbed#execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
                 wtm = WorkerTaskMessage.unpack(message, false);
-                if (wtm.payloads.length === 1) {
+                if (wtm.payloads?.length === 1) {
 
                     const payload = wtm.payloads[0];
                     if (payload.$type === 'DataPayload') {

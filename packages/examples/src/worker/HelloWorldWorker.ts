@@ -3,18 +3,18 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 
 export class HelloWorldWorker implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         console.log(message);
         // burn some time
         for (let i = 0; i < 25000000; i++) {

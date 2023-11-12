@@ -2,9 +2,9 @@ import {
     RawPayload,
     WorkerTask,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageConfig
 } from 'wtd-core';
-import { updateText } from '../worker/ComWorkerCommon.js';
+import { recalcAspectRatio, updateText } from '../worker/ComWorkerCommon.js';
 
 /**
  * Hello World example using a classic worker
@@ -22,9 +22,9 @@ class HelloWorldStandardWorkerExample {
         this.canvasCom1 = document.getElementById('com1') as HTMLCanvasElement;
         this.canvasCom2 = document.getElementById('com2') as HTMLCanvasElement;
 
-        this.recalAspectRatio(this.canvasMain);
-        this.recalAspectRatio(this.canvasCom1);
-        this.recalAspectRatio(this.canvasCom2);
+        recalcAspectRatio(this.canvasMain);
+        recalcAspectRatio(this.canvasCom1);
+        recalcAspectRatio(this.canvasCom2);
 
         updateText({
             text: 'Main: Init',
@@ -46,53 +46,44 @@ class HelloWorldStandardWorkerExample {
         });
     }
 
-    recalAspectRatio(canvas: HTMLCanvasElement) {
-        canvas.width = canvas.height * (canvas.clientWidth / canvas.clientHeight);
-    }
-
     async run() {
         const channel = new MessageChannel();
-        const initCom1 = new WorkerTaskMessage();
-        const payload1 = new RawPayload();
 
         try {
             const offscreenCom1 = this.canvasCom1.transferControlToOffscreen();
-            payload1.message.raw = {
+            const payload1 = new RawPayload({
                 port: channel.port1,
                 drawingSurface: offscreenCom1,
                 width: this.canvasCom1.clientWidth,
                 height: this.canvasCom1.clientHeight
-            };
-            initCom1.addPayload(payload1);
+            });
 
-            const initCom2 = new WorkerTaskMessage();
-            const payload2 = new RawPayload();
             const offscreenCom2 = this.canvasCom2.transferControlToOffscreen();
-            payload2.message.raw = {
+            const payload2 = new RawPayload({
                 port: channel.port2,
                 drawingSurface: offscreenCom2,
                 width: this.canvasCom2.clientWidth,
                 height: this.canvasCom2.clientHeight
-            };
-            initCom2.addPayload(payload2);
-
+            });
             const promisesinit = [];
             promisesinit.push(this.workerTaskCom1.initWorker({
-                message: initCom1,
+                message: WorkerTaskMessage.fromPayload(payload1),
                 transferables: [channel.port1, offscreenCom1]
             }));
             promisesinit.push(this.workerTaskCom2.initWorker({
-                message: initCom2,
+                message: WorkerTaskMessage.fromPayload(payload2),
                 transferables: [channel.port2, offscreenCom2],
             }));
             await Promise.all(promisesinit);
 
             const t0 = performance.now();
 
-            const onComplete = (message: WorkerTaskMessageType) => {
+            const onComplete = (message: WorkerTaskMessageConfig) => {
                 console.log('Received final command: ' + message.cmd);
-                const rawPayload = message.payloads[0] as RawPayload;
-                console.log(`Worker said onComplete: ${rawPayload.message.raw.finished}`);
+                if (message.payloads) {
+                    const rawPayload = message.payloads[0] as RawPayload;
+                    console.log(`Worker said onComplete: ${rawPayload.message.raw.finished}`);
+                }
             };
 
             const promisesExec: Array<Promise<unknown>> = [];

@@ -1,7 +1,7 @@
 import {
     WorkerTask,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageConfig
 } from 'wtd-core';
 
 /**
@@ -31,10 +31,10 @@ class HelloWorldWorkerTaskExample {
             const resultExec = await workerTask.executeWorker({
                 message: execMessage,
                 // decouple result evaluation ...
-                onComplete: (m: WorkerTaskMessageType) => {
+                onComplete: (m: WorkerTaskMessageConfig) => {
                     const wtm = WorkerTaskMessage.unpack(m, false);
                     console.log(wtm);
-                    if (wtm.payloads.length === 1) {
+                    if (wtm.payloads?.length === 1) {
                         console.log(wtm.payloads[0]);
                     }
                     console.log('Received final command: ' + wtm.cmd);

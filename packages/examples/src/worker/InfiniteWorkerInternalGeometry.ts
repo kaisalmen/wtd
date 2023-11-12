@@ -7,7 +7,7 @@ import {
     comRouting,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -18,12 +18,12 @@ import {
 
 class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         const bufferGeometry = new TorusKnotGeometry(20, 3, 100, 64);
         bufferGeometry.name = 'tmProto' + message.id;
 

@@ -1,29 +1,29 @@
 import { Payload } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
-import { WorkerTaskMessageType } from './WorkerTaskMessage.js';
+import { WorkerTaskMessageConfig } from './WorkerTaskMessage.js';
 
 export type WorkerTaskWorker = {
 
-    init?(message: WorkerTaskMessageType): void;
+    init?(message: WorkerTaskMessageConfig): void;
 
-    intermediate?(message: WorkerTaskMessageType): void;
+    intermediate?(message: WorkerTaskMessageConfig): void;
 
-    execute(message: WorkerTaskMessageType): void;
+    execute(message: WorkerTaskMessageConfig): void;
 }
 
 export type InterComWorker = {
 
-    interComInit?(message: WorkerTaskMessageType): void;
+    interComInit?(message: WorkerTaskMessageConfig): void;
 
-    interComInitComplete?(message: WorkerTaskMessageType): void;
+    interComInitComplete?(message: WorkerTaskMessageConfig): void;
 
-    interComIntermediate?(message: WorkerTaskMessageType): void;
+    interComIntermediate?(message: WorkerTaskMessageConfig): void;
 
-    interComIntermediateConfirm?(message: WorkerTaskMessageType): void;
+    interComIntermediateConfirm?(message: WorkerTaskMessageConfig): void;
 
-    interComExecute?(message: WorkerTaskMessageType): void;
+    interComExecute?(message: WorkerTaskMessageConfig): void;
 
-    interComExecuteComplete?(message: WorkerTaskMessageType): void;
+    interComExecuteComplete?(message: WorkerTaskMessageConfig): void;
 }
 
 export class InterComPortHandler {
@@ -39,17 +39,17 @@ export class InterComPortHandler {
         port.onmessage = onmessage;
     }
 
-    postMessageOnPort(target: string, message: WorkerTaskMessageType, options?: StructuredSerializeOptions) {
+    postMessageOnPort(target: string, message: WorkerTaskMessageConfig, options?: StructuredSerializeOptions) {
         this.ports.get(target)?.postMessage(message, options);
     }
 }
 
 export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>) => {
-    const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
+    const wtmt = (message as MessageEvent).data as WorkerTaskMessageConfig;
     if (wtmt) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj = (workerImpl as any);
-        const funcName = wtmt.cmd;
+        const funcName = wtmt.cmd ?? 'unknown';
         if (typeof obj[funcName] === 'function') {
             obj[funcName](wtmt);
         }

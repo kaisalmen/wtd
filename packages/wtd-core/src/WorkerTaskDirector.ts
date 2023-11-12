@@ -1,5 +1,5 @@
 import type {
-    WorkerTaskMessageType
+    WorkerTaskMessageConfig
 } from './WorkerTaskMessage.js';
 import {
     WorkerTaskMessage
@@ -104,13 +104,13 @@ export class WorkerTaskDirector {
      *
      * @param {string} taskTypeName The name of the registered task type.
      * @param {WorkerTaskMessage} message Configuration properties as serializable string.
-     * @param {(message: WorkerTaskMessageType) => void} onComplete Invoke this function if everything is completed
-     * @param {(message: WorkerTaskMessageType) => void} onIntermediateConfirm Invoke this function if an asset become intermediately available
+     * @param {(message: WorkerTaskMessageConfig) => void} onComplete Invoke this function if everything is completed
+     * @param {(message: WorkerTaskMessageConfig) => void} onIntermediateConfirm Invoke this function if an asset become intermediately available
      * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, message: WorkerTaskMessage, onComplete: (message: WorkerTaskMessageType) => void,
-        onIntermediateConfirm?: (message: WorkerTaskMessageType) => void, transferables?: Transferable[], copyTransferables?: boolean) {
+    async enqueueForExecution(taskTypeName: string, message: WorkerTaskMessage, onComplete: (message: WorkerTaskMessageConfig) => void,
+        onIntermediateConfirm?: (message: WorkerTaskMessageConfig) => void, transferables?: Transferable[], copyTransferables?: boolean) {
         return this.enqueueWorkerExecutionPlan(taskTypeName, {
             message,
             onComplete,

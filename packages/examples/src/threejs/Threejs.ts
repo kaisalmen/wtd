@@ -20,7 +20,7 @@ import {
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessageConfig
 } from 'wtd-core';
 import {
     MaterialsPayload,
@@ -143,13 +143,13 @@ class WorkerTaskDirectorExample {
             id: 0,
             name: 'HelloWorldThreeWorker'
         });
-        this.workerTaskDirector.registerTask(helloWorldInitMessage.name, {
+        this.workerTaskDirector.registerTask(helloWorldInitMessage.name!, {
             module: true,
             blob: false,
             url: new URL(import.meta.env.DEV ? '../worker/HelloWorldThreeWorker.ts' : '../worker/generated/HelloWorldThreeWorker-es.js', import.meta.url)
         });
-        this.tasksToUse.push(helloWorldInitMessage.name);
-        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldInitMessage.name, {
+        this.tasksToUse.push(helloWorldInitMessage.name!);
+        awaiting.push(this.workerTaskDirector.initTaskType(helloWorldInitMessage.name!, {
             message: helloWorldInitMessage
         }));
 
@@ -158,12 +158,12 @@ class WorkerTaskDirectorExample {
             name: 'OBJLoaderdWorker'
         });
 
-        this.workerTaskDirector.registerTask(objLoaderInitMessage.name, {
+        this.workerTaskDirector.registerTask(objLoaderInitMessage.name!, {
             module: true,
             blob: false,
             url: new URL(import.meta.env.DEV ? '../worker/OBJLoaderWorker.ts' : '../worker/generated/OBJLoaderWorker-es.js', import.meta.url)
         });
-        this.tasksToUse.push(objLoaderInitMessage.name);
+        this.tasksToUse.push(objLoaderInitMessage.name!);
 
         const loadObj = async function() {
             const fileLoader = new FileLoader();
@@ -188,7 +188,7 @@ class WorkerTaskDirectorExample {
         objLoaderInitMessage.addPayload(materialsPayload);
 
         const transferables = WorkerTaskMessage.pack(objLoaderInitMessage.payloads, false);
-        await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name, {
+        await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name!, {
             message: objLoaderInitMessage,
             transferables,
             copyTransferables: true
@@ -216,10 +216,10 @@ class WorkerTaskDirectorExample {
 
             const voidPromise = this.workerTaskDirector.enqueueWorkerExecutionPlan(name ?? 'unknown', {
                 message: execMessage,
-                onComplete: (m: WorkerTaskMessageType) => {
+                onComplete: (m: WorkerTaskMessageConfig) => {
                     this.processMessage(m);
                 },
-                onIntermediateConfirm: (m: WorkerTaskMessageType) => {
+                onIntermediateConfirm: (m: WorkerTaskMessageConfig) => {
                     this.processMessage(m);
                 }
             });
@@ -242,16 +242,16 @@ class WorkerTaskDirectorExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(message: WorkerTaskMessageType) {
+    private processMessage(message: WorkerTaskMessageConfig) {
         const wtm = WorkerTaskMessage.unpack(message, false);
         switch (wtm.cmd) {
             case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
-                if (wtm.payloads.length === 1) {
-                    this.buildMesh(wtm.id, wtm.payloads[0] as MeshPayload);
+                if (wtm.payloads?.length === 1) {
+                    this.buildMesh(wtm.id ?? 0, wtm.payloads[0] as MeshPayload);
                 }
-                else if (wtm.payloads.length === 2) {
-                    this.buildMesh(wtm.id, wtm.payloads[0] as MeshPayload, wtm.payloads[1] as MaterialsPayload);
+                else if (wtm.payloads?.length === 2) {
+                    this.buildMesh(wtm.id ?? 0, wtm.payloads[0] as MeshPayload, wtm.payloads[1] as MaterialsPayload);
                 }
                 if (wtm.cmd === WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
                     console.log(`execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);

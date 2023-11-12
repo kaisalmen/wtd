@@ -52,7 +52,7 @@ import {
 } from './DataPayload.js';
 
 import type {
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig
 } from './WorkerTaskMessage.js';
 
 import {
@@ -78,7 +78,7 @@ export {
     InterComWorker,
     InterComPortHandler,
     comRouting,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskCommandRequest,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,

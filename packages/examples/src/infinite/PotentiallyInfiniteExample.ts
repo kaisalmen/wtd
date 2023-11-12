@@ -26,7 +26,7 @@ import {
     WorkerTaskDirector,
     DataPayload,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskCommandResponse,
     createWorkerBlob,
 } from 'wtd-core';
@@ -388,7 +388,7 @@ class PotentiallyInfiniteExample {
                 initMessage.addPayload(dataPayload);
 
                 const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
-                await this.workerTaskDirector.initTaskType(initMessage.name, {
+                await this.workerTaskDirector.initTaskType(initMessage.name!, {
                     message: initMessage,
                     transferables,
                     copyTransferables: true
@@ -475,7 +475,7 @@ class PotentiallyInfiniteExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessageType | Error) {
+    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessageConfig | Error) {
         let material: Material | Material[] | undefined;
         let meshPayload: MeshPayload;
         let materialsPayload: MaterialsPayload;
@@ -494,8 +494,8 @@ class PotentiallyInfiniteExample {
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
             case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
                 // were are getting raw vertex buffers here
-                if (wtm.payloads.length > 0) {
-                    if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads.length === 1) {
+                if (wtm.payloads && wtm.payloads?.length > 0) {
+                    if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads?.length === 1) {
                         const dataPayloadOBJ = wtm.payloads[0] as DataPayload;
                         const preparedMesh = dataPayloadOBJ?.message.params?.preparedMesh;
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -528,7 +528,7 @@ class PotentiallyInfiniteExample {
                         }
                         mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
                     }
-                    this.addMesh(mesh, wtm.id);
+                    this.addMesh(mesh, wtm.id ?? 0);
                 }
                 else {
                     if (wtm.cmd !== WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
@@ -616,12 +616,12 @@ class PotentiallyInfiniteExample {
 // Simplest way to define a worker, but can't be a module worker
 class SimpleBlobWorker {
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         message.cmd = 'initComplete';
         self.postMessage(message);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
@@ -637,7 +637,7 @@ class SimpleBlobWorker {
                 progress: 0
             }
         };
-        message.payloads[0] = dataPayload;
+        message.payloads = [dataPayload];
 
         message.cmd = 'executeComplete';
         self.postMessage(message);
@@ -645,7 +645,7 @@ class SimpleBlobWorker {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
-        const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
+        const wtmt = (message as MessageEvent).data as WorkerTaskMessageConfig;
         if (wtmt) {
             if (wtmt.cmd === 'init') {
                 this.init(wtmt);

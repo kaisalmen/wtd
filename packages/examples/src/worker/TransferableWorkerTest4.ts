@@ -4,7 +4,7 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -13,20 +13,20 @@ import {
 
 class TransferableWorkerTest4 implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessageConfig) {
         console.log(`TransferableWorkerTest4#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
         message.cmd = WorkerTaskCommandResponse.INIT_COMPLETE;
         self.postMessage(message);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessageConfig) {
         console.log(`TransferableWorkerTest4#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
-        if (wtm.payloads.length === 1) {
+        if (wtm.payloads?.length === 1) {
             const payload = wtm.payloads[0] as DataPayload;
             const bufferGeometry = new TorusKnotGeometry(20, 3, payload.message.params?.segments as number, payload.message.params?.segments as number);
-            bufferGeometry.name = wtm.name;
+            bufferGeometry.name = wtm.name ?? 'unnamed';
 
             const meshPayload = new MeshPayload();
             meshPayload.setBufferGeometry(bufferGeometry, 0);

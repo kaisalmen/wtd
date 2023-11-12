@@ -1,6 +1,6 @@
 import { Payload, RawPayload } from 'wtd-core';
 
-export const getOffScreenCanvas = (payload: Payload) => {
+export const getOffScreenCanvas = (payload?: Payload) => {
     return payload ? (payload as RawPayload).message.raw.drawingSurface as HTMLCanvasElement : undefined;
 };
 
@@ -20,4 +20,9 @@ export const updateText = (params: {
     if (params.log === true) {
         console.log(params.text);
     }
+};
+
+export const recalcAspectRatio = (canvas: HTMLCanvasElement) => {
+    canvas.width = canvas.height * (canvas.clientWidth / canvas.clientHeight);
+    return canvas.width;
 };
