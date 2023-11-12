@@ -35,12 +35,14 @@ class HelloWorldStandardWorkerExample {
         });
 
         this.workerTaskCom1 = new WorkerTask('Com1Worker', 1, {
-            module: true,
+            $type: 'WorkerConfigParams',
+            workerType: 'module',
             blob: false,
             url: new URL(import.meta.env.DEV ? '../worker/Com1Worker.ts' : '../worker/generated/Com1Worker-es.js', import.meta.url)
         });
         this.workerTaskCom2 = new WorkerTask('Com2Worker', 1, {
-            module: true,
+            $type: 'WorkerConfigParams',
+            workerType: 'module',
             blob: false,
             url: new URL(import.meta.env.DEV ? '../worker/Com2Worker.ts' : '../worker/generated/Com2Worker-es.js', import.meta.url)
         });

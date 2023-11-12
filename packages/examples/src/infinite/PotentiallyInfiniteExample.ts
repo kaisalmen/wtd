@@ -51,7 +51,7 @@ type TaskDescription = {
     id: number;
     name: string
     use: boolean;
-    module: boolean;
+    workerType: 'classic' | 'module';
     blob: boolean;
     workerUrl: URL | string;
     workerCount: number;
@@ -103,7 +103,7 @@ class PotentiallyInfiniteExample {
         id: 0,
         name: 'simpleBlobWorker',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: true,
         workerUrl: createWorkerBlob([`${SimpleBlobWorker.toString()}
 
@@ -116,7 +116,7 @@ class PotentiallyInfiniteExample {
         id: 1,
         name: 'InfiniteWorkerInternalGeometry',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: false,
         workerUrl: new URL(import.meta.env.DEV ? '../worker/InfiniteWorkerInternalGeometry.ts' : '../worker/generated/InfiniteWorkerInternalGeometry-es.js', import.meta.url),
         workerCount: 10
@@ -125,7 +125,7 @@ class PotentiallyInfiniteExample {
         id: 2,
         name: 'InfiniteWorkerExternalGeometry',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: false,
         workerUrl: new URL(import.meta.env.DEV ? '../worker/InfiniteWorkerExternalGeometry.ts' : '../worker/generated/InfiniteWorkerExternalGeometry-es.js', import.meta.url),
         workerCount: 8
@@ -135,7 +135,7 @@ class PotentiallyInfiniteExample {
         name: 'OBJLoader2WorkerModule',
         modelName: 'female02',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: false,
         workerUrl: new URL(import.meta.env.DEV ? '../worker/generated/OBJLoader2WorkerClassic.js' : '../worker/generated/OBJLoader2WorkerModule.js', import.meta.url),
         workerCount: 2,
@@ -289,7 +289,8 @@ class PotentiallyInfiniteExample {
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
+                $type: 'WorkerConfigParams',
+                workerType: taskDescr.workerType,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
@@ -306,7 +307,8 @@ class PotentiallyInfiniteExample {
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
+                $type: 'WorkerConfigParams',
+                workerType: taskDescr.workerType,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
@@ -324,7 +326,8 @@ class PotentiallyInfiniteExample {
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
+                $type: 'WorkerConfigParams',
+                workerType: taskDescr.workerType,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);
@@ -351,7 +354,8 @@ class PotentiallyInfiniteExample {
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
+                $type: 'WorkerConfigParams',
+                workerType: taskDescr.workerType,
                 blob: taskDescr.blob,
                 url: taskDescr.workerUrl
             }, taskDescr.workerCount);

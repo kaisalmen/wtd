@@ -6,17 +6,25 @@ import {
     WorkerTaskCommandResponse,
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
+import { extractDelegate } from './utiilies.js';
 
-export type WorkerRegistration = {
-    module: boolean;
-    blob: boolean;
+export type WorkerConfig = {
+    $type: 'WorkerConfigParams'
+    workerType: 'classic' | 'module';
+    blob?: boolean;
     url: URL | string | undefined;
 }
+
+export type WorkerConfigDirect = {
+    $type: 'WorkerConfigDirect';
+    worker: Worker;
+};
 
 export type WorkerInitPlan = {
     message?: WorkerTaskMessage;
     transferables?: Transferable[];
     copyTransferables?: boolean;
+    delegate?: true;
 }
 
 export type WorkerExecutionPlan = {
@@ -29,6 +37,7 @@ export type WorkerExecutionPlan = {
         resolve: (value: unknown) => void,
         reject: (reason?: unknown) => void | undefined
     };
+    delegate?: true;
 }
 
 export class WorkerTask {
@@ -37,19 +46,15 @@ export class WorkerTask {
     private workerId: number;
     private verbose: boolean;
 
-    private workerRegistration: WorkerRegistration = {
-        module: true,
-        blob: false,
-        url: undefined
-    };
+    private workerConfig: WorkerConfig | WorkerConfigDirect;
 
-    private worker: Worker | undefined;
+    private worker?: Worker;
     private executing = false;
 
-    constructor(taskTypeName: string, workerId: number, workerRegistration: WorkerRegistration, verbose?: boolean) {
+    constructor(taskTypeName: string, workerId: number, workerConfig: WorkerConfig | WorkerConfigDirect, verbose?: boolean) {
         this.taskTypeName = taskTypeName;
         this.workerId = workerId;
-        this.workerRegistration = workerRegistration;
+        this.workerConfig = workerConfig;
         this.verbose = verbose === true;
     }
 
@@ -61,9 +66,14 @@ export class WorkerTask {
         this.executing = executing;
     }
 
+    getWorker() {
+        return this.worker;
+    }
+
     async initWorker(plan: WorkerInitPlan) {
+        this.worker = this.createWorker();
+
         return new Promise((resolve, reject) => {
-            this.worker = this.createWorker();
             if (this.verbose) {
                 console.log(`Task: ${this.taskTypeName}: Waiting for completion of initialization of all workers.`);
             }
@@ -77,16 +87,19 @@ export class WorkerTask {
                     resolve('WorkerTask#initWorker: No Payload provided => No init required');
                     return;
                 }
-                this.worker.addEventListener('message', async (answer) => {
+                const delegate = (plan.delegate === true) ? extractDelegate(this.worker) : undefined;
+                this.worker.onmessage = (async (answer) => {
                     // only process WorkerTaskMessage
                     if (answer.data.cmd) {
                         if (this.verbose) {
                             console.log(`Init Completed: ${message.name}: ${answer.data.id}`);
                         }
                         resolve(answer);
+                    } else {
+                        delegate?.(answer);
                     }
                 });
-                this.worker.addEventListener('error', async (answer) => {
+                this.worker.onerror = (async (answer) => {
                     if (this.verbose) {
                         console.log(`Init Aborted: ${message.name}: ${answer.error}`);
                     }
@@ -114,26 +127,33 @@ export class WorkerTask {
     }
 
     private createWorker() {
-        if (this.workerRegistration.url) {
-            if (this.workerRegistration.blob) {
-                return new Worker(this.workerRegistration.url);
-            }
-            else {
-                const workerOptions = (this.workerRegistration.module ? { type: 'module' } : { type: 'classic' }) as WorkerOptions;
-                return new Worker((this.workerRegistration.url as URL).href, workerOptions);
+        if (this.workerConfig.$type === 'WorkerConfigDirect') {
+            return this.workerConfig.worker;
+        } else if (this.workerConfig.$type === 'WorkerConfigParams') {
+            if (this.workerConfig.url) {
+                if (this.workerConfig.blob) {
+                    return new Worker(this.workerConfig.url);
+                }
+                else {
+                    return new Worker((this.workerConfig.url as URL).href, {
+                        type: this.workerConfig.workerType
+                    });
+                }
             }
         }
+
         return undefined;
     }
 
-    executeWorker(plan: WorkerExecutionPlan) {
+    async executeWorker(plan: WorkerExecutionPlan) {
         return new Promise((resolve, reject) => {
             if (!this.worker) {
                 reject(new Error('Execution error: Worker is undefined.'));
             }
             else {
                 this.markExecuting(true);
-                this.worker.addEventListener('message', async (answer) => {
+                const delegate = (plan.delegate === true) ? extractDelegate(this.worker) : undefined;
+                this.worker.onmessage = (async (answer) => {
                     // only process WorkerTaskMessage
                     if (answer.data.cmd) {
                         // allow intermediate asset provision before flagging execComplete
@@ -150,9 +170,11 @@ export class WorkerTask {
                             resolve(completionMsg);
                             this.markExecuting(false);
                         }
+                    } else {
+                        delegate?.(answer);
                     }
                 });
-                this.worker.addEventListener('error', async (answer) => {
+                this.worker.onerror = (async (answer) => {
                     if (this.verbose) {
                         console.log(`Execution Aborted: ${plan.message.name}: ${answer.error}`);
                     }

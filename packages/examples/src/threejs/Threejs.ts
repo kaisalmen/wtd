@@ -144,7 +144,8 @@ class WorkerTaskDirectorExample {
             name: 'HelloWorldThreeWorker'
         });
         this.workerTaskDirector.registerTask(helloWorldInitMessage.name!, {
-            module: true,
+            $type: 'WorkerConfigParams',
+            workerType: 'module',
             blob: false,
             url: new URL(import.meta.env.DEV ? '../worker/HelloWorldThreeWorker.ts' : '../worker/generated/HelloWorldThreeWorker-es.js', import.meta.url)
         });
@@ -159,7 +160,8 @@ class WorkerTaskDirectorExample {
         });
 
         this.workerTaskDirector.registerTask(objLoaderInitMessage.name!, {
-            module: true,
+            $type: 'WorkerConfigParams',
+            workerType: 'module',
             blob: false,
             url: new URL(import.meta.env.DEV ? '../worker/OBJLoaderWorker.ts' : '../worker/generated/OBJLoaderWorker-es.js', import.meta.url)
         });

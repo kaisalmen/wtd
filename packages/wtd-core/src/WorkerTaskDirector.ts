@@ -7,7 +7,8 @@ import {
 import type {
     WorkerExecutionPlan,
     WorkerInitPlan,
-    WorkerRegistration
+    WorkerConfig,
+    WorkerConfigDirect
 } from './WorkerTask.js';
 import {
     WorkerTask
@@ -52,11 +53,11 @@ export class WorkerTaskDirector {
      * Registers functionality for a new task type based on workerRegistration info
      *
      * @param {string} taskTypeName The name to be used for registration.
-     * @param {WorkerRegistration} workerRegistration information regarding the worker to be registered
+     * @param {WorkerConfig | WorkerConfigDirect} workerConfig information regarding the worker to be registered
      * @param {number} maxParallelExecutions Number of maximum parallel executions allowed
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTask(taskTypeName: string, workerRegistration: WorkerRegistration, maxParallelExecutions?: number) {
+    registerTask(taskTypeName: string, workerConfig: WorkerConfig | WorkerConfigDirect, maxParallelExecutions?: number) {
         const allowedToRegister = !this.taskTypes.has(taskTypeName);
         if (allowedToRegister) {
             maxParallelExecutions = maxParallelExecutions ?? this.config.defaultMaxParallelExecutions;
@@ -66,7 +67,7 @@ export class WorkerTaskDirector {
             };
             this.taskTypes.set(taskTypeName, workerTaskRuntimeDesc);
             for (let i = 0; i < maxParallelExecutions; i++) {
-                workerTaskRuntimeDesc.workerTasks.set(i, new WorkerTask(taskTypeName, i, workerRegistration, this.config.verbose));
+                workerTaskRuntimeDesc.workerTasks.set(i, new WorkerTask(taskTypeName, i, workerConfig, this.config.verbose));
             }
         }
         return allowedToRegister;

@@ -15,7 +15,8 @@ import {
 import type {
     WorkerExecutionPlan,
     WorkerInitPlan,
-    WorkerRegistration
+    WorkerConfig,
+    WorkerConfigDirect
 } from './WorkerTask.js';
 
 import {
@@ -64,13 +65,15 @@ import {
 import {
     applyProperties,
     createWorkerBlob,
-    fillTransferables
+    fillTransferables,
+    extractDelegate
 } from './utiilies.js';
 
 export {
     WorkerExecutionPlan,
     WorkerInitPlan,
-    WorkerRegistration,
+    WorkerConfig,
+    WorkerConfigDirect,
     WorkerTask,
     createWorkerBlob,
     WorkerTaskDirector,
@@ -94,5 +97,6 @@ export {
     DataPayload,
     DataPayloadHandler,
     applyProperties,
-    fillTransferables
+    fillTransferables,
+    extractDelegate
 };

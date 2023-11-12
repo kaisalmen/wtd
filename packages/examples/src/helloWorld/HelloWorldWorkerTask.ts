@@ -12,10 +12,13 @@ class HelloWorldWorkerTaskExample {
     async run() {
         const taskName = 'HelloWorldTaskWorker';
 
+        const workerUrl = new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url);
+        const worker = new Worker(workerUrl, {
+            type: 'module'
+        });
         const workerTask = new WorkerTask(taskName, 1, {
-            module: true,
-            blob: false,
-            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
+            $type: 'WorkerConfigDirect',
+            worker
         }, true);
 
         const message = new WorkerTaskMessage();

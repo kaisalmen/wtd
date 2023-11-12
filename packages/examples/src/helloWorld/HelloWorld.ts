@@ -19,7 +19,8 @@ class HelloWorldModuleWorkerExample {
 
         // register the module worker
         this.workerTaskDirector.registerTask(taskName, {
-            module: true,
+            $type: 'WorkerConfigParams',
+            workerType: 'module',
             blob: false,
             url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
         });

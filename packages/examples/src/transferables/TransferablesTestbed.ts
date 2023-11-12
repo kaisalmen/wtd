@@ -203,7 +203,8 @@ class TransferablesTestbed {
         }
 
         this.workerTaskDirector.registerTask(task.name, {
-            module: true,
+            $type: 'WorkerConfigParams',
+            workerType: 'module',
             blob: false,
             url: task.url
         });

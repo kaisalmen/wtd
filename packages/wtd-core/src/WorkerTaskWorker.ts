@@ -44,14 +44,16 @@ export class InterComPortHandler {
     }
 }
 
-export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>) => {
+export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>, delegate?: (ev: MessageEvent<unknown>) => unknown) => {
     const wtmt = (message as MessageEvent).data as WorkerTaskMessageConfig;
-    if (wtmt) {
+    if (wtmt && wtmt.cmd) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj = (workerImpl as any);
         const funcName = wtmt.cmd ?? 'unknown';
         if (typeof obj[funcName] === 'function') {
             obj[funcName](wtmt);
         }
+    } else if (delegate) {
+        delegate(message);
     }
 };
