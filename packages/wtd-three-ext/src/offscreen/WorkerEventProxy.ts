@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
     EventDispatcher
 } from 'three';
@@ -7,8 +8,6 @@ export const noop = () => {
 };
 
 export class ElementProxyReceiver extends EventDispatcher {
-    width = 1000;
-    height = 1000;
     top = 0;
     left = 0;
     clientLeft = 0;
@@ -19,11 +18,49 @@ export class ElementProxyReceiver extends EventDispatcher {
     ownerDocument = {
         documentElement: {}
     };
+    offscreenCanvas: OffscreenCanvas = new OffscreenCanvas(100, 100);
 
     constructor() {
         super();
-        // this.handleEvent = this.handleEvent.bind(this);
         this.ownerDocument.documentElement = this;
+    }
+
+    merge(offscreenCanvas: OffscreenCanvas) {
+        this.offscreenCanvas = offscreenCanvas;
+        this.width = offscreenCanvas.width;
+        this.height = offscreenCanvas.height;
+        this.oncontextlost = offscreenCanvas.oncontextlost;
+        this.oncontextrestored = offscreenCanvas.oncontextrestored;
+    }
+
+    oncontextlost: ((this: OffscreenCanvas, ev: Event) => any) | null = null;
+    oncontextrestored: ((this: OffscreenCanvas, ev: Event) => any) | null = null;
+    getContext(contextId: any, options?: any): OffscreenCanvasRenderingContext2D | null {
+        return this.offscreenCanvas.getContext(contextId, options) ?? null;
+    }
+    transferToImageBitmap(): ImageBitmap {
+        return this.offscreenCanvas.transferToImageBitmap();
+    }
+    convertToBlob(options?: ImageEncodeOptions): Promise<Blob> {
+        return this.offscreenCanvas.convertToBlob(options);
+    }
+
+    set height(value: number) {
+        this.offscreenCanvas.height = value;
+    }
+
+    set width(value: number) {
+        this.offscreenCanvas.width = value;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
+    get height() {
+        return this.offscreenCanvas.height;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
+    get width() {
+        return this.offscreenCanvas.width;
     }
 
     get clientWidth() {

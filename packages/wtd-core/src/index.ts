@@ -4,9 +4,19 @@ import type {
 } from './WorkerTaskWorker.js';
 
 import {
+    comRouting,
     InterComPortHandler,
-    comRouting
+    WorkerTaskCommandRequest,
+    WorkerTaskCommandResponse
 } from './WorkerTaskWorker.js';
+
+import type {
+    OffscreenWorker
+} from './offscreen/OffscreenWorker.js';
+
+import {
+    OffscreenWorkerCommandRequest
+} from './offscreen/OffscreenWorker.js';
 
 import {
     WorkerTaskDirector,
@@ -57,9 +67,7 @@ import type {
 } from './WorkerTaskMessage.js';
 
 import {
-    WorkerTaskMessage,
-    WorkerTaskCommandRequest,
-    WorkerTaskCommandResponse
+    WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 
 import {
@@ -108,5 +116,7 @@ export {
     extractDelegate,
     OffscreenPayloadAdditions,
     OffscreenPayloadMessage,
-    OffscreenPayload
+    OffscreenPayload,
+    OffscreenWorker,
+    OffscreenWorkerCommandRequest
 };

@@ -1,4 +1,5 @@
 import { Payload, PayloadRegister } from './Payload.js';
+import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTaskWorker.js';
 
 export type WorkerTaskMessageConfig = {
     cmd?: WorkerTaskCommands;
@@ -7,24 +8,6 @@ export type WorkerTaskMessageConfig = {
     workerId?: number;
     progress?: number;
     payloads?: Payload[];
-}
-
-export enum WorkerTaskCommandRequest {
-    INIT = 'init',
-    INTERMEDIATE = 'intermediate',
-    EXECUTE = 'execute',
-    INTERCOM_INIT = 'interComInit',
-    INTERCOM_INTERMEDIATE = 'interComIntermediate',
-    INTERCOM_EXECUTE = 'interComExecute',
-}
-
-export enum WorkerTaskCommandResponse {
-    INIT_COMPLETE = 'initComplete',
-    INTERMEDIATE_CONFIRM = 'intermediateConfirm',
-    EXECUTE_COMPLETE = 'executeComplete',
-    INTERCOM_INIT_COMPLETE = 'interComInitComplete',
-    INTERCOM_INTERMEDIATE_CONFIRM = 'interComIntermediateConfirm',
-    INTERCOM_EXECUTE_COMPLETE = 'interComExecuteComplete'
 }
 
 export type WorkerTaskCommands = WorkerTaskCommandRequest | WorkerTaskCommandResponse | string | 'unknown';

@@ -2,10 +2,9 @@ import type {
     WorkerTaskMessageConfig
 } from './WorkerTaskMessage.js';
 import {
-    WorkerTaskCommandRequest,
-    WorkerTaskCommandResponse,
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
+import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTaskWorker.js';
 import { extractDelegate } from './utiilies.js';
 
 export type WorkerConfig = {
