@@ -199,9 +199,10 @@ export class WorkerTask {
      */
     sentMessage(message: WorkerTaskMessage, transferables?: Transferable[]) {
         if (this.isWorkerExecuting() && this.worker) {
-            message.cmd = WorkerTaskCommandRequest.INTERMEDIATE;
             message.workerId = this.workerId;
             this.worker.postMessage(message, transferables!);
+        } else {
+            throw new Error('You can only sent message if Worker executing.');
         }
     }
 

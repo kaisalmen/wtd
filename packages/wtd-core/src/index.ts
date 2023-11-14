@@ -68,7 +68,14 @@ import {
     fillTransferables,
     extractDelegate
 } from './utiilies.js';
-
+import type {
+    OffscreenPayloadAdditions,
+    OffscreenPayloadMessage
+} from './offscreen/OffscreenPayload.js';
+import {
+    OffscreenPayload
+} from './offscreen/OffscreenPayload.js';
+export * from './offscreen/MainEventProxy.js';
 export {
     WorkerExecutionPlan,
     WorkerInitPlan,
@@ -98,5 +105,8 @@ export {
     DataPayloadHandler,
     applyProperties,
     fillTransferables,
-    extractDelegate
+    extractDelegate,
+    OffscreenPayloadAdditions,
+    OffscreenPayloadMessage,
+    OffscreenPayload
 };

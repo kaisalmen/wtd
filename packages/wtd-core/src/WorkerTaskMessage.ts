@@ -90,9 +90,12 @@ export class WorkerTaskMessage {
         return instance;
     }
 
-    static fromPayload(payload: Payload) {
+    static fromPayload(payloads: Payload | Payload[], cmd?: WorkerTaskCommands) {
         const wtm = new WorkerTaskMessage({});
-        wtm.addPayload(payload);
+        if (cmd) {
+            wtm.setCommand(cmd);
+        }
+        wtm.addPayload(payloads);
         return wtm;
     }
 }

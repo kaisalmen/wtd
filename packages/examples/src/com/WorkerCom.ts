@@ -5,6 +5,7 @@ import {
     WorkerTaskMessageConfig
 } from 'wtd-core';
 import { recalcAspectRatio, updateText } from '../worker/ComWorkerCommon.js';
+import { OffscreenPayload } from 'wtd-core';
 
 /**
  * Hello World example using a classic worker
@@ -53,27 +54,37 @@ class HelloWorldStandardWorkerExample {
 
         try {
             const offscreenCom1 = this.canvasCom1.transferControlToOffscreen();
+            const offscreenPayload1 = new OffscreenPayload({
+                event: {
+                    type: 'init',
+                    drawingSurface: offscreenCom1,
+                    width: this.canvasCom1.clientWidth,
+                    height: this.canvasCom1.clientHeight
+                }
+            });
             const payload1 = new RawPayload({
-                port: channel.port1,
-                drawingSurface: offscreenCom1,
-                width: this.canvasCom1.clientWidth,
-                height: this.canvasCom1.clientHeight
+                port: channel.port1
             });
 
             const offscreenCom2 = this.canvasCom2.transferControlToOffscreen();
+            const offscreenPayload2 = new OffscreenPayload({
+                event: {
+                    type: 'init',
+                    drawingSurface: offscreenCom2,
+                    width: this.canvasCom2.clientWidth,
+                    height: this.canvasCom2.clientHeight
+                }
+            });
             const payload2 = new RawPayload({
-                port: channel.port2,
-                drawingSurface: offscreenCom2,
-                width: this.canvasCom2.clientWidth,
-                height: this.canvasCom2.clientHeight
+                port: channel.port2
             });
             const promisesinit = [];
             promisesinit.push(this.workerTaskCom1.initWorker({
-                message: WorkerTaskMessage.fromPayload(payload1),
+                message: WorkerTaskMessage.fromPayload([offscreenPayload1, payload1]),
                 transferables: [channel.port1, offscreenCom1]
             }));
             promisesinit.push(this.workerTaskCom2.initWorker({
-                message: WorkerTaskMessage.fromPayload(payload2),
+                message: WorkerTaskMessage.fromPayload([offscreenPayload2, payload2]),
                 transferables: [channel.port2, offscreenCom2],
             }));
             await Promise.all(promisesinit);

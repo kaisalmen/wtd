@@ -30,7 +30,7 @@ import {
     packGeometryBuffers,
     reconstructBuffer
 } from './MeshPayload.js';
-
+export * from './offscreen/WorkerEventProxy.js';
 export {
     MaterialUtils,
     MaterialCloneInstructionsType,

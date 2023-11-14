@@ -10,6 +10,7 @@ import {
     WorkerTaskWorker
 } from 'wtd-core';
 import { getOffScreenCanvas, updateText } from './ComWorkerCommon.js';
+import { OffscreenPayload } from 'wtd-core';
 
 export class Com1Worker implements WorkerTaskWorker, InterComWorker {
 
@@ -17,10 +18,8 @@ export class Com1Worker implements WorkerTaskWorker, InterComWorker {
     private offScreenCanvas?: HTMLCanvasElement;
 
     init(message: WorkerTaskMessageConfig): void {
-        // register the default com-routing function for inter-worker communication
-        const payload = message.payloads?.[0];
-        this.icph.registerPort('com2', payload, message => comRouting(this, message));
-        this.offScreenCanvas = getOffScreenCanvas(payload);
+        const payloadOffscreen = message.payloads?.[0] as OffscreenPayload;
+        this.offScreenCanvas = getOffScreenCanvas(payloadOffscreen);
         updateText({
             text: 'Worker 1: init',
             width: this.offScreenCanvas?.width ?? 0,
@@ -28,6 +27,10 @@ export class Com1Worker implements WorkerTaskWorker, InterComWorker {
             canvas: this.offScreenCanvas,
             log: true
         });
+
+        // register the default com-routing function for inter-worker communication
+        const payloadPort = message.payloads?.[1];
+        this.icph.registerPort('com2', payloadPort, message => comRouting(this, message));
 
         // send initComplete to main
         const initComplete = WorkerTaskMessage.createFromExisting({} as WorkerTaskMessageConfig, WorkerTaskCommandResponse.INIT_COMPLETE);

@@ -1,6 +1,6 @@
 {
   "name": "wtd-core",
-  "version": "3.0.0-next.0",
+  "version": "3.0.0-next.2",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

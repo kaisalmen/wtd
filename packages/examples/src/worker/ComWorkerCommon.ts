@@ -1,7 +1,7 @@
-import { Payload, RawPayload } from 'wtd-core';
+import { OffscreenPayload } from 'wtd-core';
 
-export const getOffScreenCanvas = (payload?: Payload) => {
-    return payload ? (payload as RawPayload).message.raw.drawingSurface as HTMLCanvasElement : undefined;
+export const getOffScreenCanvas = (offScreenPayload?: OffscreenPayload) => {
+    return offScreenPayload ? offScreenPayload.message.drawingSurface as HTMLCanvasElement : undefined;
 };
 
 export const updateText = (params: {
