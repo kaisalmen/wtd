@@ -28,6 +28,10 @@ export class WorkerTaskMessage {
         this.progress = config?.progress ?? this.progress;
     }
 
+    static createEmpty() {
+        return new WorkerTaskMessage({});
+    }
+
     setCommand(cmd: WorkerTaskCommands) {
         this.cmd = cmd;
     }

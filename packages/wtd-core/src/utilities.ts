@@ -1,4 +1,8 @@
 import { AssociatedArrayType } from './Payload.js';
+import { RawPayload } from './RawPayload.js';
+import { WorkerTask } from './WorkerTask.js';
+import { WorkerTaskMessage } from './WorkerTaskMessage.js';
+import { WorkerTaskCommandRequest } from './index.js';
 
 export const fillTransferables = (buffers: IterableIterator<ArrayBufferLike>, transferables: Transferable[], cloneBuffers: boolean) => {
     for (const buffer of buffers) {
@@ -48,5 +52,24 @@ export const extractDelegate = (scope: DedicatedWorkerGlobalScope | Worker): ((e
         delegate = scope.onmessage as (ev: MessageEvent<unknown>) => unknown;
     }
     return delegate;
+};
+
+export const initChannel = (workerOne: WorkerTask, workerTwo: WorkerTask) => {
+    const channel = new MessageChannel();
+    const payloadOne = new RawPayload({
+        port: channel.port1
+    });
+    workerOne.sentMessage({
+        message: WorkerTaskMessage.fromPayload(payloadOne, WorkerTaskCommandRequest.INIT_CHANNEL),
+        transferables: [channel.port1]
+    });
+
+    const payloadTwo = new RawPayload({
+        port: channel.port2
+    });
+    workerTwo.sentMessage({
+        message: WorkerTaskMessage.fromPayload(payloadTwo, WorkerTaskCommandRequest.INIT_CHANNEL),
+        transferables: [channel.port2]
+    });
 };
 

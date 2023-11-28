@@ -9,7 +9,7 @@ export enum OffscreenWorkerCommandRequest {
 
 export type OffscreenWorker = {
 
-    initOffscreenRenderer(message: WorkerTaskMessageConfig): void;
+    initOffscreenCanvas(message: WorkerTaskMessageConfig): void;
 
     proxyStart?(message: WorkerTaskMessageConfig): void;
 

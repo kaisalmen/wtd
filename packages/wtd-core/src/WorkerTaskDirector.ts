@@ -5,8 +5,8 @@ import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 import type {
-    WorkerExecutionPlan,
-    WorkerInitPlan,
+    WorkerExecutionDef,
+    WorkerInitMessageDef,
     WorkerConfig,
     WorkerConfigDirect
 } from './WorkerTask.js';
@@ -38,7 +38,7 @@ export class WorkerTaskDirector {
         verbose: false
     };
     private taskTypes: Map<string, WorkerTaskRuntimeDesc>;
-    private workerExecutionPlans: Map<string, WorkerExecutionPlan[]>;
+    private workerExecutionPlans: Map<string, WorkerExecutionDef[]>;
 
     constructor(config?: WorkerTaskDirectorConfig) {
         if (config) {
@@ -77,16 +77,16 @@ export class WorkerTaskDirector {
      * Provides initialization configuration and transferable objects.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {WorkerInitPlan} [plan] Initialization instructions.
+     * @param {WorkerInitMessageDef} [plan] Initialization instructions.
      */
-    async initTaskType(taskTypeName: string, plan?: WorkerInitPlan) {
+    async initTaskType(taskTypeName: string, plan?: WorkerInitMessageDef) {
         const executions = [];
         const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
         if (workerTaskRuntimeDesc) {
             this.workerExecutionPlans.set(taskTypeName, []);
             for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 executions.push(workerTask.initWorker({
-                    message: plan?.message,
+                    message: plan?.message ?? WorkerTaskMessage.createEmpty(),
                     transferables: plan?.transferables,
                     copyTransferables: plan?.copyTransferables
                 }));
@@ -121,7 +121,7 @@ export class WorkerTaskDirector {
         });
     }
 
-    async enqueueWorkerExecutionPlan(taskTypeName: string, plan: WorkerExecutionPlan) {
+    async enqueueWorkerExecutionPlan(taskTypeName: string, plan: WorkerExecutionDef) {
         const promise = this.buildWorkerExecutionPlanPromise(plan);
         const planForType = this.workerExecutionPlans.get(taskTypeName);
         planForType?.push(plan);
@@ -129,7 +129,7 @@ export class WorkerTaskDirector {
         return promise;
     }
 
-    private buildWorkerExecutionPlanPromise(plan: WorkerExecutionPlan) {
+    private buildWorkerExecutionPlanPromise(plan: WorkerExecutionDef) {
         return new Promise((resolve, reject) => {
             plan.promiseFunctions = {
                 resolve: resolve,

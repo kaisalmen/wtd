@@ -2,6 +2,7 @@ import {
     comRouting,
     InterComPortHandler,
     InterComWorker,
+    OffscreenWorker,
     RawPayload,
     WorkerTaskCommandRequest,
     WorkerTaskCommandResponse,
@@ -12,14 +13,12 @@ import {
 import { getOffScreenCanvas, updateText } from './ComWorkerCommon.js';
 import { OffscreenPayload } from 'wtd-core';
 
-export class Com2Worker implements WorkerTaskWorker, InterComWorker {
+export class Com2Worker implements WorkerTaskWorker, InterComWorker, OffscreenWorker {
 
     private icph = new InterComPortHandler();
     private offScreenCanvas?: HTMLCanvasElement;
 
     init(message: WorkerTaskMessageConfig): void {
-        const payloadOffscreen = message.payloads?.[0] as OffscreenPayload;
-        this.offScreenCanvas = getOffScreenCanvas(payloadOffscreen);
         updateText({
             text: 'Worker 2: init',
             width: this.offScreenCanvas?.width ?? 0,
@@ -28,16 +27,20 @@ export class Com2Worker implements WorkerTaskWorker, InterComWorker {
             log: true
         });
 
-        // register the default com-routing function for inter-worker communication
-        const payloadPort = message.payloads?.[1];
-        this.icph.registerPort('com1', payloadPort, message => comRouting(this, message));
-
-        // send initComplete to main
-        const initComplete = WorkerTaskMessage.createFromExisting({} as WorkerTaskMessageConfig, WorkerTaskCommandResponse.INIT_COMPLETE);
-        const payloadResponse = new RawPayload({ hello: 'Worker 2 initComplete!' });
-        initComplete.addPayload(payloadResponse);
-
+        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+        initComplete.addPayload(new RawPayload({ hello: 'Com2Worker initComplete!' }));
         self.postMessage(initComplete);
+    }
+
+    initChannel(message: WorkerTaskMessageConfig): void {
+        // register the default com-routing function for inter-worker communication
+        const payloadPort = message.payloads?.[0];
+        this.icph.registerPort('com1', payloadPort, message => comRouting(this, message));
+    }
+
+    initOffscreenCanvas(message: WorkerTaskMessageConfig): void {
+        const payloadOffscreen = message.payloads?.[0] as OffscreenPayload;
+        this.offScreenCanvas = getOffScreenCanvas(payloadOffscreen);
     }
 
     execute(message: WorkerTaskMessageConfig) {

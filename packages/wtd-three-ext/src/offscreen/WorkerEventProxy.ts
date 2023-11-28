@@ -45,22 +45,20 @@ export class ElementProxyReceiver extends EventDispatcher {
         return this.offscreenCanvas.convertToBlob(options);
     }
 
-    set height(value: number) {
-        this.offscreenCanvas.height = value;
-    }
-
-    set width(value: number) {
-        this.offscreenCanvas.width = value;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
     get height() {
         return this.offscreenCanvas.height;
     }
 
-    // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
+    set height(value: number) {
+        this.offscreenCanvas.height = value;
+    }
+
     get width() {
         return this.offscreenCanvas.width;
+    }
+
+    set width(value: number) {
+        this.offscreenCanvas.width = value;
     }
 
     get clientWidth() {

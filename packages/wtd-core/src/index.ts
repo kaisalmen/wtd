@@ -23,8 +23,9 @@ import {
 } from './WorkerTaskDirector.js';
 
 import type {
-    WorkerExecutionPlan,
-    WorkerInitPlan,
+    WorkerMessageDef,
+    WorkerInitMessageDef,
+    WorkerExecutionDef,
     WorkerConfig,
     WorkerConfigDirect
 } from './WorkerTask.js';
@@ -70,12 +71,7 @@ import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 
-import {
-    applyProperties,
-    createWorkerBlob,
-    fillTransferables,
-    extractDelegate
-} from './utiilies.js';
+export * from './utilities.js';
 import type {
     OffscreenPayloadAdditions,
     OffscreenPayloadMessage
@@ -84,13 +80,14 @@ import {
     OffscreenPayload
 } from './offscreen/OffscreenPayload.js';
 export * from './offscreen/MainEventProxy.js';
+export * from './offscreen/helper.js';
 export {
-    WorkerExecutionPlan,
-    WorkerInitPlan,
+    WorkerMessageDef,
+    WorkerInitMessageDef,
+    WorkerExecutionDef,
     WorkerConfig,
     WorkerConfigDirect,
     WorkerTask,
-    createWorkerBlob,
     WorkerTaskDirector,
     WorkerTaskWorker,
     InterComWorker,
@@ -111,9 +108,6 @@ export {
     RawPayload,
     DataPayload,
     DataPayloadHandler,
-    applyProperties,
-    fillTransferables,
-    extractDelegate,
     OffscreenPayloadAdditions,
     OffscreenPayloadMessage,
     OffscreenPayload,

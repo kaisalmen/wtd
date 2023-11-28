@@ -5,7 +5,7 @@ import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTaskWorker.js';
-import { extractDelegate } from './utiilies.js';
+import { extractDelegate } from './utilities.js';
 
 export type WorkerConfig = {
     $type: 'WorkerConfigParams'
@@ -19,14 +19,17 @@ export type WorkerConfigDirect = {
     worker: Worker;
 };
 
-export type WorkerInitPlan = {
-    message?: WorkerTaskMessage;
+export type WorkerMessageDef = {
+    message: WorkerTaskMessage;
     transferables?: Transferable[];
     copyTransferables?: boolean;
-    delegate?: true;
+};
+
+export type WorkerInitMessageDef = WorkerMessageDef & {
+    delegate?: boolean;
 }
 
-export type WorkerExecutionPlan = {
+export type WorkerExecutionDef = {
     message: WorkerTaskMessage;
     onComplete: (message: WorkerTaskMessageConfig) => void;
     onIntermediateConfirm?: (message: WorkerTaskMessageConfig) => void;
@@ -69,8 +72,8 @@ export class WorkerTask {
         return this.worker;
     }
 
-    async initWorker(plan: WorkerInitPlan) {
-        this.worker = this.createWorker();
+    async initWorker(plan: WorkerInitMessageDef) {
+        this.createWorker();
 
         return new Promise((resolve, reject) => {
             if (this.verbose) {
@@ -125,26 +128,24 @@ export class WorkerTask {
         });
     }
 
-    private createWorker() {
+    createWorker() {
         if (this.workerConfig.$type === 'WorkerConfigDirect') {
-            return this.workerConfig.worker;
+            this.worker = this.workerConfig.worker;
         } else if (this.workerConfig.$type === 'WorkerConfigParams') {
             if (this.workerConfig.url) {
                 if (this.workerConfig.blob) {
-                    return new Worker(this.workerConfig.url);
+                    this.worker = new Worker(this.workerConfig.url);
                 }
                 else {
-                    return new Worker((this.workerConfig.url as URL).href, {
+                    this.worker = new Worker((this.workerConfig.url as URL).href, {
                         type: this.workerConfig.workerType
                     });
                 }
             }
         }
-
-        return undefined;
     }
 
-    async executeWorker(plan: WorkerExecutionPlan) {
+    async executeWorker(plan: WorkerExecutionDef) {
         return new Promise((resolve, reject) => {
             if (!this.worker) {
                 reject(new Error('Execution error: Worker is undefined.'));
@@ -192,16 +193,27 @@ export class WorkerTask {
     }
 
     /**
-     * This is only possible if the worker is already executing.
-     * @param message
-     * @param transferables
+     * This is only possible if the worker is available.
      */
-    sentMessage(message: WorkerTaskMessage, transferables?: Transferable[]) {
-        if (this.isWorkerExecuting() && this.worker) {
+    sentMessage(plan: WorkerMessageDef) {
+        if (this.worker) {
+            const message = plan.message;
             message.workerId = this.workerId;
-            this.worker.postMessage(message, transferables!);
+            if (plan.transferables) {
+                if (plan.copyTransferables === true) {
+                    const transferablesToWorker = [];
+                    for (const transferable of plan.transferables) {
+                        transferablesToWorker.push((transferable as ArrayBufferLike).slice(0));
+                    }
+                    this.worker.postMessage(message, transferablesToWorker);
+                } else {
+                    this.worker.postMessage(message, plan.transferables);
+                }
+            } else {
+                this.worker.postMessage(message);
+            }
         } else {
-            throw new Error('You can only sent message if Worker executing.');
+            throw new Error('You can only sent message if the worker is available.');
         }
     }
 

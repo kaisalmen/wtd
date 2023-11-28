@@ -28,7 +28,9 @@ export const mouseEventProperties = [
 
 export const mouseEventHandler = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
     const offscreenPayload = extractProperties(event, properties);
-    workerTask.sentMessage(WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent'));
+    workerTask.sentMessage({
+        message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+    });
 };
 
 export const wheelEventProperties = [
@@ -38,7 +40,9 @@ export const wheelEventProperties = [
 
 export const wheelEventHandler = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
     const offscreenPayload = extractProperties(event, properties);
-    workerTask.sentMessage(WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent'));
+    workerTask.sentMessage({
+        message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+    });
 };
 
 export const keydownEventProperties = [
@@ -64,7 +68,9 @@ export const filteredKeydownEventHandler = (event: Event, workerTask: WorkerTask
     const { code } = event as KeyboardEvent;
     if (positiveList?.includes(code)) {
         const offscreenPayload = extractProperties(event, properties);
-        workerTask.sentMessage(WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent'));
+        workerTask.sentMessage({
+            message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+        });
     }
 };
 
@@ -100,7 +106,9 @@ export const touchEventHandler = (event: Event, workerTask: WorkerTask) => {
             touches
         }
     });
-    workerTask.sentMessage(WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent'));
+    workerTask.sentMessage({
+        message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+    });
 };
 
 export type HandlingInstructions = {
@@ -152,7 +160,9 @@ export const buildDefaultEventHandlingInstructions = (): Map<string, HandlingIns
 export const registerCanvas = (canvas: HTMLCanvasElement, workerTask: WorkerTask, handlingInstructions: Map<string, HandlingInstructions>) => {
     canvas.focus();
 
-    workerTask.sentMessage(WorkerTaskMessage.fromPayload(new OffscreenPayload({}), 'proxyStart'));
+    workerTask.sentMessage({
+        message: WorkerTaskMessage.fromPayload(new OffscreenPayload({}), 'proxyStart')
+    });
 
     for (const [eventName, instruction] of handlingInstructions.entries()) {
         if (eventName.startsWith('key')) {
@@ -174,7 +184,7 @@ export const registerResizeHandler = (canvas: HTMLCanvasElement, workerTask: Wor
             height: canvas.offsetHeight,
             pixelRatio: window.devicePixelRatio
         });
-        workerTask.sentMessage(WorkerTaskMessage.fromPayload(dataPayload, 'resize'));
+        workerTask.sentMessage({ message: WorkerTaskMessage.fromPayload(dataPayload, 'resize') });
     };
 
     window.addEventListener('resize', () => resize(), false);

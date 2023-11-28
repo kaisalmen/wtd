@@ -4,6 +4,7 @@ import { WorkerTaskMessageConfig } from './WorkerTaskMessage.js';
 
 export enum WorkerTaskCommandRequest {
     INIT = 'init',
+    INIT_CHANNEL = 'initChannel',
     INTERMEDIATE = 'intermediate',
     EXECUTE = 'execute',
     INTERCOM_INIT = 'interComInit',
@@ -23,6 +24,8 @@ export enum WorkerTaskCommandResponse {
 export type WorkerTaskWorker = {
 
     init?(message: WorkerTaskMessageConfig): void;
+
+    initChannel?(message: WorkerTaskMessageConfig): void;
 
     intermediate?(message: WorkerTaskMessageConfig): void;
 
