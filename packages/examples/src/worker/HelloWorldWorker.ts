@@ -15,7 +15,6 @@ export class HelloWorldWorker implements WorkerTaskWorker {
     }
 
     execute(message: WorkerTaskMessageConfig) {
-        console.log(message);
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;

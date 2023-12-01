@@ -15,14 +15,14 @@ export const updateText = (params: {
     if (context) {
         context.clearRect(0, 0, params.width, params.height);
         context.font = '12px Arial';
-        context?.fillText(params.text, 12, 48);
+        context.fillText(params.text, 12, 48);
     }
     if (params.log === true) {
         console.log(params.text);
     }
 };
 
-export const recalcAspectRatio = (canvas: HTMLCanvasElement) => {
-    canvas.width = canvas.height * (canvas.clientWidth / canvas.clientHeight);
+export const recalcAspectRatio = (canvas: HTMLCanvasElement, clientWidth: number, clientHeight: number) => {
+    canvas.width = canvas.height * (clientWidth / clientHeight);
     return canvas.width;
 };

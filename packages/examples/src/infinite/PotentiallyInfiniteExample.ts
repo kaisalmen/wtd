@@ -288,12 +288,16 @@ class PotentiallyInfiniteExample {
         let taskDescr = this.taskSimpleBlobWorker;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                $type: 'WorkerConfigParams',
-                workerType: taskDescr.workerType,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
             const initMessage = new WorkerTaskMessage({
                 id: taskDescr.id,
                 name: taskDescr.name
@@ -306,12 +310,16 @@ class PotentiallyInfiniteExample {
         taskDescr = this.taskInfiniteWorkerInternalGeometry;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                $type: 'WorkerConfigParams',
-                workerType: taskDescr.workerType,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
 
             const initMessage = new WorkerTaskMessage({
                 id: taskDescr.id,
@@ -325,12 +333,16 @@ class PotentiallyInfiniteExample {
         taskDescr = this.taskInfiniteWorkerExternalGeometry;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                $type: 'WorkerConfigParams',
-                workerType: taskDescr.workerType,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
 
             const torus = new TorusGeometry(25, 8, 16, 100);
             torus.name = 'torus';
@@ -353,12 +365,16 @@ class PotentiallyInfiniteExample {
         taskDescr = this.taskObjLoader2Worker;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                $type: 'WorkerConfigParams',
-                workerType: taskDescr.workerType,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
 
             const loadMtl = new Promise<MTLLoader.MaterialCreator>(resolve => {
                 const mtlLoader = new MTLLoader();
@@ -440,9 +456,11 @@ class PotentiallyInfiniteExample {
                 };
                 execMessage.addPayload(dataPayload);
 
-                const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, execMessage,
-                    data => this.processMessage(taskDescr, data),
-                    data => this.processMessage(taskDescr, data));
+                const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, {
+                    message: execMessage,
+                    onComplete: data => this.processMessage(taskDescr, data),
+                    onIntermediateConfirm: data => this.processMessage(taskDescr, data)
+                });
                 this.executions.push(promise);
 
                 globalCount++;

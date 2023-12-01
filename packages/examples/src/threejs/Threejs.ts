@@ -143,11 +143,14 @@ class WorkerTaskDirectorExample {
             id: 0,
             name: 'HelloWorldThreeWorker'
         });
-        this.workerTaskDirector.registerTask(helloWorldInitMessage.name!, {
-            $type: 'WorkerConfigParams',
-            workerType: 'module',
-            blob: false,
-            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldThreeWorker.ts' : '../worker/generated/HelloWorldThreeWorker-es.js', import.meta.url)
+        this.workerTaskDirector.registerTask({
+            taskName: helloWorldInitMessage.name!,
+            workerConfig: {
+                $type: 'WorkerConfigParams',
+                workerType: 'module',
+                blob: false,
+                url: new URL(import.meta.env.DEV ? '../worker/HelloWorldThreeWorker.ts' : '../worker/generated/HelloWorldThreeWorker-es.js', import.meta.url)
+            }
         });
         this.tasksToUse.push(helloWorldInitMessage.name!);
         awaiting.push(this.workerTaskDirector.initTaskType(helloWorldInitMessage.name!, {
@@ -159,11 +162,14 @@ class WorkerTaskDirectorExample {
             name: 'OBJLoaderdWorker'
         });
 
-        this.workerTaskDirector.registerTask(objLoaderInitMessage.name!, {
-            $type: 'WorkerConfigParams',
-            workerType: 'module',
-            blob: false,
-            url: new URL(import.meta.env.DEV ? '../worker/OBJLoaderWorker.ts' : '../worker/generated/OBJLoaderWorker-es.js', import.meta.url)
+        this.workerTaskDirector.registerTask({
+            taskName: objLoaderInitMessage.name!,
+            workerConfig: {
+                $type: 'WorkerConfigParams',
+                workerType: 'module',
+                blob: false,
+                url: new URL(import.meta.env.DEV ? '../worker/OBJLoaderWorker.ts' : '../worker/generated/OBJLoaderWorker-es.js', import.meta.url)
+            }
         });
         this.tasksToUse.push(objLoaderInitMessage.name!);
 
@@ -216,7 +222,7 @@ class WorkerTaskDirectorExample {
                 name: `${name}_${globalCount}`
             });
 
-            const voidPromise = this.workerTaskDirector.enqueueWorkerExecutionPlan(name ?? 'unknown', {
+            const voidPromise = this.workerTaskDirector.enqueueForExecution(name ?? 'unknown', {
                 message: execMessage,
                 onComplete: (m: WorkerTaskMessageConfig) => {
                     this.processMessage(m);

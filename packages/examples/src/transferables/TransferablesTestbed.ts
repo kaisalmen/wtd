@@ -202,11 +202,14 @@ class TransferablesTestbed {
             });
         }
 
-        this.workerTaskDirector.registerTask(task.name, {
-            $type: 'WorkerConfigParams',
-            workerType: 'module',
-            blob: false,
-            url: task.url
+        this.workerTaskDirector.registerTask({
+            taskName: task.name,
+            workerConfig: {
+                $type: 'WorkerConfigParams',
+                workerType: 'module',
+                blob: false,
+                url: task.url
+            }
         });
 
         const initMessage = new WorkerTaskMessage({
@@ -248,7 +251,7 @@ class TransferablesTestbed {
         console.log('All worker executions have been completed');
     }
 
-    private executeWorker(task: ExampleTask) {
+    private async executeWorker(task: ExampleTask) {
         const execMessage = new WorkerTaskMessage({
             id: task.id,
             name: task.name
@@ -262,13 +265,12 @@ class TransferablesTestbed {
         execMessage.addPayload(dataPayload);
         const transferables = WorkerTaskMessage.pack(execMessage.payloads, false);
 
-        return this.workerTaskDirector.enqueueWorkerExecutionPlan(task.name, {
+        const result = await this.workerTaskDirector.enqueueForExecution(task.name, {
             message: execMessage,
-            onComplete: (m: WorkerTaskMessageConfig) => {
-                this.processMessage(m);
-            },
             transferables: transferables
         });
+
+        this.processMessage(result);
     }
 
     private processMessage(message: WorkerTaskMessageConfig) {

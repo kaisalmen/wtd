@@ -1,9 +1,9 @@
 import { WorkerTask } from '../WorkerTask.js';
 import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
 import { OffscreenPayload } from './OffscreenPayload.js';
-import { OffscreenWorkerCommandRequest } from './OffscreenWorker.js';
+import { OffscreenWorkerCommandRequest, OffscreenWorkerCommandResponse } from './OffscreenWorker.js';
 
-export const initOffscreenCanvas = (workerTask: WorkerTask, canvas: HTMLCanvasElement) => {
+export const initOffscreenCanvas = async (workerTask: WorkerTask, canvas: HTMLCanvasElement) => {
     const offscreenCanvas = canvas.transferControlToOffscreen();
     const offscreenPayloadRenderer = new OffscreenPayload({
         drawingSurface: offscreenCanvas,
@@ -11,8 +11,10 @@ export const initOffscreenCanvas = (workerTask: WorkerTask, canvas: HTMLCanvasEl
         height: canvas.clientHeight,
         pixelRatio: window.devicePixelRatio
     });
-    workerTask.sentMessage({
+    return workerTask.sentMessage({
         message: WorkerTaskMessage.fromPayload(offscreenPayloadRenderer, OffscreenWorkerCommandRequest.INIT_OFFSCREEN_CANVAS),
-        transferables: [offscreenCanvas]
+        transferables: [offscreenCanvas],
+        awaitAnswer: true,
+        answer: OffscreenWorkerCommandResponse.INIT_OFFSCREEN_CANVAS_COMPLETE
     });
 };

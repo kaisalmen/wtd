@@ -8,6 +8,7 @@ import { AssociatedArrayType } from '../Payload.js';
 import { WorkerTask } from '../WorkerTask.js';
 import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
 import { OffscreenPayload } from './OffscreenPayload.js';
+import { OffscreenWorkerCommandRequest } from './OffscreenWorker.js';
 
 export const preventDefaultHandler = (event: Event) => {
     event.preventDefault();
@@ -177,15 +178,15 @@ export const registerCanvas = (canvas: HTMLCanvasElement, workerTask: WorkerTask
     }
 };
 
-export const registerResizeHandler = (canvas: HTMLCanvasElement, workerTask: WorkerTask) => {
-    const resize = () => {
-        const dataPayload = new OffscreenPayload({
-            width: canvas.offsetWidth,
-            height: canvas.offsetHeight,
-            pixelRatio: window.devicePixelRatio
-        });
-        workerTask.sentMessage({ message: WorkerTaskMessage.fromPayload(dataPayload, 'resize') });
-    };
+export const sentResize = (canvas: HTMLCanvasElement, workerTask: WorkerTask) => {
+    const dataPayload = new OffscreenPayload({
+        width: canvas.offsetWidth,
+        height: canvas.offsetHeight,
+        pixelRatio: window.devicePixelRatio
+    });
+    workerTask.sentMessage({ message: WorkerTaskMessage.fromPayload(dataPayload, OffscreenWorkerCommandRequest.RESIZE) });
+};
 
-    window.addEventListener('resize', () => resize(), false);
+export const registerResizeHandler = (canvas: HTMLCanvasElement, workerTask: WorkerTask) => {
+    window.addEventListener('resize', () => sentResize(canvas, workerTask), false);
 };

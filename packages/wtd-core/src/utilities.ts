@@ -2,7 +2,7 @@ import { AssociatedArrayType } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
 import { WorkerTask } from './WorkerTask.js';
 import { WorkerTaskMessage } from './WorkerTaskMessage.js';
-import { WorkerTaskCommandRequest } from './index.js';
+import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './index.js';
 
 export const fillTransferables = (buffers: IterableIterator<ArrayBufferLike>, transferables: Transferable[], cloneBuffers: boolean) => {
     for (const buffer of buffers) {
@@ -54,22 +54,29 @@ export const extractDelegate = (scope: DedicatedWorkerGlobalScope | Worker): ((e
     return delegate;
 };
 
-export const initChannel = (workerOne: WorkerTask, workerTwo: WorkerTask) => {
+export const initChannel = async (workerOne: WorkerTask, workerTwo: WorkerTask) => {
     const channel = new MessageChannel();
+
+    const promises = [];
     const payloadOne = new RawPayload({
         port: channel.port1
     });
-    workerOne.sentMessage({
+    promises.push(workerOne.sentMessage({
         message: WorkerTaskMessage.fromPayload(payloadOne, WorkerTaskCommandRequest.INIT_CHANNEL),
-        transferables: [channel.port1]
-    });
+        transferables: [channel.port1],
+        awaitAnswer: true,
+        answer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
+    }));
 
     const payloadTwo = new RawPayload({
         port: channel.port2
     });
-    workerTwo.sentMessage({
+    promises.push(workerTwo.sentMessage({
         message: WorkerTaskMessage.fromPayload(payloadTwo, WorkerTaskCommandRequest.INIT_CHANNEL),
-        transferables: [channel.port2]
-    });
+        transferables: [channel.port2],
+        awaitAnswer: true,
+        answer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
+    }));
+    return Promise.all(promises);
 };
 

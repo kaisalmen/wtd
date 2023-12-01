@@ -1,9 +1,6 @@
 import type {
     WorkerTaskMessageConfig
 } from './WorkerTaskMessage.js';
-import {
-    WorkerTaskMessage
-} from './WorkerTaskMessage.js';
 import type {
     WorkerExecutionDef,
     WorkerInitMessageDef,
@@ -25,6 +22,22 @@ type WorkerTaskDirectorConfig = {
 }
 
 /**
+ * This is only used internally
+ */
+type WorkerExecutionPlan = WorkerExecutionDef & {
+    promiseFunctions?: {
+        resolve: (message: WorkerTaskMessageConfig) => void,
+        reject: (error?: Error) => void
+    };
+};
+
+export type WorkerTaskDirectorTaskDef = {
+    taskName: string;
+    workerConfig: WorkerConfig | WorkerConfigDirect;
+    maxParallelExecutions?: number
+};
+
+/**
  * Register one to many tasks type to the WorkerTaskDirector. Then init and enqueue a worker based execution by passing
  * configuration and buffers. The WorkerTaskDirector allows to execute a maximum number of executions in parallel for
  * each registered worker task.
@@ -38,7 +51,7 @@ export class WorkerTaskDirector {
         verbose: false
     };
     private taskTypes: Map<string, WorkerTaskRuntimeDesc>;
-    private workerExecutionPlans: Map<string, WorkerExecutionDef[]>;
+    private workerExecutionPlans: Map<string, WorkerExecutionPlan[]>;
 
     constructor(config?: WorkerTaskDirectorConfig) {
         if (config) {
@@ -52,22 +65,28 @@ export class WorkerTaskDirector {
     /**
      * Registers functionality for a new task type based on workerRegistration info
      *
-     * @param {string} taskTypeName The name to be used for registration.
+     * @param {string} taskName The name to be used for registration.
      * @param {WorkerConfig | WorkerConfigDirect} workerConfig information regarding the worker to be registered
      * @param {number} maxParallelExecutions Number of maximum parallel executions allowed
      * @return {boolean} Tells if registration is possible (new=true) or if task was already registered (existing=false)
      */
-    registerTask(taskTypeName: string, workerConfig: WorkerConfig | WorkerConfigDirect, maxParallelExecutions?: number) {
-        const allowedToRegister = !this.taskTypes.has(taskTypeName);
+    registerTask(workerTaskDirectorDef: WorkerTaskDirectorTaskDef) {
+        const taskName = workerTaskDirectorDef.taskName;
+        const allowedToRegister = !this.taskTypes.has(taskName);
         if (allowedToRegister) {
-            maxParallelExecutions = maxParallelExecutions ?? this.config.defaultMaxParallelExecutions;
+            const maxParallelExecutions = workerTaskDirectorDef.maxParallelExecutions ?? this.config.defaultMaxParallelExecutions;
             const workerTaskRuntimeDesc: WorkerTaskRuntimeDesc = {
                 workerTasks: new Map(),
                 maxParallelExecutions: maxParallelExecutions
             };
-            this.taskTypes.set(taskTypeName, workerTaskRuntimeDesc);
+            this.taskTypes.set(taskName, workerTaskRuntimeDesc);
             for (let i = 0; i < maxParallelExecutions; i++) {
-                workerTaskRuntimeDesc.workerTasks.set(i, new WorkerTask(taskTypeName, i, workerConfig, this.config.verbose));
+                workerTaskRuntimeDesc.workerTasks.set(i, new WorkerTask({
+                    taskName,
+                    workerId: i,
+                    workerConfig: workerTaskDirectorDef.workerConfig,
+                    verbose: this.config.verbose
+                }));
             }
         }
         return allowedToRegister;
@@ -77,19 +96,23 @@ export class WorkerTaskDirector {
      * Provides initialization configuration and transferable objects.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {WorkerInitMessageDef} [plan] Initialization instructions.
+     * @param {WorkerInitMessageDef} [def] Initialization instructions.
      */
-    async initTaskType(taskTypeName: string, plan?: WorkerInitMessageDef) {
+    async initTaskType(taskTypeName: string, def?: WorkerInitMessageDef) {
         const executions = [];
         const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
         if (workerTaskRuntimeDesc) {
             this.workerExecutionPlans.set(taskTypeName, []);
             for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
-                executions.push(workerTask.initWorker({
-                    message: plan?.message ?? WorkerTaskMessage.createEmpty(),
-                    transferables: plan?.transferables,
-                    copyTransferables: plan?.copyTransferables
-                }));
+                // only init worker if a def is provided
+                workerTask.createWorker();
+                if (def) {
+                    executions.push(workerTask.initWorker({
+                        message: def.message,
+                        transferables: def.transferables,
+                        copyTransferables: def.copyTransferables === true
+                    }));
+                }
             }
         } else {
             executions.push(Promise.reject());
@@ -104,38 +127,22 @@ export class WorkerTaskDirector {
      * Queues a new task of the given type. Task will not execute until initialization completes.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {WorkerTaskMessage} message Configuration properties as serializable string.
-     * @param {(message: WorkerTaskMessageConfig) => void} onComplete Invoke this function if everything is completed
-     * @param {(message: WorkerTaskMessageConfig) => void} onIntermediateConfirm Invoke this function if an asset become intermediately available
-     * @param {Transferable[]} [transferables] Any optional {@link ArrayBuffer} encapsulated in object.
+     * @param {WorkerExecutionDef} Defines all the information needed to execute the worker task.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, message: WorkerTaskMessage, onComplete: (message: WorkerTaskMessageConfig) => void,
-        onIntermediateConfirm?: (message: WorkerTaskMessageConfig) => void, transferables?: Transferable[], copyTransferables?: boolean) {
-        return this.enqueueWorkerExecutionPlan(taskTypeName, {
-            message,
-            onComplete,
-            onIntermediateConfirm,
-            transferables,
-            copyTransferables
-        });
-    }
-
-    async enqueueWorkerExecutionPlan(taskTypeName: string, plan: WorkerExecutionDef) {
-        const promise = this.buildWorkerExecutionPlanPromise(plan);
-        const planForType = this.workerExecutionPlans.get(taskTypeName);
-        planForType?.push(plan);
-        this.depleteWorkerExecutionPlans(taskTypeName);
-        return promise;
-    }
-
-    private buildWorkerExecutionPlanPromise(plan: WorkerExecutionDef) {
-        return new Promise((resolve, reject) => {
+    async enqueueForExecution(taskTypeName: string, workerExecutionDef: WorkerExecutionDef): Promise<WorkerTaskMessageConfig> {
+        const plan = workerExecutionDef as WorkerExecutionPlan;
+        const promise = new Promise((resolve, reject) => {
             plan.promiseFunctions = {
                 resolve: resolve,
                 reject: reject
             };
-        });
+        }) as Promise<WorkerTaskMessageConfig>;
+
+        const planForType = this.workerExecutionPlans.get(taskTypeName);
+        planForType?.push(plan);
+        this.depleteWorkerExecutionPlans(taskTypeName);
+        return promise;
     }
 
     private async depleteWorkerExecutionPlans(taskTypeName: string) {

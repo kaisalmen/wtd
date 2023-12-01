@@ -2,7 +2,6 @@ import type {
     WorkerTaskWorker,
     InterComWorker
 } from './WorkerTaskWorker.js';
-
 import {
     comRouting,
     InterComPortHandler,
@@ -13,11 +12,14 @@ import {
 import type {
     OffscreenWorker
 } from './offscreen/OffscreenWorker.js';
-
 import {
-    OffscreenWorkerCommandRequest
+    OffscreenWorkerCommandRequest,
+    OffscreenWorkerCommandResponse
 } from './offscreen/OffscreenWorker.js';
 
+import type {
+    WorkerTaskDirectorTaskDef,
+} from './WorkerTaskDirector.js';
 import {
     WorkerTaskDirector,
 } from './WorkerTaskDirector.js';
@@ -29,7 +31,6 @@ import type {
     WorkerConfig,
     WorkerConfigDirect
 } from './WorkerTask.js';
-
 import {
     WorkerTask
 } from './WorkerTask.js';
@@ -39,7 +40,6 @@ import type {
     Payload,
     PayloadHandler
 } from './Payload.js';
-
 import {
     PayloadRegister
 } from './Payload.js';
@@ -48,7 +48,6 @@ import type {
     RawMessage,
     RawPayloadAdditions
 } from './RawPayload.js';
-
 import {
     RawPayload
 } from './RawPayload.js';
@@ -57,7 +56,6 @@ import type {
     ParameterizedMessage,
     DataPayloadAdditions
 } from './DataPayload.js';
-
 import {
     DataPayload,
     DataPayloadHandler
@@ -66,7 +64,6 @@ import {
 import type {
     WorkerTaskMessageConfig
 } from './WorkerTaskMessage.js';
-
 import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
@@ -89,6 +86,7 @@ export {
     WorkerConfigDirect,
     WorkerTask,
     WorkerTaskDirector,
+    WorkerTaskDirectorTaskDef,
     WorkerTaskWorker,
     InterComWorker,
     InterComPortHandler,
@@ -112,5 +110,6 @@ export {
     OffscreenPayloadMessage,
     OffscreenPayload,
     OffscreenWorker,
-    OffscreenWorkerCommandRequest
+    OffscreenWorkerCommandRequest,
+    OffscreenWorkerCommandResponse
 };

@@ -14,6 +14,7 @@ export enum WorkerTaskCommandRequest {
 
 export enum WorkerTaskCommandResponse {
     INIT_COMPLETE = 'initComplete',
+    INIT_CHANNEL_COMPLETE = 'initChannelComplete',
     INTERMEDIATE_CONFIRM = 'intermediateConfirm',
     EXECUTE_COMPLETE = 'executeComplete',
     INTERCOM_INIT_COMPLETE = 'interComInitComplete',
@@ -73,6 +74,8 @@ export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, messag
         const funcName = wtmt.cmd ?? 'unknown';
         if (typeof obj[funcName] === 'function') {
             obj[funcName](wtmt);
+        } else {
+            console.warn(`No function "${funcName}" found on workerImpl.`);
         }
     } else if (delegate) {
         delegate(message);
