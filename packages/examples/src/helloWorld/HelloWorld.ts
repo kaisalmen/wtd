@@ -36,7 +36,7 @@ class HelloWorldModuleWorkerExample {
             // execute worker without init
             const t0 = performance.now();
             const resultExec = await this.workerTaskDirector.enqueueForExecution(taskName, {
-                message: new WorkerTaskMessage(),
+                message: WorkerTaskMessage.createEmpty(),
             });
 
             const wtm = WorkerTaskMessage.unpack(resultExec, false);

@@ -4,7 +4,6 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -13,14 +12,14 @@ import {
 
 class TransferableWorkerTest4 implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageConfig) {
-        console.log(`TransferableWorkerTest4#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    init(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest4#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
         message.cmd = WorkerTaskCommandResponse.INIT_COMPLETE;
         self.postMessage(message);
     }
 
-    execute(message: WorkerTaskMessageConfig) {
-        console.log(`TransferableWorkerTest4#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest4#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads?.length === 1) {
@@ -31,7 +30,9 @@ class TransferableWorkerTest4 implements WorkerTaskWorker {
             const meshPayload = new MeshPayload();
             meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-            const execComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+            const execComplete = WorkerTaskMessage.createFromExisting(wtm, {
+                overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+            });
             execComplete.addPayload(meshPayload);
 
             const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);

@@ -9,7 +9,6 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -24,11 +23,11 @@ class OBJLoaderWorker implements WorkerTaskWorker {
         objLoader: undefined as OBJLoader | undefined,
         materials: new Map() as Map<string, Material>,
         buffer: undefined as ArrayBufferLike | undefined,
-        objectId: 0
+        objectId: 'unknown'
     };
 
-    init(message: WorkerTaskMessageConfig) {
-        console.log(`OBJLoaderWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    init(message: WorkerTaskMessage) {
+        console.log(`OBJLoaderWorker#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads?.length === 2) {
@@ -38,16 +37,18 @@ class OBJLoaderWorker implements WorkerTaskWorker {
             this.localData.buffer = dataPayload.message.buffers?.get('modelData');
             this.localData.materials = materialsPayload.message.materials;
 
-            const initComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
+            const initComplete = WorkerTaskMessage.createFromExisting(wtm, {
+                overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+            });
             self.postMessage(initComplete);
         }
     }
 
-    execute(message: WorkerTaskMessageConfig) {
-        console.log(`OBJLoaderWorker#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerTaskMessage) {
+        console.log(`OBJLoaderWorker#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         this.localData.objLoader = new OBJLoader();
-        this.localData.objectId = message.id as number;
+        this.localData.objectId = message.uuid as string;
 
         const materials: AssociatedArrayType<unknown> = {};
         materials.create = (name: string) => {
@@ -65,10 +66,12 @@ class OBJLoaderWorker implements WorkerTaskWorker {
         const meshes = this.localData.objLoader.parse(enc.decode(this.localData.buffer));
         for (let mesh, i = 0; i < meshes.children.length; i++) {
             mesh = meshes.children[i] as Mesh;
-            mesh.name = mesh.name + message.id;
+            mesh.name = mesh.name + message.uuid;
 
             // signal intermediate feedback
-            const intermediate = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM);
+            const intermediate = WorkerTaskMessage.createFromExisting(message, {
+                overrideCmd: WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM
+            });
 
             const meshPayload = new MeshPayload();
             meshPayload.setMesh(mesh, 0);
@@ -86,7 +89,9 @@ class OBJLoaderWorker implements WorkerTaskWorker {
         }
 
         // signal complete
-        const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+        });
         self.postMessage(execComplete);
     }
 

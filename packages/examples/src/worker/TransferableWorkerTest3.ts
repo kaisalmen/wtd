@@ -4,7 +4,6 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -18,20 +17,22 @@ class TransferableWorkerTest3 implements WorkerTaskWorker {
         initPayload: undefined as MeshPayload | undefined
     };
 
-    init(message: WorkerTaskMessageConfig) {
-        console.log(`TransferableWorkerTest3#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    init(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest3#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads && wtm.payloads?.length > 0) {
             this.context.initPayload = wtm.payloads[0] as MeshPayload;
         }
 
-        const initComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.INIT_COMPLETE);
+        const initComplete = WorkerTaskMessage.createFromExisting(wtm, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageConfig) {
-        console.log(`TransferableWorkerTest3#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest3#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         if (this.context.initPayload) {
             const wtm = WorkerTaskMessage.unpack(message, false);
@@ -46,7 +47,9 @@ class TransferableWorkerTest3 implements WorkerTaskWorker {
                 packGeometryBuffers(false, bufferGeometry as BufferGeometry, dataPayload.message.buffers);
             }
 
-            const execComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+            const execComplete = WorkerTaskMessage.createFromExisting(wtm, {
+                overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+            });
             execComplete.addPayload(dataPayload);
 
             const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);

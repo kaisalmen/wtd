@@ -19,8 +19,7 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
-    WorkerTaskMessage,
-    WorkerTaskMessageConfig
+    WorkerTaskMessage
 } from 'wtd-core';
 import {
     MaterialsPayload,
@@ -62,10 +61,10 @@ class WorkerTaskDirectorExample {
     private controls: TrackballControls;
     private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector({
         defaultMaxParallelExecutions: 8,
-        verbose: true
+        verbose: false
     });
 
-    private objectsUsed: Map<number, Vector3> = new Map();
+    private objectsUsed: Map<string, Vector3> = new Map();
     private tasksToUse: string[] = [];
     private materialStore = new MaterialStore(true);
 
@@ -139,8 +138,7 @@ class WorkerTaskDirectorExample {
     private async initTasks() {
         console.time('Init tasks');
         const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
-        const helloWorldInitMessage = new WorkerTaskMessage({
-            id: 0,
+        const helloWorldInitMessage = WorkerTaskMessage.createNew({
             name: 'HelloWorldThreeWorker'
         });
         this.workerTaskDirector.registerTask({
@@ -157,11 +155,9 @@ class WorkerTaskDirectorExample {
             message: helloWorldInitMessage
         }));
 
-        const objLoaderInitMessage = new WorkerTaskMessage({
-            id: 0,
+        const objLoaderInitMessage = WorkerTaskMessage.createNew({
             name: 'OBJLoaderdWorker'
         });
-
         this.workerTaskDirector.registerTask({
             taskName: objLoaderInitMessage.name!,
             workerConfig: {
@@ -210,30 +206,23 @@ class WorkerTaskDirectorExample {
         if (this.tasksToUse.length === 0) throw new Error('No Tasks have been selected. Aborting...');
 
         console.time('Execute tasks');
-        let globalCount = 0;
         let taskToUseIndex = 0;
         const executions = [];
 
         for (let i = 0; i < 1024; i++) {
             const name = this.tasksToUse[taskToUseIndex];
 
-            const execMessage = new WorkerTaskMessage({
-                id: globalCount,
-                name: `${name}_${globalCount}`
-            });
-
             const voidPromise = this.workerTaskDirector.enqueueForExecution(name ?? 'unknown', {
-                message: execMessage,
-                onComplete: (m: WorkerTaskMessageConfig) => {
+                message: WorkerTaskMessage.createEmpty(),
+                onComplete: (m: WorkerTaskMessage) => {
                     this.processMessage(m);
                 },
-                onIntermediateConfirm: (m: WorkerTaskMessageConfig) => {
+                onIntermediateConfirm: (m: WorkerTaskMessage) => {
                     this.processMessage(m);
                 }
             });
             executions.push(voidPromise);
 
-            globalCount++;
             taskToUseIndex++;
             if (taskToUseIndex === this.tasksToUse.length) {
                 taskToUseIndex = 0;
@@ -250,29 +239,29 @@ class WorkerTaskDirectorExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(message: WorkerTaskMessageConfig) {
+    private processMessage(message: WorkerTaskMessage) {
         const wtm = WorkerTaskMessage.unpack(message, false);
         switch (wtm.cmd) {
             case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
                 if (wtm.payloads?.length === 1) {
-                    this.buildMesh(wtm.id ?? 0, wtm.payloads[0] as MeshPayload);
+                    this.buildMesh(wtm.uuid ?? 'unknown', wtm.payloads[0] as MeshPayload);
                 }
                 else if (wtm.payloads?.length === 2) {
-                    this.buildMesh(wtm.id ?? 0, wtm.payloads[0] as MeshPayload, wtm.payloads[1] as MaterialsPayload);
+                    this.buildMesh(wtm.uuid ?? 'unknown', wtm.payloads[0] as MeshPayload, wtm.payloads[1] as MaterialsPayload);
                 }
                 if (wtm.cmd === WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
-                    console.log(`execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+                    console.log(`execComplete: name: ${wtm.name} uuid: ${wtm.uuid} cmd: ${wtm.cmd} workerId: ${wtm.workerId}`);
                 }
                 break;
 
             default:
-                console.error(`${message.id}: Received unknown command: ${message.cmd}`);
+                console.error(`${wtm.uuid}: Received unknown command: ${wtm.cmd}`);
                 break;
         }
     }
 
-    private buildMesh(id: number, meshPayload: MeshPayload, materialsPayload?: MaterialsPayload) {
+    private buildMesh(uuid: string, meshPayload: MeshPayload, materialsPayload?: MaterialsPayload) {
         let material;
         if (!materialsPayload) {
             const randArray = new Uint8Array(3);
@@ -285,13 +274,13 @@ class WorkerTaskDirectorExample {
         }
         if (meshPayload.message.bufferGeometry) {
             const mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
-            this.addMesh(mesh, id);
+            this.addMesh(mesh, uuid);
         }
     }
 
     /** Add mesh at random position, but keep sub-meshes of an object together, therefore we need */
-    private addMesh(mesh: Mesh, id: number) {
-        let pos = this.objectsUsed.get(id);
+    private addMesh(mesh: Mesh, uuid: string) {
+        let pos = this.objectsUsed.get(uuid);
         if (!pos) {
             // sphere positions
             const baseFactor = 750;
@@ -299,10 +288,10 @@ class WorkerTaskDirectorExample {
             pos.applyAxisAngle(new Vector3(1, 0, 0), 2 * Math.PI * Math.random());
             pos.applyAxisAngle(new Vector3(0, 1, 0), 2 * Math.PI * Math.random());
             pos.applyAxisAngle(new Vector3(0, 0, 1), 2 * Math.PI * Math.random());
-            this.objectsUsed.set(id, pos);
+            this.objectsUsed.set(uuid, pos);
         }
         mesh.position.set(pos.x, pos.y, pos.z);
-        mesh.name = id + '' + mesh.name;
+        mesh.name = uuid + '' + mesh.name;
         this.scene.add(mesh);
     }
 }

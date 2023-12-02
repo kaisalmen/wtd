@@ -2,7 +2,6 @@ import {
     RawPayload,
     WorkerTask,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     initChannel,
     initOffscreenCanvas,
     registerResizeHandler
@@ -96,14 +95,14 @@ class HelloWorldStandardWorkerExample {
             setTimeout(async () => {
                 promises = [];
                 promises.push(workerTaskCom1.executeWorker({
-                    message: new WorkerTaskMessage()
+                    message: WorkerTaskMessage.createEmpty()
                 }));
                 promises.push(workerTaskCom2.executeWorker({
-                    message: new WorkerTaskMessage()
+                    message: WorkerTaskMessage.createEmpty()
                 }));
 
                 const results = await Promise.all(promises);
-                results.forEach((message: WorkerTaskMessageConfig) => {
+                results.forEach((message: WorkerTaskMessage) => {
                     console.log('Received final command: ' + message.cmd);
                     if (message.payloads) {
                         const rawPayload = message.payloads[0] as RawPayload;

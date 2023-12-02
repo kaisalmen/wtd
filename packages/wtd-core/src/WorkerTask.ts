@@ -1,6 +1,3 @@
-import type {
-    WorkerTaskMessageConfig
-} from './WorkerTaskMessage.js';
 import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
@@ -36,8 +33,8 @@ export type WorkerIntermediateMessageDef = WorkerMessageDef & {
 
 export type WorkerExecutionDef = {
     message: WorkerTaskMessage;
-    onComplete?: (message: WorkerTaskMessageConfig) => void;
-    onIntermediateConfirm?: (message: WorkerTaskMessageConfig) => void;
+    onComplete?: (message: WorkerTaskMessage) => void;
+    onIntermediateConfirm?: (message: WorkerTaskMessage) => void;
     transferables?: Transferable[];
     copyTransferables?: boolean;
 }
@@ -52,7 +49,7 @@ export type WorkerTaskConfig = {
 
 type AwaitHandler = {
     name: string;
-    resolve: Array<(wtm: WorkerTaskMessageConfig) => void>;
+    resolve: Array<(wtm: WorkerTaskMessage) => void>;
     reject: (error: Error) => void;
     remove: boolean;
     log: boolean;
@@ -70,7 +67,7 @@ export class WorkerTask {
     private worker?: Worker;
     private executing = false;
     private executionCounter = 0;
-    private awaitAnswers = new Map<number, AwaitHandler[]>();
+    private awaitAnswers = new Map<string, AwaitHandler[]>();
 
     constructor(config: WorkerTaskConfig) {
         this.taskName = config.taskName;
@@ -118,13 +115,13 @@ export class WorkerTask {
         const delegate = (this.piggyBag === true) ? extractDelegate(this.worker) : undefined;
         this.worker.onmessage = (async (answer) => {
             // only process WorkerTaskMessage
-            const wtm = answer.data as WorkerTaskMessageConfig;
+            const wtm = answer.data as WorkerTaskMessage;
             if (wtm.cmd) {
-                const awaitHandlers = this.awaitAnswers.get(wtm.id ?? -1);
+                const awaitHandlers = this.awaitAnswers.get(wtm.uuid ?? 'unknown');
                 awaitHandlers?.forEach(handler => {
                     if (handler.name === wtm.cmd) {
                         if (handler.log === true) {
-                            const completionMsg = `Received: ${wtm.cmd} (workerId: ${wtm.workerId ?? -1}) with id: ${wtm.id ?? -1}`;
+                            const completionMsg = `Received: ${wtm.cmd} (workerName: ${wtm.name ?? 'unknown'}) with uuid: ${wtm.uuid}`;
                             console.log(completionMsg);
                         }
                         for (const resolve of handler.resolve) {
@@ -134,7 +131,7 @@ export class WorkerTask {
                             this.markExecuting(false);
                         }
                         if (handler.remove === true) {
-                            this.awaitAnswers.delete(wtm.id!);
+                            this.awaitAnswers.delete(wtm.uuid!);
                         }
                     }
                 });
@@ -149,7 +146,7 @@ export class WorkerTask {
         });
     }
 
-    async initWorker(def: WorkerInitMessageDef): Promise<WorkerTaskMessageConfig> {
+    async initWorker(def: WorkerInitMessageDef): Promise<WorkerTaskMessage> {
         return new Promise((resolve, reject) => {
             if (!this.worker) {
                 reject(new Error('No worker is available. Aborting...'));
@@ -161,11 +158,9 @@ export class WorkerTask {
 
                 const message = def.message;
                 message.cmd = WorkerTaskCommandRequest.INIT;
-                message.workerId = this.workerId;
-                message.id = this.executionCounter++;
                 const transferablesToWorker = this.handleTransferables(def);
 
-                this.awaitAnswers.set(message.id, [{
+                this.updateAwaitHandlers(message, [{
                     name: WorkerTaskCommandResponse.INIT_COMPLETE,
                     resolve: [resolve],
                     reject: reject,
@@ -177,21 +172,20 @@ export class WorkerTask {
         });
     }
 
-    async executeWorker(def: WorkerExecutionDef): Promise<WorkerTaskMessageConfig> {
+    async executeWorker(def: WorkerExecutionDef): Promise<WorkerTaskMessage> {
         return new Promise((resolve, reject) => {
             if (!this.worker) {
                 reject(new Error('No worker is available. Aborting...'));
                 this.markExecuting(false);
             } else {
                 this.markExecuting(true);
+
                 const message = def.message;
                 message.cmd = WorkerTaskCommandRequest.EXECUTE;
-                message.workerId = this.workerId;
-                message.id = this.executionCounter++;
                 const transferablesToWorker = this.handleTransferables(def);
 
                 const awaitHandlers: AwaitHandler[] = [];
-                const resolveFuncs: Array<(message: WorkerTaskMessageConfig) => void> = [];
+                const resolveFuncs: Array<(message: WorkerTaskMessage) => void> = [];
                 if (def.onComplete) {
                     resolveFuncs.push(def.onComplete);
                 }
@@ -214,7 +208,7 @@ export class WorkerTask {
                         log: this.verbose
                     });
                 }
-                this.awaitAnswers.set(message.id, awaitHandlers);
+                this.updateAwaitHandlers(message, awaitHandlers);
                 this.worker.postMessage(message, transferablesToWorker);
             }
         });
@@ -223,13 +217,14 @@ export class WorkerTask {
     /**
      * This is only possible if the worker is available.
      */
-    sentMessage(def: WorkerIntermediateMessageDef): Promise<WorkerTaskMessageConfig> {
+    sentMessage(def: WorkerIntermediateMessageDef): Promise<WorkerTaskMessage> {
         return new Promise((resolve, reject) => {
             if (this.checkWorker(reject)) {
                 const message = def.message;
 
-                message.workerId = this.workerId;
-                message.id = this.executionCounter++;
+                if (message.cmd === 'unknown' || message.cmd.length === 0) {
+                    throw new Error('No command provided. Aborting...');
+                }
                 const transferablesToWorker = this.handleTransferables(def);
 
                 if (def.awaitAnswer === true) {
@@ -237,7 +232,7 @@ export class WorkerTask {
                         reject(new Error('No answer name provided. Aborting...'));
                         return;
                     }
-                    this.awaitAnswers.set(message.id, [{
+                    this.updateAwaitHandlers(message, [{
                         name: def.answer,
                         resolve: [resolve],
                         reject: reject,
@@ -246,8 +241,22 @@ export class WorkerTask {
                     }]);
                 }
                 this.worker?.postMessage(message, transferablesToWorker);
+
+                if (!def.awaitAnswer) {
+                    resolve(WorkerTaskMessage.createEmpty());
+                }
             }
         });
+    }
+
+    private updateAwaitHandlers(wtm: WorkerTaskMessage, awaitHandlers: AwaitHandler[]) {
+        wtm.workerId = this.workerId;
+        wtm.uuid = this.buildUuid();
+        this.awaitAnswers.set(wtm.uuid, awaitHandlers);
+    }
+
+    private buildUuid() {
+        return `${this.workerId}_${this.executionCounter++}_${Math.floor(Math.random() * 100000000)}`;
     }
 
     private handleTransferables(def: WorkerMessageDef) {

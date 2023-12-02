@@ -1,4 +1,4 @@
-import { WorkerTaskMessageConfig } from '../WorkerTaskMessage.js';
+import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
 
 export enum OffscreenWorkerCommandRequest {
     INIT_OFFSCREEN_CANVAS = 'initOffscreenCanvas',
@@ -15,12 +15,8 @@ export enum OffscreenWorkerCommandResponse {
 }
 
 export type OffscreenWorker = {
-
-    initOffscreenCanvas(message: WorkerTaskMessageConfig): void;
-
-    proxyStart?(message: WorkerTaskMessageConfig): void;
-
-    proxyEvent?(message: WorkerTaskMessageConfig): void;
-
-    resize?(message: WorkerTaskMessageConfig): void;
+    initOffscreenCanvas(message: WorkerTaskMessage): void;
+    proxyStart?(message: WorkerTaskMessage): void;
+    proxyEvent?(message: WorkerTaskMessage): void;
+    resize?(message: WorkerTaskMessage): void;
 }

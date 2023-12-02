@@ -18,8 +18,7 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
-    WorkerTaskMessage,
-    WorkerTaskMessageConfig
+    WorkerTaskMessage
 } from 'wtd-core';
 import {
     MeshPayload, reconstructBuffer
@@ -35,7 +34,6 @@ type CameraDefaults = {
 
 type ExampleTask = {
     execute: boolean;
-    id: number;
     name: string;
     sendGeometry: boolean;
     url: URL;
@@ -83,7 +81,6 @@ class TransferablesTestbed {
 
         this.tasks.push({
             execute: true,
-            id: 1,
             name: 'TransferableWorkerTest1',
             sendGeometry: false,
             url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest1.ts' : '../worker/generated/TransferableWorkerTest1-es.js', import.meta.url),
@@ -91,7 +88,6 @@ class TransferablesTestbed {
         });
         this.tasks.push({
             execute: true,
-            id: 2,
             name: 'TransferableWorkerTest2',
             sendGeometry: false,
             url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest2.ts' : '../worker/generated/TransferableWorkerTest2-es.js', import.meta.url),
@@ -99,7 +95,6 @@ class TransferablesTestbed {
         });
         this.tasks.push({
             execute: true,
-            id: 3,
             name: 'TransferableWorkerTest3',
             sendGeometry: true,
             url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest3.ts' : '../worker/generated/TransferableWorkerTest3-es.js', import.meta.url),
@@ -107,7 +102,6 @@ class TransferablesTestbed {
         });
         this.tasks.push({
             execute: true,
-            id: 4,
             name: 'TransferableWorkerTest4',
             sendGeometry: false,
             url: new URL(import.meta.env.DEV ? '../worker/TransferableWorkerTest4.ts' : '../worker/generated/TransferableWorkerTest4-es.js', import.meta.url),
@@ -212,8 +206,7 @@ class TransferablesTestbed {
             }
         });
 
-        const initMessage = new WorkerTaskMessage({
-            id: task.id,
+        const initMessage = WorkerTaskMessage.createNew({
             name: task.name
         });
         if (task.sendGeometry) {
@@ -252,8 +245,7 @@ class TransferablesTestbed {
     }
 
     private async executeWorker(task: ExampleTask) {
-        const execMessage = new WorkerTaskMessage({
-            id: task.id,
+        const execMessage = WorkerTaskMessage.createNew({
             name: task.name
         });
 
@@ -273,11 +265,11 @@ class TransferablesTestbed {
         this.processMessage(result);
     }
 
-    private processMessage(message: WorkerTaskMessageConfig) {
+    private processMessage(message: WorkerTaskMessage) {
         let wtm;
         switch (message.cmd) {
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
-                console.log(`TransferableTestbed#execComplete: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+                console.log(`TransferableTestbed#execComplete: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
                 wtm = WorkerTaskMessage.unpack(message, false);
                 if (wtm.payloads?.length === 1) {
@@ -313,7 +305,7 @@ class TransferablesTestbed {
                 break;
 
             default:
-                console.error(`${message.id}: Received unknown command: ${message.cmd}`);
+                console.error(`${message.uuid}: Received unknown command: ${message.cmd}`);
                 break;
         }
     }

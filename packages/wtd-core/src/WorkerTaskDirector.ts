@@ -1,5 +1,5 @@
-import type {
-    WorkerTaskMessageConfig
+import {
+    WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 import type {
     WorkerExecutionDef,
@@ -17,8 +17,8 @@ type WorkerTaskRuntimeDesc = {
 }
 
 type WorkerTaskDirectorConfig = {
-    defaultMaxParallelExecutions: number;
-    verbose: boolean;
+    defaultMaxParallelExecutions?: number;
+    verbose?: boolean;
 }
 
 /**
@@ -26,7 +26,7 @@ type WorkerTaskDirectorConfig = {
  */
 type WorkerExecutionPlan = WorkerExecutionDef & {
     promiseFunctions?: {
-        resolve: (message: WorkerTaskMessageConfig) => void,
+        resolve: (message: WorkerTaskMessage) => void,
         reject: (error?: Error) => void
     };
 };
@@ -46,18 +46,14 @@ export class WorkerTaskDirector {
 
     static DEFAULT_MAX_PARALLEL_EXECUTIONS = 4;
 
-    private config: WorkerTaskDirectorConfig = {
-        defaultMaxParallelExecutions: WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS,
-        verbose: false
-    };
+    private defaultMaxParallelExecutions: number;
+    private verbose = false;
     private taskTypes: Map<string, WorkerTaskRuntimeDesc>;
     private workerExecutionPlans: Map<string, WorkerExecutionPlan[]>;
 
     constructor(config?: WorkerTaskDirectorConfig) {
-        if (config) {
-            this.config.defaultMaxParallelExecutions = config.defaultMaxParallelExecutions;
-            this.config.verbose = config.verbose === true;
-        }
+        this.defaultMaxParallelExecutions = config?.defaultMaxParallelExecutions ?? WorkerTaskDirector.DEFAULT_MAX_PARALLEL_EXECUTIONS;
+        this.verbose = config?.verbose === true;
         this.taskTypes = new Map();
         this.workerExecutionPlans = new Map();
     }
@@ -74,7 +70,7 @@ export class WorkerTaskDirector {
         const taskName = workerTaskDirectorDef.taskName;
         const allowedToRegister = !this.taskTypes.has(taskName);
         if (allowedToRegister) {
-            const maxParallelExecutions = workerTaskDirectorDef.maxParallelExecutions ?? this.config.defaultMaxParallelExecutions;
+            const maxParallelExecutions = workerTaskDirectorDef.maxParallelExecutions ?? this.defaultMaxParallelExecutions;
             const workerTaskRuntimeDesc: WorkerTaskRuntimeDesc = {
                 workerTasks: new Map(),
                 maxParallelExecutions: maxParallelExecutions
@@ -85,7 +81,7 @@ export class WorkerTaskDirector {
                     taskName,
                     workerId: i,
                     workerConfig: workerTaskDirectorDef.workerConfig,
-                    verbose: this.config.verbose
+                    verbose: this.verbose
                 }));
             }
         }
@@ -130,14 +126,14 @@ export class WorkerTaskDirector {
      * @param {WorkerExecutionDef} Defines all the information needed to execute the worker task.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, workerExecutionDef: WorkerExecutionDef): Promise<WorkerTaskMessageConfig> {
+    async enqueueForExecution(taskTypeName: string, workerExecutionDef: WorkerExecutionDef): Promise<WorkerTaskMessage> {
         const plan = workerExecutionDef as WorkerExecutionPlan;
         const promise = new Promise((resolve, reject) => {
             plan.promiseFunctions = {
                 resolve: resolve,
                 reject: reject
             };
-        }) as Promise<WorkerTaskMessageConfig>;
+        }) as Promise<WorkerTaskMessage>;
 
         const planForType = this.workerExecutionPlans.get(taskTypeName);
         planForType?.push(plan);
@@ -148,7 +144,7 @@ export class WorkerTaskDirector {
     private async depleteWorkerExecutionPlans(taskTypeName: string) {
         const planForType = this.workerExecutionPlans.get(taskTypeName);
         if (planForType?.length === 0) {
-            if (this.config.verbose) {
+            if (this.verbose) {
                 console.log(`No more WorkerExecutionPlans in the queue for: ${taskTypeName}`);
             }
             return;

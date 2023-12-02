@@ -31,7 +31,7 @@ class HelloWorldWorkerTaskExample {
 
             const t0 = performance.now();
             // once the init Promise is done enqueue the execution
-            const execMessage = new WorkerTaskMessage();
+            const execMessage = WorkerTaskMessage.createEmpty();
             const resultExec = await workerTask.executeWorker({
                 message: execMessage
             });

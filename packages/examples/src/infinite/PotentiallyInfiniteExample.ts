@@ -26,7 +26,6 @@ import {
     WorkerTaskDirector,
     DataPayload,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskCommandResponse,
     createWorkerBlob,
 } from 'wtd-core';
@@ -96,11 +95,13 @@ class PotentiallyInfiniteExample {
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector();
+    private verbose = false;
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector({
+        verbose: this.verbose
+    });
 
     // configure all task that shall be usable on register to the WorkerTaskDirector
     taskSimpleBlobWorker = {
-        id: 0,
         name: 'simpleBlobWorker',
         use: true,
         workerType: 'module',
@@ -113,7 +114,6 @@ class PotentiallyInfiniteExample {
         workerCount: 6
     } as TaskDescription;
     taskInfiniteWorkerInternalGeometry = {
-        id: 1,
         name: 'InfiniteWorkerInternalGeometry',
         use: true,
         workerType: 'module',
@@ -122,7 +122,6 @@ class PotentiallyInfiniteExample {
         workerCount: 10
     } as TaskDescription;
     taskInfiniteWorkerExternalGeometry = {
-        id: 2,
         name: 'InfiniteWorkerExternalGeometry',
         use: true,
         workerType: 'module',
@@ -131,7 +130,6 @@ class PotentiallyInfiniteExample {
         workerCount: 8
     } as TaskDescription;
     taskObjLoader2Worker = {
-        id: 3,
         name: 'OBJLoader2WorkerModule',
         modelName: 'female02',
         use: true,
@@ -146,7 +144,7 @@ class PotentiallyInfiniteExample {
     private materialStore = new MaterialStore(true);
     private tasksToUse: TaskDescription[] = [];
     private executions: Array<Promise<unknown>> = [];
-    private objectsUsed = new Map<number, { name: string, pos: Vector3 }>();
+    private objectsUsed = new Map<string, { name: string, pos: Vector3 }>();
     private meshesAdded: string[] = [];
     private removeCount = 50;
     numberOfMeshesToKeep = 750;
@@ -208,7 +206,9 @@ class PotentiallyInfiniteExample {
     }
 
     resetAppContext() {
-        this.workerTaskDirector = new WorkerTaskDirector();
+        this.workerTaskDirector = new WorkerTaskDirector({
+            verbose: this.verbose
+        });
 
         this.tasksToUse = [];
         this.executions = [];
@@ -298,8 +298,7 @@ class PotentiallyInfiniteExample {
                 },
                 maxParallelExecutions: taskDescr.workerCount
             });
-            const initMessage = new WorkerTaskMessage({
-                id: taskDescr.id,
+            const initMessage = WorkerTaskMessage.createNew({
                 name: taskDescr.name
             });
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
@@ -321,8 +320,7 @@ class PotentiallyInfiniteExample {
                 maxParallelExecutions: taskDescr.workerCount
             });
 
-            const initMessage = new WorkerTaskMessage({
-                id: taskDescr.id,
+            const initMessage = WorkerTaskMessage.createNew({
                 name: taskDescr.name
             });
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
@@ -346,8 +344,7 @@ class PotentiallyInfiniteExample {
 
             const torus = new TorusGeometry(25, 8, 16, 100);
             torus.name = 'torus';
-            const initMessage = new WorkerTaskMessage({
-                id: taskDescr.id,
+            const initMessage = WorkerTaskMessage.createNew({
                 name: taskDescr.name
             });
             const meshPayload = new MeshPayload();
@@ -396,8 +393,7 @@ class PotentiallyInfiniteExample {
                 this.materialStore.addMaterialsFromObject(materialCreator.materials, false);
                 const buffer = results[results.length - 1] as string | ArrayBuffer;
 
-                const initMessage = new WorkerTaskMessage({
-                    id: 0,
+                const initMessage = WorkerTaskMessage.createNew({
                     name: 'OBJLoader2WorkerModule'
                 });
                 const dataPayload = new DataPayload();
@@ -437,7 +433,6 @@ class PotentiallyInfiniteExample {
         }
 
         console.time('start');
-        let globalCount = 0;
         const taskSelector = this.createTaskSelector();
 
         for (let j = 0; j < this.loopCount && !this.abort; j++) {
@@ -447,23 +442,16 @@ class PotentiallyInfiniteExample {
                 const indexToUse = Math.floor(Math.random() * taskSelector.totalWorkers);
                 const taskDescr = taskSelector.taskSelectorArray[indexToUse];
 
-                const execMessage = new WorkerTaskMessage({
-                    id: globalCount
-                });
                 const dataPayload = new DataPayload();
                 dataPayload.message.params = {
                     modelName: taskDescr.name
                 };
-                execMessage.addPayload(dataPayload);
-
                 const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, {
-                    message: execMessage,
+                    message: WorkerTaskMessage.fromPayload(dataPayload),
                     onComplete: data => this.processMessage(taskDescr, data),
                     onIntermediateConfirm: data => this.processMessage(taskDescr, data)
                 });
                 this.executions.push(promise);
-
-                globalCount++;
             }
             await Promise.all(this.executions);
             this.executions = [];
@@ -497,7 +485,7 @@ class PotentiallyInfiniteExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessageConfig | Error) {
+    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessage | Error) {
         let material: Material | Material[] | undefined;
         let meshPayload: MeshPayload;
         let materialsPayload: MaterialsPayload;
@@ -510,7 +498,7 @@ class PotentiallyInfiniteExample {
         const wtm = WorkerTaskMessage.unpack(message, false);
         switch (wtm.cmd) {
             case WorkerTaskCommandResponse.INIT_COMPLETE:
-                console.log('Init Completed: ' + wtm.id);
+                console.log('Init Completed: ' + wtm.uuid);
                 break;
 
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
@@ -550,7 +538,7 @@ class PotentiallyInfiniteExample {
                         }
                         mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
                     }
-                    this.addMesh(mesh, wtm.id ?? 0);
+                    this.addMesh(mesh, wtm.uuid ?? 'unknown');
                 }
                 else {
                     if (wtm.cmd !== WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
@@ -563,7 +551,7 @@ class PotentiallyInfiniteExample {
                 break;
 
             default:
-                console.error(`${wtm.id}: Received unknown command: ${wtm.cmd}`);
+                console.error(`${wtm.uuid}: Received unknown command: ${wtm.cmd}`);
                 break;
         }
     }
@@ -571,8 +559,8 @@ class PotentiallyInfiniteExample {
     /**
      * Add mesh at random position, but keep sub-meshes of an object together
      */
-    private addMesh(mesh: Mesh, id: number) {
-        const storedPos = this.objectsUsed.get(id);
+    private addMesh(mesh: Mesh, uuid: string) {
+        const storedPos = this.objectsUsed.get(uuid);
         let pos;
         if (storedPos) {
             pos = storedPos.pos;
@@ -582,10 +570,10 @@ class PotentiallyInfiniteExample {
             pos.applyAxisAngle(this.baseVectorX, 2 * Math.PI * Math.random());
             pos.applyAxisAngle(this.baseVectorY, 2 * Math.PI * Math.random());
             pos.applyAxisAngle(this.baseVectorZ, 2 * Math.PI * Math.random());
-            this.objectsUsed.set(id, { name: mesh.name, pos: pos });
+            this.objectsUsed.set(uuid, { name: mesh.name, pos: pos });
         }
         mesh.position.set(pos.x, pos.y, pos.z);
-        mesh.name = id + '' + mesh.name;
+        mesh.name = uuid + '' + mesh.name;
         this.scene.add(mesh);
         this.meshesAdded.push(mesh.name);
     }
@@ -638,12 +626,12 @@ class PotentiallyInfiniteExample {
 // Simplest way to define a worker, but can't be a module worker
 class SimpleBlobWorker {
 
-    init(message: WorkerTaskMessageConfig) {
+    init(message: WorkerTaskMessage) {
         message.cmd = 'initComplete';
         self.postMessage(message);
     }
 
-    execute(message: WorkerTaskMessageConfig) {
+    execute(message: WorkerTaskMessage) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
@@ -667,7 +655,7 @@ class SimpleBlobWorker {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
-        const wtmt = (message as MessageEvent).data as WorkerTaskMessageConfig;
+        const wtmt = (message as MessageEvent).data as WorkerTaskMessage;
         if (wtmt) {
             if (wtmt.cmd === 'init') {
                 this.init(wtmt);

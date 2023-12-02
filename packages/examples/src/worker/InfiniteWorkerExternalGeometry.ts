@@ -4,7 +4,6 @@ import {
 import {
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskWorker,
     comRouting
 } from 'wtd-core';
@@ -16,17 +15,19 @@ class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
 
     private bufferGeometry?: BufferGeometry = undefined;
 
-    init(message: WorkerTaskMessageConfig) {
+    init(message: WorkerTaskMessage) {
         const wtm = WorkerTaskMessage.unpack(message, false);
         if (wtm.payloads && wtm.payloads?.length > 0) {
             this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
         }
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageConfig) {
+    execute(message: WorkerTaskMessage) {
         if (!this.bufferGeometry) {
             self.postMessage(new Error('No initial payload available'));
         } else {
@@ -34,7 +35,7 @@ class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
             const geometry = this.bufferGeometry.clone();
 
             if (geometry) {
-                geometry.name = 'tmProto' + message.id;
+                geometry.name = 'tmProto' + message.uuid;
 
                 const vertexArray = geometry.getAttribute('position').array;
                 for (let i = 0; i < vertexArray.length; i++) {
@@ -54,7 +55,9 @@ class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
                     }
                 };
 
-                const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+                const execComplete = WorkerTaskMessage.createFromExisting(message, {
+                    overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+                });
                 execComplete.addPayload(meshPayload);
 
                 const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);

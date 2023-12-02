@@ -3,18 +3,19 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 
 export class HelloWorldWorker implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageConfig) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+    init(message: WorkerTaskMessage) {
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageConfig) {
+    execute(message: WorkerTaskMessage) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
@@ -25,7 +26,9 @@ export class HelloWorldWorker implements WorkerTaskWorker {
             hello: 'say hello'
         };
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+        });
         execComplete.addPayload(dataPayload);
 
         // no need to pack as there aren't any buffers used

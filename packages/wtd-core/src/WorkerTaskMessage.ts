@@ -3,7 +3,6 @@ import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTas
 
 export type WorkerTaskMessageConfig = {
     cmd?: WorkerTaskCommands;
-    id?: number;
     name?: string;
     workerId?: number;
     progress?: number;
@@ -14,26 +13,17 @@ export type WorkerTaskCommands = WorkerTaskCommandRequest | WorkerTaskCommandRes
 
 export class WorkerTaskMessage {
     cmd: WorkerTaskCommands = 'unknown';
-    id = 0;
+    uuid: string = 'unknown';
     name = 'unnamed';
     workerId = 0;
     progress = 0;
     payloads: Payload[] = [];
 
-    constructor(config?: WorkerTaskMessageConfig) {
+    private constructor(config?: WorkerTaskMessageConfig) {
         this.cmd = config?.cmd ?? this.cmd;
-        this.id = config?.id ?? this.id;
         this.name = config?.name ?? this.name;
         this.workerId = config?.workerId ?? this.workerId;
         this.progress = config?.progress ?? this.progress;
-    }
-
-    static createEmpty() {
-        return new WorkerTaskMessage({});
-    }
-
-    setCommand(cmd: WorkerTaskCommands) {
-        this.cmd = cmd;
     }
 
     addPayload(payloads?: Payload[] | Payload) {
@@ -46,10 +36,25 @@ export class WorkerTaskMessage {
         }
     }
 
-    static createFromExisting(message: WorkerTaskMessageConfig, overrideCmd?: WorkerTaskCommands) {
-        const wtm = new WorkerTaskMessage(message);
-        if (overrideCmd) {
-            wtm.setCommand(overrideCmd);
+    static createNew(message: WorkerTaskMessageConfig) {
+        return new WorkerTaskMessage(message);
+    }
+
+    static createEmpty() {
+        return WorkerTaskMessage.createNew({});
+    }
+
+    static createFromExisting(message: WorkerTaskMessage, options?: {
+        overrideCmd?: WorkerTaskCommands,
+        overrideUuid?: string
+    }) {
+        const wtm = WorkerTaskMessage.createNew(message);
+        wtm.uuid = message.uuid;
+        if (options?.overrideCmd) {
+            wtm.cmd = options.overrideCmd;
+        }
+        if (options?.overrideUuid) {
+            wtm.uuid = options.overrideUuid;
         }
         return wtm;
     }
@@ -65,8 +70,10 @@ export class WorkerTaskMessage {
         return transferables;
     }
 
-    static unpack(rawMessage: WorkerTaskMessageConfig, cloneBuffers?: boolean) {
-        const instance = new WorkerTaskMessage(rawMessage);
+    static unpack(rawMessage: WorkerTaskMessage, cloneBuffers?: boolean) {
+        const instance = WorkerTaskMessage.createFromExisting(rawMessage, {
+            overrideUuid: rawMessage.uuid
+        });
 
         if (rawMessage.payloads) {
             for (const payload of rawMessage.payloads) {
@@ -78,10 +85,9 @@ export class WorkerTaskMessage {
     }
 
     static fromPayload(payloads: Payload | Payload[], cmd?: WorkerTaskCommands) {
-        const wtm = new WorkerTaskMessage({});
-        if (cmd) {
-            wtm.setCommand(cmd);
-        }
+        const wtm = WorkerTaskMessage.createNew({
+            cmd
+        });
         wtm.addPayload(payloads);
         return wtm;
     }

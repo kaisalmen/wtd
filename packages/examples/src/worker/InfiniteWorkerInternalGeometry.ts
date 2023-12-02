@@ -7,7 +7,6 @@ import {
     comRouting,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -18,14 +17,16 @@ import {
 
 class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageConfig) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+    init(message: WorkerTaskMessage) {
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageConfig) {
+    execute(message: WorkerTaskMessage) {
         const bufferGeometry = new TorusKnotGeometry(20, 3, 100, 64);
-        bufferGeometry.name = 'tmProto' + message.id;
+        bufferGeometry.name = 'tmProto' + message.uuid;
 
         const vertexBA = bufferGeometry.getAttribute('position');
         const vertexArray = vertexBA.array;
@@ -42,13 +43,15 @@ class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
         const material = new MeshPhongMaterial({ color: color });
 
         const materialsPayload = new MaterialsPayload();
-        MaterialUtils.addMaterial(materialsPayload.message.materials, 'randomColor' + message.id, material, false, false);
+        MaterialUtils.addMaterial(materialsPayload.message.materials, 'randomColor' + message.uuid, material, false, false);
         materialsPayload.cleanMaterials();
 
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 2);
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+        });
         execComplete.addPayload(meshPayload);
         execComplete.addPayload(materialsPayload);
 

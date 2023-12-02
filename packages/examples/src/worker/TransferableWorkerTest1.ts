@@ -3,21 +3,22 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageConfig,
     WorkerTaskWorker
 } from 'wtd-core';
 
 class TransferableWorkerTest1 implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageConfig) {
-        console.log(`TransferableWorkerTest1#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    init(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest1#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, WorkerTaskCommandResponse.INIT_COMPLETE);
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageConfig) {
-        console.log(`TransferableWorkerTest1#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest1#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
 
@@ -26,7 +27,9 @@ class TransferableWorkerTest1 implements WorkerTaskWorker {
             data: new Uint32Array(32 * 1024 * 1024)
         };
 
-        const execComplete = WorkerTaskMessage.createFromExisting(wtm, WorkerTaskCommandResponse.EXECUTE_COMPLETE);
+        const execComplete = WorkerTaskMessage.createFromExisting(wtm, {
+            overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+        });
         execComplete.addPayload(dataPayload);
 
         const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);

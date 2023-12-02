@@ -1,6 +1,6 @@
 import { Payload } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
-import { WorkerTaskMessageConfig } from './WorkerTaskMessage.js';
+import { WorkerTaskMessage } from './WorkerTaskMessage.js';
 
 export enum WorkerTaskCommandRequest {
     INIT = 'init',
@@ -23,29 +23,19 @@ export enum WorkerTaskCommandResponse {
 }
 
 export type WorkerTaskWorker = {
-
-    init?(message: WorkerTaskMessageConfig): void;
-
-    initChannel?(message: WorkerTaskMessageConfig): void;
-
-    intermediate?(message: WorkerTaskMessageConfig): void;
-
-    execute(message: WorkerTaskMessageConfig): void;
+    init?(message: WorkerTaskMessage): void;
+    initChannel?(message: WorkerTaskMessage): void;
+    intermediate?(message: WorkerTaskMessage): void;
+    execute(message: WorkerTaskMessage): void;
 }
 
 export type InterComWorker = {
-
-    interComInit?(message: WorkerTaskMessageConfig): void;
-
-    interComInitComplete?(message: WorkerTaskMessageConfig): void;
-
-    interComIntermediate?(message: WorkerTaskMessageConfig): void;
-
-    interComIntermediateConfirm?(message: WorkerTaskMessageConfig): void;
-
-    interComExecute?(message: WorkerTaskMessageConfig): void;
-
-    interComExecuteComplete?(message: WorkerTaskMessageConfig): void;
+    interComInit?(message: WorkerTaskMessage): void;
+    interComInitComplete?(message: WorkerTaskMessage): void;
+    interComIntermediate?(message: WorkerTaskMessage): void;
+    interComIntermediateConfirm?(message: WorkerTaskMessage): void;
+    interComExecute?(message: WorkerTaskMessage): void;
+    interComExecuteComplete?(message: WorkerTaskMessage): void;
 }
 
 export class InterComPortHandler {
@@ -61,13 +51,13 @@ export class InterComPortHandler {
         port.onmessage = onmessage;
     }
 
-    postMessageOnPort(target: string, message: WorkerTaskMessageConfig, options?: StructuredSerializeOptions) {
+    postMessageOnPort(target: string, message: WorkerTaskMessage, options?: StructuredSerializeOptions) {
         this.ports.get(target)?.postMessage(message, options);
     }
 }
 
 export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>, delegate?: (ev: MessageEvent<unknown>) => unknown) => {
-    const wtmt = (message as MessageEvent).data as WorkerTaskMessageConfig;
+    const wtmt = (message as MessageEvent).data as WorkerTaskMessage;
     if (wtmt && wtmt.cmd) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj = (workerImpl as any);
