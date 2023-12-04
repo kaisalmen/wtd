@@ -8,7 +8,7 @@ import { AssociatedArrayType } from '../Payload.js';
 import { WorkerTask } from '../WorkerTask.js';
 import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
 import { OffscreenPayload } from './OffscreenPayload.js';
-import { OffscreenWorkerCommandRequest } from './OffscreenWorker.js';
+import { OffscreenWorkerCommandRequest, OffscreenWorkerCommandResponse } from './OffscreenWorker.js';
 
 export const preventDefaultHandler = (event: Event) => {
     event.preventDefault();
@@ -108,7 +108,7 @@ export const touchEventHandler = (event: Event, workerTask: WorkerTask) => {
         }
     });
     workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+        message: WorkerTaskMessage.fromPayload(offscreenPayload, OffscreenWorkerCommandRequest.PROXY_EVENT)
     });
 };
 
@@ -158,11 +158,13 @@ export const buildDefaultEventHandlingInstructions = (): Map<string, HandlingIns
     return handlingInstructions;
 };
 
-export const registerCanvas = (canvas: HTMLCanvasElement, workerTask: WorkerTask, handlingInstructions: Map<string, HandlingInstructions>) => {
+export const registerCanvas = async (workerTask: WorkerTask, canvas: HTMLCanvasElement, handlingInstructions: Map<string, HandlingInstructions>) => {
     canvas.focus();
 
-    workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(new OffscreenPayload({}), 'proxyStart')
+    await workerTask.sentMessage({
+        message: WorkerTaskMessage.fromPayload(new OffscreenPayload({}), OffscreenWorkerCommandRequest.PROXY_START),
+        awaitAnswer: true,
+        answer: OffscreenWorkerCommandResponse.PROXY_START_COMPLETE
     });
 
     for (const [eventName, instruction] of handlingInstructions.entries()) {
@@ -178,15 +180,17 @@ export const registerCanvas = (canvas: HTMLCanvasElement, workerTask: WorkerTask
     }
 };
 
-export const sentResize = (canvas: HTMLCanvasElement, workerTask: WorkerTask) => {
+export const sentResize = (workerTask: WorkerTask, canvas: HTMLCanvasElement) => {
     const dataPayload = new OffscreenPayload({
         width: canvas.offsetWidth,
         height: canvas.offsetHeight,
         pixelRatio: window.devicePixelRatio
     });
-    workerTask.sentMessage({ message: WorkerTaskMessage.fromPayload(dataPayload, OffscreenWorkerCommandRequest.RESIZE) });
+    workerTask.sentMessage({
+        message: WorkerTaskMessage.fromPayload(dataPayload, OffscreenWorkerCommandRequest.RESIZE),
+    });
 };
 
-export const registerResizeHandler = (canvas: HTMLCanvasElement, workerTask: WorkerTask) => {
-    window.addEventListener('resize', () => sentResize(canvas, workerTask), false);
+export const registerResizeHandler = (workerTask: WorkerTask, canvas: HTMLCanvasElement,) => {
+    window.addEventListener('resize', () => sentResize(workerTask, canvas), false);
 };

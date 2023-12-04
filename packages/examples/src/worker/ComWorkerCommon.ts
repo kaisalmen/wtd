@@ -1,9 +1,3 @@
-import { OffscreenPayload } from 'wtd-core';
-
-export const getOffScreenCanvas = (offScreenPayload?: OffscreenPayload) => {
-    return offScreenPayload ? offScreenPayload.message.drawingSurface as HTMLCanvasElement : undefined;
-};
-
 export const updateText = (params: {
     text: string;
     width: number;
@@ -22,7 +16,3 @@ export const updateText = (params: {
     }
 };
 
-export const recalcAspectRatio = (canvas: HTMLCanvasElement, clientWidth: number, clientHeight: number) => {
-    canvas.width = canvas.height * (clientWidth / clientHeight);
-    return canvas.width;
-};

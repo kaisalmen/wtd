@@ -4,9 +4,10 @@ import {
     WorkerTaskMessage,
     initChannel,
     initOffscreenCanvas,
+    recalcAspectRatio,
     registerResizeHandler
 } from 'wtd-core';
-import { recalcAspectRatio, updateText } from '../worker/ComWorkerCommon.js';
+import { updateText } from '../worker/ComWorkerCommon.js';
 
 /**
  * Hello World example using a classic worker
@@ -65,8 +66,8 @@ class HelloWorldStandardWorkerExample {
             promises.push(initOffscreenCanvas(workerTaskCom2, this.canvasCom2));
             await Promise.all(promises);
 
-            registerResizeHandler(this.canvasCom1, workerTaskCom1);
-            registerResizeHandler(this.canvasCom2, workerTaskCom2);
+            registerResizeHandler(workerTaskCom1, this.canvasCom1);
+            registerResizeHandler(workerTaskCom2, this.canvasCom2);
 
             updateText({
                 text: 'Main: Init',

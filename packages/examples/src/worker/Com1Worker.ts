@@ -1,22 +1,24 @@
 import {
     comRouting,
+    getOffscreenCanvas,
     InterComPortHandler,
     InterComWorker,
     OffscreenWorker,
     OffscreenWorkerCommandResponse,
     RawPayload,
+    recalcAspectRatio,
     WorkerTaskCommandRequest,
     WorkerTaskCommandResponse,
     WorkerTaskMessage,
     WorkerTaskWorker
 } from 'wtd-core';
-import { getOffScreenCanvas, recalcAspectRatio, updateText } from './ComWorkerCommon.js';
+import { updateText } from './ComWorkerCommon.js';
 import { OffscreenPayload } from 'wtd-core';
 
 export class Com1Worker implements WorkerTaskWorker, InterComWorker, OffscreenWorker {
 
     private icph = new InterComPortHandler();
-    private offScreenCanvas?: HTMLCanvasElement;
+    private offScreenCanvas?: OffscreenCanvas;
     private text = 'none';
 
     initChannel(message: WorkerTaskMessage): void {
@@ -32,7 +34,7 @@ export class Com1Worker implements WorkerTaskWorker, InterComWorker, OffscreenWo
 
     initOffscreenCanvas(message: WorkerTaskMessage): void {
         const offscreenPayload = message.payloads?.[0] as OffscreenPayload;
-        this.offScreenCanvas = getOffScreenCanvas(offscreenPayload);
+        this.offScreenCanvas = getOffscreenCanvas(offscreenPayload);
 
         const initOffscreenCanvasComplete = WorkerTaskMessage.createFromExisting(message, {
             overrideCmd: OffscreenWorkerCommandResponse.INIT_OFFSCREEN_CANVAS_COMPLETE
@@ -104,7 +106,7 @@ export class Com1Worker implements WorkerTaskWorker, InterComWorker, OffscreenWo
             text: this.text,
             width: this.offScreenCanvas?.width ?? 0,
             height: this.offScreenCanvas?.height ?? 0,
-            canvas: this.offScreenCanvas,
+            canvas: this.offScreenCanvas as unknown as HTMLCanvasElement,
             log
         });
     }
