@@ -1,77 +1,94 @@
-import {
-    PayloadRegister,
-    DataPayload
-} from './DataPayload.js';
+import { Payload, PayloadRegister } from './Payload.js';
+import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTaskWorker.js';
 
-export type WorkerTaskMessageHeaderType = {
-    id?: number;
+export type WorkerTaskMessageConfig = {
+    cmd?: WorkerTaskCommands;
     name?: string;
     workerId?: number;
     progress?: number;
+    payloads?: Payload[];
 }
 
-export type WorkerTaskCommandType = {
-    cmd: string;
-}
+export type WorkerTaskCommands = WorkerTaskCommandRequest | WorkerTaskCommandResponse | string | 'unknown';
 
-export type WorkerTaskMessageBodyType = {
-    payloads: DataPayload[]
-}
-
-export type WorkerTaskMessageType = WorkerTaskMessageHeaderType & WorkerTaskCommandType & WorkerTaskMessageBodyType
-
-export class WorkerTaskMessage implements WorkerTaskMessageType {
-    cmd = 'unknown';
-    id = 0;
+export class WorkerTaskMessage {
+    cmd: WorkerTaskCommands = 'unknown';
+    uuid: string = 'unknown';
     name = 'unnamed';
     workerId = 0;
     progress = 0;
-    payloads: DataPayload[] = [];
+    payloads: Payload[] = [];
 
-    constructor(config?: WorkerTaskMessageHeaderType) {
-        this.id = config?.id ?? this.id;
+    private constructor(config?: WorkerTaskMessageConfig) {
+        this.cmd = config?.cmd ?? this.cmd;
         this.name = config?.name ?? this.name;
         this.workerId = config?.workerId ?? this.workerId;
         this.progress = config?.progress ?? this.progress;
     }
 
-    addPayload(payload: DataPayload | DataPayload[] | undefined) {
-        if (!payload) {
-            return;
-        }
-        else if (Array.isArray(payload)) {
-            this.payloads = this.payloads.concat(payload);
-        }
-        else {
-            this.payloads.push(payload);
+    addPayload(payloads?: Payload[] | Payload) {
+        if (!payloads) return;
+
+        if (Array.isArray(payloads)) {
+            this.payloads = this.payloads.concat(payloads);
+        } else {
+            this.payloads.push(payloads);
         }
     }
 
-    static createFromExisting(message: WorkerTaskMessageType, cmd?: string) {
-        const wtm = new WorkerTaskMessage(message);
-        if (cmd) {
-            wtm.cmd = cmd;
+    static createNew(message: WorkerTaskMessageConfig) {
+        return new WorkerTaskMessage(message);
+    }
+
+    static createEmpty() {
+        return WorkerTaskMessage.createNew({});
+    }
+
+    static createFromExisting(message: WorkerTaskMessage, options?: {
+        overrideCmd?: WorkerTaskCommands,
+        overrideUuid?: string
+    }) {
+        const wtm = WorkerTaskMessage.createNew(message);
+        wtm.uuid = message.uuid;
+        if (options?.overrideCmd) {
+            wtm.cmd = options.overrideCmd;
+        }
+        if (options?.overrideUuid) {
+            wtm.uuid = options.overrideUuid;
         }
         return wtm;
     }
 
-    pack(cloneBuffers: boolean): Transferable[] {
+    static pack(payloads?: Payload[], cloneBuffers?: boolean): Transferable[] {
         const transferables: Transferable[] = [];
-        for (const payload of this.payloads) {
-            const handler = PayloadRegister.handler.get(payload.type);
-            handler?.pack(payload, transferables, cloneBuffers);
+        if (payloads) {
+            for (const payload of payloads) {
+                const handler = PayloadRegister.handler.get(payload.$type);
+                handler?.pack(payload, transferables, cloneBuffers === true);
+            }
         }
         return transferables;
     }
 
-    static unpack(rawMessage: WorkerTaskMessageType, cloneBuffers: boolean) {
-        const instance = new WorkerTaskMessage(rawMessage);
-        instance.cmd = rawMessage.cmd;
+    static unpack(rawMessage: WorkerTaskMessage, cloneBuffers?: boolean) {
+        const instance = WorkerTaskMessage.createFromExisting(rawMessage, {
+            overrideUuid: rawMessage.uuid
+        });
 
-        for (const payload of rawMessage.payloads) {
-            const handler = PayloadRegister.handler.get(payload.type);
-            instance.addPayload(handler?.unpack(payload, cloneBuffers));
+        if (rawMessage.payloads) {
+            for (const payload of rawMessage.payloads) {
+                const handler = PayloadRegister.handler.get(payload.$type);
+                instance.addPayload(handler?.unpack(payload, cloneBuffers === true));
+            }
         }
         return instance;
+    }
+
+    static fromPayload(payloads: Payload | Payload[], cmd?: WorkerTaskCommands) {
+        const wtm = WorkerTaskMessage.createNew({
+            cmd
+        });
+        wtm.addPayload(payloads);
+        return wtm;
     }
 }

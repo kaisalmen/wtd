@@ -9,12 +9,12 @@ export default defineConfig(({ command }) => {
     console.log(`Running: ${command}`);
     return {
         build: {
-            target: ['es2020'],
+            target: ['es2022'],
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, 'index.html'),
                     helloWorld: path.resolve(__dirname, 'helloWorld.html'),
-                    helloWorldStandard: path.resolve(__dirname, 'helloWorldStandard.html'),
+                    workerCom: path.resolve(__dirname, 'workerCom.html'),
                     helloWorldWorkerTask: path.resolve(__dirname, 'helloWorldWorkerTask.html'),
                     transferables: path.resolve(__dirname, 'transferables.html'),
                     threejs: path.resolve(__dirname, 'threejs.html'),
@@ -35,7 +35,7 @@ export default defineConfig(({ command }) => {
         },
         optimizeDeps: {
             esbuildOptions: {
-                target: 'es2020'
+                target: 'es2022'
             }
         }
     };

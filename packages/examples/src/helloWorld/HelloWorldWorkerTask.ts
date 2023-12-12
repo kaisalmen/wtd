@@ -1,7 +1,7 @@
 import {
+    DataPayload,
     WorkerTask,
-    WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessage
 } from 'wtd-core';
 
 /**
@@ -12,41 +12,41 @@ class HelloWorldWorkerTaskExample {
     async run() {
         const taskName = 'HelloWorldTaskWorker';
 
-        const workerTask = new WorkerTask(taskName, 1, {
-            module: true,
-            blob: false,
-            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
-        }, true);
-
-        const initMessage = new WorkerTaskMessage();
+        const workerUrl = new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url);
+        const worker = new Worker(workerUrl, {
+            type: 'module'
+        });
+        const workerTask = new WorkerTask({
+            taskName,
+            workerId: 1,
+            workerConfig: {
+                $type: 'WorkerConfigDirect',
+                worker
+            },
+            verbose: true
+        });
 
         try {
-            // init the worker task without any payload (worker init without function invocation on worker)
-            const resultInit = await workerTask.initWorker(initMessage);
-            console.log(`initTaskType then: ${resultInit}`);
+            workerTask.createWorker();
 
             const t0 = performance.now();
-            // once the init Promise returns enqueue the execution
-            const execMessage = new WorkerTaskMessage();
+            // once the init Promise is done enqueue the execution
+            const execMessage = WorkerTaskMessage.createEmpty();
             const resultExec = await workerTask.executeWorker({
-                message: execMessage,
-                // decouple result evaluation ...
-                onComplete: (m: WorkerTaskMessageType) => {
-                    const wtm = WorkerTaskMessage.unpack(m, false);
-                    console.log(wtm);
-                    if (wtm.payloads.length === 1) {
-                        console.log(wtm.payloads[0]);
-                    }
-                    console.log('Received final command: ' + wtm.cmd);
-                }
+                message: execMessage
             });
-            // ... promise result handling
-            console.log(`enqueueWorkerExecutionPlan then: ${resultExec}`);
+
+            const wtm = WorkerTaskMessage.unpack(resultExec, false);
+            if (wtm.payloads?.length === 1) {
+                const dataPayload = wtm.payloads[0] as DataPayload;
+                console.log(`Worker said: ${dataPayload.message?.params?.hello}`);
+            }
+            console.log('Received final command: ' + wtm.cmd);
+
             const t1 = performance.now();
             const msg = `Worker execution has been completed after ${t1 - t0}ms.`;
             console.log(msg);
             alert(msg);
-            console.log('Done');
         } catch (e) {
             console.error(e);
         }

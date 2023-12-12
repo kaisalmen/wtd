@@ -4,9 +4,10 @@ import {
     MeshPhongMaterial
 } from 'three';
 import {
-    WorkerTaskDefaultWorker,
+    comRouting,
+    WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskWorker
 } from 'wtd-core';
 import {
     MaterialUtils,
@@ -14,16 +15,18 @@ import {
     MaterialsPayload,
 } from 'wtd-three-ext';
 
-class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
+class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessageType) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+    init(message: WorkerTaskMessage) {
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessage) {
         const bufferGeometry = new TorusKnotGeometry(20, 3, 100, 64);
-        bufferGeometry.name = 'tmProto' + message.id;
+        bufferGeometry.name = 'tmProto' + message.uuid;
 
         const vertexBA = bufferGeometry.getAttribute('position');
         const vertexArray = vertexBA.array;
@@ -40,20 +43,22 @@ class InfiniteWorkerInternalGeometry extends WorkerTaskDefaultWorker {
         const material = new MeshPhongMaterial({ color: color });
 
         const materialsPayload = new MaterialsPayload();
-        MaterialUtils.addMaterial(materialsPayload.materials, 'randomColor' + message.id, material, false, false);
+        MaterialUtils.addMaterial(materialsPayload.message.materials, 'randomColor' + message.uuid, material, false, false);
         materialsPayload.cleanMaterials();
 
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 2);
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+        });
         execComplete.addPayload(meshPayload);
         execComplete.addPayload(materialsPayload);
 
-        const transferables = execComplete.pack(false);
+        const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 }
 
 const worker = new InfiniteWorkerInternalGeometry();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

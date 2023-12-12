@@ -1,7 +1,7 @@
 import {
+    DataPayload,
     WorkerTaskDirector,
-    WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskMessage
 } from 'wtd-core';
 
 /**
@@ -18,39 +18,38 @@ class HelloWorldModuleWorkerExample {
         const taskName = 'WorkerModule';
 
         // register the module worker
-        this.workerTaskDirector.registerTask(taskName, {
-            module: true,
-            blob: false,
-            url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url)
+        this.workerTaskDirector.registerTask({
+            taskName,
+            workerConfig: {
+                $type: 'WorkerConfigParams',
+                workerType: 'module',
+                blob: false,
+                url: new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url),
+
+            }
         });
 
         try {
-            // init the worker task without any payload (worker init without function invocation on worker)
-            const resultInit = await this.workerTaskDirector.initTaskType(taskName);
-            console.log(`initTaskType then: ${resultInit[0]}`);
+            // init the director without any payload (worker init without function invocation on worker)
+            await this.workerTaskDirector.initTaskType(taskName);
 
+            // execute worker without init
             const t0 = performance.now();
-            // once the init Promise returns enqueue the execution
-            const execMessage = new WorkerTaskMessage();
-            const resultExec = await this.workerTaskDirector.enqueueWorkerExecutionPlan(taskName, {
-                message: execMessage,
-                // decouple result evaluation ...
-                onComplete: (m: WorkerTaskMessageType) => {
-                    const wtm = WorkerTaskMessage.unpack(m, false);
-                    console.log(wtm);
-                    if (wtm.payloads.length === 1) {
-                        console.log(wtm.payloads[0]);
-                    }
-                    console.log('Received final command: ' + wtm.cmd);
-                }
+            const resultExec = await this.workerTaskDirector.enqueueForExecution(taskName, {
+                message: WorkerTaskMessage.createEmpty(),
             });
-            // ... promise result handling
-            console.log(`enqueueWorkerExecutionPlan then: ${resultExec}`);
+
+            const wtm = WorkerTaskMessage.unpack(resultExec, false);
+            if (wtm.payloads?.length === 1) {
+                const dataPayload = wtm.payloads[0] as DataPayload;
+                console.log(`Worker said: ${dataPayload.message?.params?.hello}`);
+            }
+            console.log('Received final command: ' + wtm.cmd);
+
             const t1 = performance.now();
             const msg = `Worker execution has been completed after ${t1 - t0}ms.`;
             console.log(msg);
             alert(msg);
-            console.log('Done');
         } catch (e) {
             console.error(e);
         }

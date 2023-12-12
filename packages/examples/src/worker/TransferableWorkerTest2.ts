@@ -1,36 +1,39 @@
 import {
-    WorkerTaskDefaultWorker,
-    WorkerTaskMessageType,
+    comRouting,
+    DataPayload,
+    WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    DataPayload
+    WorkerTaskWorker
 } from 'wtd-core';
 
-declare const self: DedicatedWorkerGlobalScope;
+class TransferableWorkerTest2 implements WorkerTaskWorker {
 
-class TransferableWorkerTest2 extends WorkerTaskDefaultWorker {
+    init(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest2#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-    init(message: WorkerTaskMessageType) {
-        console.log(`TransferableWorkerTest2#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
-
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
-        console.log(`TransferableWorkerTest2#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest2#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
-        if (wtm.payloads.length === 1) {
-            const payload = wtm.payloads[0];
-            if (payload.params) {
+        if (wtm.payloads?.length === 1) {
+            const payload = wtm.payloads[0] as DataPayload;
+            if (payload.message.params) {
                 const payloadOut = new DataPayload();
-                payloadOut.buffers.set('data', new Uint32Array(32 * 1024 * 1024));
+                payloadOut.message.buffers?.set('data', new Uint32Array(32 * 1024 * 1024));
 
-                const execComplete = WorkerTaskMessage.createFromExisting(wtm, 'execComplete');
-                execComplete.name = payload.params.name as string;
+                const execComplete = WorkerTaskMessage.createFromExisting(wtm, {
+                    overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+                });
+                execComplete.name = payload.message.params.name as string;
                 execComplete.addPayload(payloadOut);
 
-                const transferables = execComplete.pack(false);
+                const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
                 self.postMessage(execComplete, transferables);
             }
         }
@@ -38,4 +41,4 @@ class TransferableWorkerTest2 extends WorkerTaskDefaultWorker {
 }
 
 const worker = new TransferableWorkerTest2();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

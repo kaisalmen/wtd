@@ -1,32 +1,34 @@
 import {
+    comRouting,
     DataPayload,
-    WorkerTaskDefaultWorker,
+    WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskWorker
 } from 'wtd-core';
 
-declare const self: DedicatedWorkerGlobalScope;
+export class HelloWorldWorker implements WorkerTaskWorker {
 
-export class HelloWorldWorker extends WorkerTaskDefaultWorker {
-
-    init(message: WorkerTaskMessageType) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+    init(message: WorkerTaskMessage) {
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
-        console.log(message);
+    execute(message: WorkerTaskMessage) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
         }
 
         const dataPayload = new DataPayload();
-        dataPayload.params = {
+        dataPayload.message.params = {
             hello: 'say hello'
         };
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+        });
         execComplete.addPayload(dataPayload);
 
         // no need to pack as there aren't any buffers used
@@ -36,4 +38,4 @@ export class HelloWorldWorker extends WorkerTaskDefaultWorker {
 }
 
 const worker = new HelloWorldWorker();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

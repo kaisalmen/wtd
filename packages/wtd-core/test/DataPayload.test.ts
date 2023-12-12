@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { DataPayloadHandler } from '../src/DataPayload.js';
+import { applyProperties } from 'wtd-core';
 
 describe('DataPayload applyProperties Tests', () => {
     test('verify empty', () => {
@@ -7,7 +7,7 @@ describe('DataPayload applyProperties Tests', () => {
             'alpha': 2
         };
         const params = {};
-        DataPayloadHandler.applyProperties(objToAlter, params, false);
+        applyProperties(objToAlter, params, false);
         expect(objToAlter).toEqual(objToAlter);
     });
 
@@ -21,7 +21,7 @@ describe('DataPayload applyProperties Tests', () => {
         const objToAlterTarget = {
             'alpha': 5
         };
-        DataPayloadHandler.applyProperties(objToAlter, paramsWithProps, false);
+        applyProperties(objToAlter, paramsWithProps, false);
         expect(objToAlter).toEqual(objToAlterTarget);
     });
 
@@ -42,7 +42,7 @@ describe('DataPayload applyProperties Tests', () => {
                 'beta2': true
             }
         };
-        DataPayloadHandler.applyProperties(objToAlter, paramsWithPropsL2, false);
+        applyProperties(objToAlter, paramsWithPropsL2, false);
         expect(objToAlter).toEqual(objToAlterTarget);
     });
 
@@ -79,7 +79,7 @@ describe('DataPayload applyProperties Tests', () => {
         };
         const testClassTarget = new Class4ApplyProperties('colombian', 1, '20ml');
 
-        DataPayloadHandler.applyProperties(testClassAlter, paramsWithProps, false);
+        applyProperties(testClassAlter, paramsWithProps, false);
         expect(testClassAlter).toEqual(testClassTarget);
         expect(testClassRef).not.toEqual(testClassAlter);
         expect(testClassRef).not.toEqual(testClassTarget);

@@ -11,31 +11,41 @@ import {
     MaterialStore
 } from './MaterialStore.js';
 import type {
-    MaterialsPayloadType
+    MaterialsPayloadAdditions,
+    MaterialsPayloadMessageAdditions
 } from './MaterialsPayload.js';
 import {
-    MaterialsPayload,
-    MaterialsPayloadHandler
+    MaterialsPayload
 } from './MaterialsPayload.js';
 import type {
     AssociatedBufferAttributeArrayType,
-    MeshPayloadType
+    MeshPayloadAdditions,
+    MeshPayloadMessageAdditions
 } from './MeshPayload.js';
 import {
     MeshPayload,
-    MeshPayloadHandler
+    MeshPayloadHandler,
+    addAttributeToBuffers,
+    assignAttributeFromTransfered,
+    packGeometryBuffers,
+    reconstructBuffer
 } from './MeshPayload.js';
-
+export * from './offscreen/WorkerEventProxy.js';
 export {
     MaterialUtils,
     MaterialCloneInstructionsType,
     AssociatedMaterialArrayType,
     MaterialStore,
-    MaterialsPayloadType,
     MaterialsPayload,
-    MaterialsPayloadHandler,
+    MaterialsPayloadAdditions,
+    MaterialsPayloadMessageAdditions,
     AssociatedBufferAttributeArrayType,
-    MeshPayloadType,
+    MeshPayloadAdditions,
+    MeshPayloadMessageAdditions,
     MeshPayload,
-    MeshPayloadHandler
+    MeshPayloadHandler,
+    addAttributeToBuffers,
+    assignAttributeFromTransfered,
+    packGeometryBuffers,
+    reconstructBuffer
 };

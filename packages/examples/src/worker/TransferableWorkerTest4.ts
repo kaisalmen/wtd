@@ -1,39 +1,41 @@
 import { TorusKnotGeometry } from 'three';
 import {
-    WorkerTaskDefaultWorker,
-    WorkerTaskMessageType,
-    WorkerTaskMessage
+    comRouting,
+    DataPayload,
+    WorkerTaskCommandResponse,
+    WorkerTaskMessage,
+    WorkerTaskWorker
 } from 'wtd-core';
 import {
     MeshPayload
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
+class TransferableWorkerTest4 implements WorkerTaskWorker {
 
-class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
-
-    init(message: WorkerTaskMessageType) {
-        console.log(`TransferableWorkerTest4#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
-        message.cmd = 'initComplete';
+    init(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest4#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+        message.cmd = WorkerTaskCommandResponse.INIT_COMPLETE;
         self.postMessage(message);
     }
 
-    execute(message: WorkerTaskMessageType) {
-        console.log(`TransferableWorkerTest4#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerTaskMessage) {
+        console.log(`TransferableWorkerTest4#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const wtm = WorkerTaskMessage.unpack(message, false);
-        if (wtm.payloads.length === 1) {
-            const payload = wtm.payloads[0];
-            const bufferGeometry = new TorusKnotGeometry(20, 3, payload.params?.segments as number, payload.params?.segments as number);
-            bufferGeometry.name = wtm.name;
+        if (wtm.payloads?.length === 1) {
+            const payload = wtm.payloads[0] as DataPayload;
+            const bufferGeometry = new TorusKnotGeometry(20, 3, payload.message.params?.segments as number, payload.message.params?.segments as number);
+            bufferGeometry.name = wtm.name ?? 'unnamed';
 
             const meshPayload = new MeshPayload();
             meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-            const execComplete = WorkerTaskMessage.createFromExisting(wtm, 'execComplete');
+            const execComplete = WorkerTaskMessage.createFromExisting(wtm, {
+                overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+            });
             execComplete.addPayload(meshPayload);
 
-            const transferables = execComplete.pack(false);
+            const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
             self.postMessage(execComplete, transferables);
         }
     }
@@ -41,4 +43,4 @@ class TransferableWorkerTest4 extends WorkerTaskDefaultWorker {
 }
 
 const worker = new TransferableWorkerTest4();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

@@ -2,40 +2,40 @@ import {
     BufferGeometry
 } from 'three';
 import {
-    WorkerTaskDefaultWorker,
+    WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskWorker,
+    comRouting
 } from 'wtd-core';
 import {
-    MeshPayload, MeshPayloadHandler, MeshPayloadType,
+    MeshPayload
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
+class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
 
-class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
-
-    private localData = {
-        meshPayloadRaw: undefined as MeshPayloadType | undefined
-    };
+    private bufferGeometry?: BufferGeometry = undefined;
 
     init(message: WorkerTaskMessage) {
-        this.localData.meshPayloadRaw = message.payloads[0] as MeshPayload;
+        const wtm = WorkerTaskMessage.unpack(message, false);
+        if (wtm.payloads && wtm.payloads?.length > 0) {
+            this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
+        }
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
-        if (!this.localData.meshPayloadRaw) {
+    execute(message: WorkerTaskMessage) {
+        if (!this.bufferGeometry) {
             self.postMessage(new Error('No initial payload available'));
-        }
-        else {
-            // unpack for every usage to ensure Transferables are not re-used
-            const meshPayload = MeshPayloadHandler.unpack(this.localData.meshPayloadRaw, true) as MeshPayload;
-            const geometry = meshPayload.bufferGeometry as BufferGeometry;
+        } else {
+            // clone before re-using as othewise transferables can not be obtained
+            const geometry = this.bufferGeometry.clone();
 
             if (geometry) {
-                geometry.name = 'tmProto' + message.id;
+                geometry.name = 'tmProto' + message.uuid;
 
                 const vertexArray = geometry.getAttribute('position').array;
                 for (let i = 0; i < vertexArray.length; i++) {
@@ -47,7 +47,7 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
 
                 const randArray = new Uint8Array(3);
                 self.crypto.getRandomValues(randArray);
-                meshPayload.params = {
+                meshPayload.message.params = {
                     color: {
                         r: randArray[0] / 255,
                         g: randArray[1] / 255,
@@ -55,16 +55,17 @@ class InfiniteWorkerExternalGeometry extends WorkerTaskDefaultWorker {
                     }
                 };
 
-                const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+                const execComplete = WorkerTaskMessage.createFromExisting(message, {
+                    overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+                });
                 execComplete.addPayload(meshPayload);
 
-                const transferables = execComplete.pack(false);
+                const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
                 self.postMessage(execComplete, transferables);
             }
         }
-
     }
 }
 
 const worker = new InfiniteWorkerExternalGeometry();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

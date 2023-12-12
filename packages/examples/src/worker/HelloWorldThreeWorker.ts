@@ -1,29 +1,30 @@
 import { SphereGeometry } from 'three';
 import {
-    WorkerTaskDefaultWorker,
+    comRouting,
+    WorkerTaskCommandResponse,
     WorkerTaskMessage,
-    WorkerTaskMessageType
+    WorkerTaskWorker
 } from 'wtd-core';
 import {
     MeshPayload
 } from 'wtd-three-ext';
 
-declare const self: DedicatedWorkerGlobalScope;
+export class HelloWorlThreedWorker implements WorkerTaskWorker {
 
-export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
+    init(message: WorkerTaskMessage) {
+        console.log(`HelloWorldWorker#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
-    init(message: WorkerTaskMessageType) {
-        console.log(`HelloWorldWorker#init: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
-
-        const initComplete = WorkerTaskMessage.createFromExisting(message, 'initComplete');
+        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
+        });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessageType) {
-        console.log(`HelloWorldWorker#execute: name: ${message.name} id: ${message.id} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerTaskMessage) {
+        console.log(`HelloWorldWorker#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
 
         const bufferGeometry = new SphereGeometry(40, 64, 64);
-        bufferGeometry.name = message.name ?? 'unknown' + message.id ?? 'unknown';
+        bufferGeometry.name = message.name ?? 'unknown' + message.uuid ?? 'unknown';
         const vertexArray = bufferGeometry.getAttribute('position').array;
         for (let i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
@@ -32,14 +33,16 @@ export class HelloWorlThreedWorker extends WorkerTaskDefaultWorker {
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, 'execComplete');
+        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+            overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
+        });
         execComplete.addPayload(meshPayload);
 
-        const transferables = execComplete.pack(false);
+        const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 
 }
 
 const worker = new HelloWorlThreedWorker();
-self.onmessage = message => worker.comRouting(message);
+self.onmessage = message => comRouting(worker, message);

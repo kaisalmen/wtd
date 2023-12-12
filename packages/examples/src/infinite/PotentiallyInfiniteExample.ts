@@ -1,4 +1,20 @@
-import * as THREE from 'three';
+import {
+    AmbientLight,
+    BufferGeometry,
+    Color,
+    DirectionalLight,
+    FileLoader,
+    GridHelper,
+    Material,
+    Mesh,
+    MeshPhongMaterial,
+    MeshStandardMaterial,
+    PerspectiveCamera,
+    Scene,
+    TorusGeometry,
+    Vector3,
+    WebGLRenderer
+} from 'three';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
@@ -7,11 +23,11 @@ import {
     GUI
 } from 'lil-gui';
 import {
-    WorkerTask,
     WorkerTaskDirector,
     DataPayload,
     WorkerTaskMessage,
-    WorkerTaskMessageType,
+    WorkerTaskCommandResponse,
+    createWorkerBlob,
 } from 'wtd-core';
 import {
     MaterialStore,
@@ -23,8 +39,8 @@ import {
 } from 'wwobjloader2';
 
 export type CameraDefaults = {
-    posCamera: THREE.Vector3;
-    posCameraTarget: THREE.Vector3;
+    posCamera: Vector3;
+    posCameraTarget: Vector3;
     near: number;
     far: number;
     fov: number;
@@ -34,7 +50,7 @@ type TaskDescription = {
     id: number;
     name: string
     use: boolean;
-    module: boolean;
+    workerType: 'classic' | 'module';
     blob: boolean;
     workerUrl: URL | string;
     workerCount: number;
@@ -66,29 +82,31 @@ type TaskDescription = {
  */
 class PotentiallyInfiniteExample {
 
-    private renderer: THREE.WebGLRenderer;
+    private renderer: WebGLRenderer;
     private canvas: HTMLElement;
-    private scene: THREE.Scene = new THREE.Scene();
-    private camera: THREE.PerspectiveCamera;
-    private cameraTarget: THREE.Vector3;
+    private scene: Scene = new Scene();
+    private camera: PerspectiveCamera;
+    private cameraTarget: Vector3;
     private cameraDefaults: CameraDefaults = {
-        posCamera: new THREE.Vector3(1000.0, 1000.0, 1000.0),
-        posCameraTarget: new THREE.Vector3(0, 0, 0),
+        posCamera: new Vector3(1000.0, 1000.0, 1000.0),
+        posCameraTarget: new Vector3(0, 0, 0),
         near: 0.1,
         far: 10000,
         fov: 45
     };
     private controls: TrackballControls;
-    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector();
+    private verbose = false;
+    private workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector({
+        verbose: this.verbose
+    });
 
     // configure all task that shall be usable on register to the WorkerTaskDirector
     taskSimpleBlobWorker = {
-        id: 0,
         name: 'simpleBlobWorker',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: true,
-        workerUrl: WorkerTask.createWorkerBlob([`${SimpleBlobWorker.toString()}
+        workerUrl: createWorkerBlob([`${SimpleBlobWorker.toString()}
 
         worker = new SimpleBlobWorker();
         self.onmessage = message => worker.comRouting(message);
@@ -96,29 +114,26 @@ class PotentiallyInfiniteExample {
         workerCount: 6
     } as TaskDescription;
     taskInfiniteWorkerInternalGeometry = {
-        id: 1,
         name: 'InfiniteWorkerInternalGeometry',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: false,
         workerUrl: new URL(import.meta.env.DEV ? '../worker/InfiniteWorkerInternalGeometry.ts' : '../worker/generated/InfiniteWorkerInternalGeometry-es.js', import.meta.url),
         workerCount: 10
     } as TaskDescription;
     taskInfiniteWorkerExternalGeometry = {
-        id: 2,
         name: 'InfiniteWorkerExternalGeometry',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: false,
         workerUrl: new URL(import.meta.env.DEV ? '../worker/InfiniteWorkerExternalGeometry.ts' : '../worker/generated/InfiniteWorkerExternalGeometry-es.js', import.meta.url),
         workerCount: 8
     } as TaskDescription;
     taskObjLoader2Worker = {
-        id: 3,
         name: 'OBJLoader2WorkerModule',
         modelName: 'female02',
         use: true,
-        module: true,
+        workerType: 'module',
         blob: false,
         workerUrl: new URL(import.meta.env.DEV ? '../worker/generated/OBJLoader2WorkerClassic.js' : '../worker/generated/OBJLoader2WorkerModule.js', import.meta.url),
         workerCount: 2,
@@ -129,7 +144,7 @@ class PotentiallyInfiniteExample {
     private materialStore = new MaterialStore(true);
     private tasksToUse: TaskDescription[] = [];
     private executions: Array<Promise<unknown>> = [];
-    private objectsUsed = new Map<number, { name: string, pos: THREE.Vector3 }>();
+    private objectsUsed = new Map<string, { name: string, pos: Vector3 }>();
     private meshesAdded: string[] = [];
     private removeCount = 50;
     numberOfMeshesToKeep = 750;
@@ -143,9 +158,9 @@ class PotentiallyInfiniteExample {
 
     // sphere positions
     private baseFactor = 750;
-    private baseVectorX = new THREE.Vector3(1, 0, 0);
-    private baseVectorY = new THREE.Vector3(0, 1, 0);
-    private baseVectorZ = new THREE.Vector3(0, 0, 1);
+    private baseVectorX = new Vector3(1, 0, 0);
+    private baseVectorY = new Vector3(0, 1, 0);
+    private baseVectorZ = new Vector3(0, 0, 1);
 
     abort = false;
 
@@ -158,21 +173,21 @@ class PotentiallyInfiniteExample {
         this.ui = new GUIControls(document.getElementById('lil-gui'), this);
 
         this.canvas = elementToBindTo;
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new WebGLRenderer({
             canvas: this.canvas,
             antialias: true
         });
         this.renderer.setClearColor(0x050505);
 
         this.cameraTarget = this.cameraDefaults.posCameraTarget;
-        this.camera = new THREE.PerspectiveCamera(this.cameraDefaults.fov, this.recalcAspectRatio(), this.cameraDefaults.near, this.cameraDefaults.far);
+        this.camera = new PerspectiveCamera(this.cameraDefaults.fov, this.recalcAspectRatio(), this.cameraDefaults.near, this.cameraDefaults.far);
         this.resetCamera();
 
         this.controls = new TrackballControls(this.camera, this.renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        const directionalLight1 = new THREE.DirectionalLight(0xC0C090);
-        const directionalLight2 = new THREE.DirectionalLight(0xC0C090);
+        const ambientLight = new AmbientLight(0x404040);
+        const directionalLight1 = new DirectionalLight(0xC0C090);
+        const directionalLight2 = new DirectionalLight(0xC0C090);
 
         directionalLight1.position.set(- 100, - 50, 100);
         directionalLight2.position.set(100, 50, - 100);
@@ -181,7 +196,7 @@ class PotentiallyInfiniteExample {
         this.scene.add(directionalLight2);
         this.scene.add(ambientLight);
 
-        const helper = new THREE.GridHelper(1000, 30, 0xFF4444, 0x404040);
+        const helper = new GridHelper(1000, 30, 0xFF4444, 0x404040);
         helper.name = 'grid';
         this.scene.add(helper);
     }
@@ -191,7 +206,9 @@ class PotentiallyInfiniteExample {
     }
 
     resetAppContext() {
-        this.workerTaskDirector = new WorkerTaskDirector();
+        this.workerTaskDirector = new WorkerTaskDirector({
+            verbose: this.verbose
+        });
 
         this.tasksToUse = [];
         this.executions = [];
@@ -215,9 +232,9 @@ class PotentiallyInfiniteExample {
 
         // sphere positions
         this.baseFactor = 750;
-        this.baseVectorX = new THREE.Vector3(1, 0, 0);
-        this.baseVectorY = new THREE.Vector3(0, 1, 0);
-        this.baseVectorZ = new THREE.Vector3(0, 0, 1);
+        this.baseVectorX = new Vector3(1, 0, 0);
+        this.baseVectorY = new Vector3(0, 1, 0);
+        this.baseVectorZ = new Vector3(0, 0, 1);
     }
 
     resetUI() {
@@ -271,65 +288,90 @@ class PotentiallyInfiniteExample {
         let taskDescr = this.taskSimpleBlobWorker;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
-            const initMessage = new WorkerTaskMessage({
-                id: taskDescr.id,
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
+            const initMessage = WorkerTaskMessage.createNew({
                 name: taskDescr.name
             });
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
+                message: initMessage
+            }));
         }
 
         taskDescr = this.taskInfiniteWorkerInternalGeometry;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
 
-            const initMessage = new WorkerTaskMessage({
-                id: taskDescr.id,
+            const initMessage = WorkerTaskMessage.createNew({
                 name: taskDescr.name
             });
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage));
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
+                message: initMessage
+            }));
         }
 
         taskDescr = this.taskInfiniteWorkerExternalGeometry;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
 
-            const torus = new THREE.TorusGeometry(25, 8, 16, 100);
+            const torus = new TorusGeometry(25, 8, 16, 100);
             torus.name = 'torus';
-            const initMessage = new WorkerTaskMessage({
-                id: taskDescr.id,
+            const initMessage = WorkerTaskMessage.createNew({
                 name: taskDescr.name
             });
             const meshPayload = new MeshPayload();
             meshPayload.setBufferGeometry(torus, 0);
 
             initMessage.addPayload(meshPayload);
-            const transferables = initMessage.pack(false);
-            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, initMessage, transferables));
+            const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
+            awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
+                message: initMessage,
+                transferables,
+                copyTransferables: true
+            }));
         }
 
         taskDescr = this.taskObjLoader2Worker;
         if (taskDescr.use) {
             this.tasksToUse.push(taskDescr);
-            this.workerTaskDirector.registerTask(taskDescr.name, {
-                module: taskDescr.module,
-                blob: taskDescr.blob,
-                url: taskDescr.workerUrl
-            }, taskDescr.workerCount);
+            this.workerTaskDirector.registerTask({
+                taskName: taskDescr.name,
+                workerConfig: {
+                    $type: 'WorkerConfigParams',
+                    workerType: taskDescr.workerType,
+                    blob: taskDescr.blob,
+                    url: taskDescr.workerUrl
+                },
+                maxParallelExecutions: taskDescr.workerCount
+            });
 
             const loadMtl = new Promise<MTLLoader.MaterialCreator>(resolve => {
                 const mtlLoader = new MTLLoader();
@@ -337,7 +379,7 @@ class PotentiallyInfiniteExample {
             });
             awaiting.push(loadMtl);
 
-            const fileLoader = new THREE.FileLoader();
+            const fileLoader = new FileLoader();
             fileLoader.setResponseType('arraybuffer');
             const loadObj = fileLoader.loadAsync(taskDescr!.filenameObj!.href as string);
             awaiting.push(loadObj);
@@ -351,19 +393,22 @@ class PotentiallyInfiniteExample {
                 this.materialStore.addMaterialsFromObject(materialCreator.materials, false);
                 const buffer = results[results.length - 1] as string | ArrayBuffer;
 
-                const initMessage = new WorkerTaskMessage({
-                    id: 0,
+                const initMessage = WorkerTaskMessage.createNew({
                     name: 'OBJLoader2WorkerModule'
                 });
                 const dataPayload = new DataPayload();
-                dataPayload.params = {
+                dataPayload.message.params = {
                     materialNames: new Set(Array.from(this.materialStore.getMaterials().keys()))
                 };
-                dataPayload.buffers.set('modelData', buffer as ArrayBufferLike);
+                dataPayload.message.buffers?.set('modelData', buffer as ArrayBufferLike);
                 initMessage.addPayload(dataPayload);
 
-                const transferables = initMessage.pack(false);
-                await this.workerTaskDirector.initTaskType(initMessage.name, initMessage, transferables);
+                const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
+                await this.workerTaskDirector.initTaskType(initMessage.name!, {
+                    message: initMessage,
+                    transferables,
+                    copyTransferables: true
+                });
                 console.timeEnd('All tasks have been initialized');
                 this.executeWorkers();
             }
@@ -388,7 +433,6 @@ class PotentiallyInfiniteExample {
         }
 
         console.time('start');
-        let globalCount = 0;
         const taskSelector = this.createTaskSelector();
 
         for (let j = 0; j < this.loopCount && !this.abort; j++) {
@@ -398,21 +442,16 @@ class PotentiallyInfiniteExample {
                 const indexToUse = Math.floor(Math.random() * taskSelector.totalWorkers);
                 const taskDescr = taskSelector.taskSelectorArray[indexToUse];
 
-                const execMessage = new WorkerTaskMessage({
-                    id: globalCount
-                });
                 const dataPayload = new DataPayload();
-                dataPayload.params = {
+                dataPayload.message.params = {
                     modelName: taskDescr.name
                 };
-                execMessage.addPayload(dataPayload);
-
-                const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, execMessage,
-                    data => this.processMessage(taskDescr, data),
-                    data => this.processMessage(taskDescr, data));
+                const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, {
+                    message: WorkerTaskMessage.fromPayload(dataPayload),
+                    onComplete: data => this.processMessage(taskDescr, data),
+                    onIntermediateConfirm: data => this.processMessage(taskDescr, data)
+                });
                 this.executions.push(promise);
-
-                globalCount++;
             }
             await Promise.all(this.executions);
             this.executions = [];
@@ -446,11 +485,11 @@ class PotentiallyInfiniteExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessageType | Error) {
-        let material: THREE.Material | THREE.Material[] | undefined;
+    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessage | Error) {
+        let material: Material | Material[] | undefined;
         let meshPayload: MeshPayload;
         let materialsPayload: MaterialsPayload;
-        let mesh: THREE.Mesh;
+        let mesh: Mesh;
         if (message instanceof Error) {
             console.error(message);
             return;
@@ -458,26 +497,26 @@ class PotentiallyInfiniteExample {
 
         const wtm = WorkerTaskMessage.unpack(message, false);
         switch (wtm.cmd) {
-            case 'initComplete':
-                console.log('Init Completed: ' + wtm.id);
+            case WorkerTaskCommandResponse.INIT_COMPLETE:
+                console.log('Init Completed: ' + wtm.uuid);
                 break;
 
-            case 'execComplete':
-            case 'intermediate':
+            case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
+            case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
                 // were are getting raw vertex buffers here
-                if (wtm.payloads.length > 0) {
-                    if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads.length === 1) {
-                        const dataPayloadOBJ = wtm.payloads[0];
-                        const preparedMesh = dataPayloadOBJ?.params?.preparedMesh;
+                if (wtm.payloads && wtm.payloads?.length > 0) {
+                    if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads?.length === 1) {
+                        const dataPayloadOBJ = wtm.payloads[0] as DataPayload;
+                        const preparedMesh = dataPayloadOBJ?.message.params?.preparedMesh;
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                         // @ts-ignore
-                        mesh = OBJLoader2.buildThreeMesh(preparedMesh, this.materialStore.getMaterials(), false) as THREE.Mesh;
+                        mesh = OBJLoader2.buildThreeMesh(preparedMesh, this.materialStore.getMaterials(), false) as Mesh;
                     } else {
                         meshPayload = wtm.payloads[0] as MeshPayload;
-                        if (meshPayload.params?.color) {
-                            const pColor = meshPayload.params?.color as { r: number, g: number, b: number };
-                            const color = new THREE.Color(pColor.r, pColor.g, pColor.b);
-                            material = new THREE.MeshPhongMaterial({ color: color });
+                        if (meshPayload.message.params?.color) {
+                            const pColor = meshPayload.message.params?.color as { r: number, g: number, b: number };
+                            const color = new Color(pColor.r, pColor.g, pColor.b);
+                            material = new MeshPhongMaterial({ color: color });
                         }
 
                         if (wtm.payloads.length === 2) {
@@ -485,24 +524,24 @@ class PotentiallyInfiniteExample {
                             const storedMaterials = this.materialStore.getMaterials();
                             material = materialsPayload.processMaterialTransport(storedMaterials, true);
                             if (!material) {
-                                material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+                                material = new MeshStandardMaterial({ color: 0xFF0000 });
                             }
                         }
                         else {
                             const randArray = new Uint8Array(3);
                             window.crypto.getRandomValues(randArray);
-                            const color = new THREE.Color();
+                            const color = new Color();
                             color.r = randArray[0] / 255;
                             color.g = randArray[1] / 255;
                             color.b = randArray[2] / 255;
-                            material = new THREE.MeshPhongMaterial({ color: color });
+                            material = new MeshPhongMaterial({ color: color });
                         }
-                        mesh = new THREE.Mesh(meshPayload.bufferGeometry as THREE.BufferGeometry, material);
+                        mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
                     }
-                    this.addMesh(mesh, wtm.id);
+                    this.addMesh(mesh, wtm.uuid ?? 'unknown');
                 }
                 else {
-                    if (wtm.cmd !== 'execComplete') {
+                    if (wtm.cmd !== WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
                         // This is the end-point for the execution
                         //console.log(`DataTransport: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
                         console.error('Provided payload.type did not match: ' + wtm.cmd);
@@ -512,7 +551,7 @@ class PotentiallyInfiniteExample {
                 break;
 
             default:
-                console.error(`${wtm.id}: Received unknown command: ${wtm.cmd}`);
+                console.error(`${wtm.uuid}: Received unknown command: ${wtm.cmd}`);
                 break;
         }
     }
@@ -520,21 +559,21 @@ class PotentiallyInfiniteExample {
     /**
      * Add mesh at random position, but keep sub-meshes of an object together
      */
-    private addMesh(mesh: THREE.Mesh, id: number) {
-        const storedPos = this.objectsUsed.get(id);
+    private addMesh(mesh: Mesh, uuid: string) {
+        const storedPos = this.objectsUsed.get(uuid);
         let pos;
         if (storedPos) {
             pos = storedPos.pos;
         }
         else {
-            pos = new THREE.Vector3(this.baseFactor * Math.random(), this.baseFactor * Math.random(), this.baseFactor * Math.random());
+            pos = new Vector3(this.baseFactor * Math.random(), this.baseFactor * Math.random(), this.baseFactor * Math.random());
             pos.applyAxisAngle(this.baseVectorX, 2 * Math.PI * Math.random());
             pos.applyAxisAngle(this.baseVectorY, 2 * Math.PI * Math.random());
             pos.applyAxisAngle(this.baseVectorZ, 2 * Math.PI * Math.random());
-            this.objectsUsed.set(id, { name: mesh.name, pos: pos });
+            this.objectsUsed.set(uuid, { name: mesh.name, pos: pos });
         }
         mesh.position.set(pos.x, pos.y, pos.z);
-        mesh.name = id + '' + mesh.name;
+        mesh.name = uuid + '' + mesh.name;
         this.scene.add(mesh);
         this.meshesAdded.push(mesh.name);
     }
@@ -558,10 +597,10 @@ class PotentiallyInfiniteExample {
         let i = 0;
         while (deleteCount < deleteRange && i < this.meshesAdded.length) {
             const meshName = this.meshesAdded[i];
-            toBeRemoved = this.scene.getObjectByName(meshName) as THREE.Mesh;
+            toBeRemoved = this.scene.getObjectByName(meshName) as Mesh;
             if (toBeRemoved) {
                 toBeRemoved.geometry.dispose();
-                if (toBeRemoved.material instanceof THREE.Material) {
+                if (toBeRemoved.material instanceof Material) {
                     if (typeof toBeRemoved.material.dispose === 'function') {
                         toBeRemoved.material.dispose();
                     }
@@ -587,34 +626,36 @@ class PotentiallyInfiniteExample {
 // Simplest way to define a worker, but can't be a module worker
 class SimpleBlobWorker {
 
-    init(message: WorkerTaskMessageType) {
+    init(message: WorkerTaskMessage) {
         message.cmd = 'initComplete';
         self.postMessage(message);
     }
 
-    execute(message: WorkerTaskMessageType) {
+    execute(message: WorkerTaskMessage) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
         }
 
         const dataPayload = {
-            params: {
-                hello: 'say hello'
-            },
-            type: 'dataPayload',
-            buffers: new Map(),
-            progress: 0
+            $type: 'DataPayload',
+            message: {
+                params: {
+                    hello: 'say hello'
+                },
+                buffers: new Map(),
+                progress: 0
+            }
         };
-        message.payloads[0] = dataPayload;
+        message.payloads = [dataPayload];
 
-        message.cmd = 'execComplete';
+        message.cmd = 'executeComplete';
         self.postMessage(message);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
-        const wtmt = (message as MessageEvent).data as WorkerTaskMessageType;
+        const wtmt = (message as MessageEvent).data as WorkerTaskMessage;
         if (wtmt) {
             if (wtmt.cmd === 'init') {
                 this.init(wtmt);
