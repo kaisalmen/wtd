@@ -56,18 +56,18 @@ export class InterComPortHandler {
     }
 }
 
-export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>, delegate?: (ev: MessageEvent<unknown>) => unknown) => {
-    const wtmt = (message as MessageEvent).data as WorkerTaskMessage;
-    if (wtmt && wtmt.cmd) {
+export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>) => {
+    const wtm = (message as MessageEvent).data as WorkerTaskMessage;
+    if (wtm && wtm.cmd) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const obj = (workerImpl as any);
-        const funcName = wtmt.cmd ?? 'unknown';
+        const funcName = wtm.cmd ?? 'unknown';
         if (typeof obj[funcName] === 'function') {
-            obj[funcName](wtmt);
+            obj[funcName](wtm);
         } else {
             console.warn(`No function "${funcName}" found on workerImpl.`);
         }
-    } else if (delegate) {
-        delegate(message);
+    } else {
+        console.error(`Received: unknown message: ${wtm}`);
     }
 };

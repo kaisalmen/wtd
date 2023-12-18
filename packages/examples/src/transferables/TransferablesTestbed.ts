@@ -21,7 +21,8 @@ import {
     WorkerTaskMessage
 } from 'wtd-core';
 import {
-    MeshPayload, reconstructBuffer
+    MeshPayload,
+    reconstructBuffer
 } from 'wtd-three-ext';
 
 type CameraDefaults = {

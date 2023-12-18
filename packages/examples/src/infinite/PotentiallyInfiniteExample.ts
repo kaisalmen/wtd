@@ -665,7 +665,6 @@ class SimpleBlobWorker {
             }
         }
     }
-
 }
 
 class GUIControls {

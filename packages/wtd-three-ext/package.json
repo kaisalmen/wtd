@@ -1,6 +1,6 @@
 {
   "name": "wtd-three-ext",
-  "version": "3.0.0-next.5",
+  "version": "3.0.0-next.6",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -41,11 +41,11 @@
     "build": "npm run clean && npm run compile && npm run build:bundle"
   },
   "volta": {
-    "node": "18.18.2",
-    "npm": "9.8.1"
+    "node": "20.10.0",
+    "npm": "10.2.3"
   },
   "dependencies": {
-    "wtd-core": "~3.0.0-next.5",
+    "wtd-core": "~3.0.0-next.6",
     "three": "~0.159.0"
   },
   "devDependencies": {

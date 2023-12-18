@@ -2,7 +2,6 @@ import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTaskWorker.js';
-import { extractDelegate } from './utilities.js';
 
 export type WorkerConfig = {
     $type: 'WorkerConfigParams'
@@ -22,10 +21,6 @@ export type WorkerMessageDef = {
     copyTransferables?: boolean;
 };
 
-export type WorkerInitMessageDef = WorkerMessageDef & {
-    delegate?: boolean;
-}
-
 export type WorkerIntermediateMessageDef = WorkerMessageDef & {
     answer?: string;
     awaitAnswer?: boolean;
@@ -43,7 +38,6 @@ export type WorkerTaskConfig = {
     taskName: string;
     workerId: number;
     workerConfig: WorkerConfig | WorkerConfigDirect;
-    piggyBag?: boolean;
     verbose?: boolean;
 }
 
@@ -61,7 +55,6 @@ export class WorkerTask {
     private taskName: string;
     private workerId: number;
     private workerConfig: WorkerConfig | WorkerConfigDirect;
-    private piggyBag = false;
     private verbose = false;
 
     private worker?: Worker;
@@ -74,7 +67,6 @@ export class WorkerTask {
         this.workerId = config.workerId;
         this.workerConfig = config.workerConfig;
         this.verbose = config.verbose === true;
-        this.piggyBag = config.piggyBag === true;
     }
 
     isWorkerExecuting() {
@@ -112,7 +104,6 @@ export class WorkerTask {
             throw new Error('No valid worker configuration was supplied. Aborting...');
         }
 
-        const delegate = (this.piggyBag === true) ? extractDelegate(this.worker) : undefined;
         this.worker.onmessage = (async (answer) => {
             // only process WorkerTaskMessage
             const wtm = answer.data as WorkerTaskMessage;
@@ -136,7 +127,7 @@ export class WorkerTask {
                     }
                 });
             } else {
-                delegate?.(answer);
+                console.error(`Received: unknown message: ${wtm}`);
             }
         });
         this.worker.onerror = (async (answer) => {
@@ -146,7 +137,7 @@ export class WorkerTask {
         });
     }
 
-    async initWorker(def: WorkerInitMessageDef): Promise<WorkerTaskMessage> {
+    async initWorker(def: WorkerMessageDef): Promise<WorkerTaskMessage> {
         return new Promise((resolve, reject) => {
             if (!this.worker) {
                 reject(new Error('No worker is available. Aborting...'));

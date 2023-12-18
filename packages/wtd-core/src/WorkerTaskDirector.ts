@@ -2,10 +2,10 @@ import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 import type {
-    WorkerExecutionDef,
-    WorkerInitMessageDef,
     WorkerConfig,
-    WorkerConfigDirect
+    WorkerConfigDirect,
+    WorkerExecutionDef,
+    WorkerMessageDef
 } from './WorkerTask.js';
 import {
     WorkerTask
@@ -92,9 +92,9 @@ export class WorkerTaskDirector {
      * Provides initialization configuration and transferable objects.
      *
      * @param {string} taskTypeName The name of the registered task type.
-     * @param {WorkerInitMessageDef} [def] Initialization instructions.
+     * @param {WorkerMessageDef} [def] Initialization instructions.
      */
-    async initTaskType(taskTypeName: string, def?: WorkerInitMessageDef) {
+    async initTaskType(taskTypeName: string, def?: WorkerMessageDef) {
         const executions = [];
         const workerTaskRuntimeDesc = this.taskTypes.get(taskTypeName);
         if (workerTaskRuntimeDesc) {

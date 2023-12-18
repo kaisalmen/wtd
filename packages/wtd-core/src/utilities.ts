@@ -46,14 +46,6 @@ export const createWorkerBlob = (code: string[]) => {
     return window.URL.createObjectURL(simpleWorkerBlob);
 };
 
-export const extractDelegate = (scope: DedicatedWorkerGlobalScope | Worker): ((ev: MessageEvent<unknown>) => unknown) | undefined => {
-    let delegate: ((ev: MessageEvent<unknown>) => unknown) | undefined = undefined;
-    if (scope.onmessage !== undefined) {
-        delegate = scope.onmessage as (ev: MessageEvent<unknown>) => unknown;
-    }
-    return delegate;
-};
-
 export const initChannel = async (workerOne: WorkerTask, workerTwo: WorkerTask) => {
     const channel = new MessageChannel();
 

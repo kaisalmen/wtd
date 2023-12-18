@@ -4,6 +4,8 @@
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
 [![wtd](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml/badge.svg)](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml)
 
+**IMPORTANT**: The README is being overhauled to in preparation of v3.0.0 release.
+
 ## Overview
 
 The Worker Task Director Core Library [wtd-core](./packages/wtd-core) directs the execution of registered workers. Each registerd worker can be instantiated a configurable number of times as generic WorkerTask. Each WorkerTask can be executed with variying data in parallel. Execution is handled asynchronuously on the main JavaScript thread and the execution itself is done in parallel in each worker.
@@ -18,12 +20,12 @@ With version v2.0.0 the core library [wtd-core](./packages/wtd-core) and the thr
 
 There are multiple examples available (listed from simple to advanced):
 
-- **Hello World: Module Worker**: [html](./packages/examples/helloWorld.html), [ts](./packages/examples/src/helloWorld/helloWorld.ts), [worker-ts](./packages/examples/src/worker/HelloWorldWorker.ts)
-- **Hello World: Standard Worker**: [html](./packages/examples/helloWorldStandard.html), [ts](./packages/examples/src/helloWorld/helloWorldStandard.ts), [worker-js (generated)](./packages/examples/src/worker/generated/HelloWorldWorker-iife.js)
-- **Hello World: WorkerTask Only**: [html](./packages/examples/helloWorldWorkerTask.html), [ts](./packages/examples/src/helloWorld/helloWorldWorkerTask.ts), [worker-ts](./packages/examples/src/worker/HelloWorldWorker.ts)
-- **Transferables**: [html](./packages/examples/transferables.html), [ts](./packages/examples/src/transferables/TransferablesTestbed.ts), **Worker**: [1](./packages/examples/src/worker/TransferableWorkerTest1.ts), [2](./packages/examples/src/worker/TransferableWorkerTest2.ts), [3](./packages/examples/src/worker/TransferableWorkerTest3.ts), [4](./packages/examples/src/worker/TransferableWorkerTest4.ts)
-- **Three.js Example**: [html](./packages/examples/threejs.html), [ts](./packages/examples/src/threejs/Threejs.ts), **Worker**: [1](./packages/examples/src/worker/HelloWorldThreeWorker.ts), [2](./packages/examples/src/worker/OBJLoaderWorker.ts)
-- **Potentially Infinite Example**: [html](./packages/examples/potentially_infinite.html), [ts](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts), **Worker**: [1](./packages/examples/src/worker/InfiniteWorkerExternalGeometry.ts), [2](./packages/examples/src/worker/InfiniteWorkerInternalGeometry.ts), [3](https://github.com/kaisalmen/WWOBJLoader/blob/main/packages/objloader2/src/worker/OBJLoader2Worker.js), [4](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts#L598-L638)
+- **WorkerTask: Hello World**: [html](./packages/examples/helloWorldWorkerTask.html), [ts](./packages/examples/src/helloWorld/HelloWorldWorkerTask.ts), [worker](./packages/examples/src/worker/HelloWorldWorker.ts)
+- **WorkerTaskDirector: Hello World**: [html](./packages/examples/helloWorldWorkerTaskDirector.html), [ts](./packages/examples/src/helloWorld/helloWorldWorkerTaskDirector.ts), [worker](./packages/examples/src/worker/HelloWorldWorker.ts)
+- **WorkerTask: Inter-Worker Communication**: [html](./packages/examples/workerCom.html), [ts](./packages/examples/src/com/WorkerCom.ts), **Worker**: [1](./packages/examples/src/worker/Com1Worker.ts) and [2](./packages/examples/src/worker/Com2Worker.ts)
+- **WorkerTaskDirector: Transferables**: [html](./packages/examples/transferables.html), [ts](./packages/examples/src/transferables/TransferablesTestbed.ts), **Worker**: [1](./packages/examples/src/worker/TransferableWorkerTest1.ts), [2](./packages/examples/src/worker/TransferableWorkerTest2.ts), [3](./packages/examples/src/worker/TransferableWorkerTest3.ts), [4](./packages/examples/src/worker/TransferableWorkerTest4.ts)
+- **WorkerTaskDirector: Three.js**: [html](./packages/examples/threejs.html), [ts](./packages/examples/src/threejs/Threejs.ts), **Worker**: [1](./packages/examples/src/worker/HelloWorldThreeWorker.ts), [2](./packages/examples/src/worker/OBJLoaderWorker.ts)
+- **WorkerTaskDirector: Potentially Infinite Execution**: [html](./packages/examples/potentially_infinite.html), [ts](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts), **Worker**: [1](./packages/examples/src/worker/InfiniteWorkerExternalGeometry.ts), [2](./packages/examples/src/worker/InfiniteWorkerInternalGeometry.ts), [3](https://github.com/kaisalmen/WWOBJLoader/blob/main/packages/objloader2/src/worker/OBJLoader2Worker.ts), [4](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts#L627-L668)
 
 ### Usage
 

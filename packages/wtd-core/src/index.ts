@@ -25,11 +25,11 @@ import {
 } from './WorkerTaskDirector.js';
 
 import type {
-    WorkerMessageDef,
-    WorkerInitMessageDef,
-    WorkerExecutionDef,
     WorkerConfig,
-    WorkerConfigDirect
+    WorkerConfigDirect,
+    WorkerExecutionDef,
+    WorkerMessageDef,
+    WorkerIntermediateMessageDef
 } from './WorkerTask.js';
 import {
     WorkerTask
@@ -78,12 +78,13 @@ import {
 } from './offscreen/OffscreenPayload.js';
 export * from './offscreen/MainEventProxy.js';
 export * from './offscreen/helper.js';
+
 export {
-    WorkerMessageDef,
-    WorkerInitMessageDef,
-    WorkerExecutionDef,
     WorkerConfig,
     WorkerConfigDirect,
+    WorkerMessageDef,
+    WorkerExecutionDef,
+    WorkerIntermediateMessageDef,
     WorkerTask,
     WorkerTaskDirector,
     WorkerTaskDirectorTaskDef,
