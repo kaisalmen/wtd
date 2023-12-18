@@ -13,9 +13,9 @@ export default defineConfig(({ command }) => {
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, 'index.html'),
-                    helloWorld: path.resolve(__dirname, 'helloWorld.html'),
-                    workerCom: path.resolve(__dirname, 'workerCom.html'),
                     helloWorldWorkerTask: path.resolve(__dirname, 'helloWorldWorkerTask.html'),
+                    helloWorldWorkerTaskDirector: path.resolve(__dirname, 'helloWorldWorkerTaskDirector.html'),
+                    workerCom: path.resolve(__dirname, 'workerCom.html'),
                     transferables: path.resolve(__dirname, 'transferables.html'),
                     threejs: path.resolve(__dirname, 'threejs.html'),
                     potentiallyInfinite: path.resolve(__dirname, 'potentially_infinite.html')
