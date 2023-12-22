@@ -101,7 +101,7 @@ export class WorkerTaskDirector {
             this.workerExecutionPlans.set(taskTypeName, []);
             for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 // only init worker if a def is provided
-                workerTask.createWorker();
+                workerTask.connectWorker();
                 if (def) {
                     executions.push(workerTask.initWorker({
                         message: def.message,

@@ -81,7 +81,7 @@ export class WorkerTask {
         return this.worker;
     }
 
-    createWorker() {
+    connectWorker() {
         if (this.worker) {
             throw new Error('Worker already created. Aborting...');
         }

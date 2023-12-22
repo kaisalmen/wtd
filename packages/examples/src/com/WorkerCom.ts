@@ -55,8 +55,8 @@ class HelloWorldStandardWorkerExample {
             verbose: true
         });
 
-        workerTaskCom1.createWorker();
-        workerTaskCom2.createWorker();
+        workerTaskCom1.connectWorker();
+        workerTaskCom2.connectWorker();
 
         try {
             await initChannel(workerTaskCom1, workerTaskCom2);

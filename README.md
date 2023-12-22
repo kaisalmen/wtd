@@ -1,24 +1,24 @@
-# WorkerTaskDirector Core Library, Extensions for three.js and examples
+# WorkerTask, WorkerTaskDirector and three.js extensions
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
 [![wtd](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml/badge.svg)](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml)
 
-**IMPORTANT**: The README is being overhauled to in preparation of v3.0.0 release.
+Build applications with workers with less boiler plate code.
 
 ## Overview
 
-The Worker Task Director Core Library [wtd-core](./packages/wtd-core) directs the execution of registered workers. Each registerd worker can be instantiated a configurable number of times as generic WorkerTask. Each WorkerTask can be executed with variying data in parallel. Execution is handled asynchronuously on the main JavaScript thread and the execution itself is done in parallel in each worker.
-
-The [WorkerTaskDirector](./packages/wtd-core/src/WorkerTaskDirector.ts) defines a [execution workflow](#execution-workflow) and ensures communication between Main and workers. **WorkerTaskDirector** uses a generic [WorkerTask](./packages/wtd-core/src/WorkerTask.ts) that handles the worker registration, initialization and execution. Additionally, [WorkerTaskMessage](./packages/wtd-core/src/WorkerTaskMessage.ts) defines basic message properties and with version 2.0.0+ it properly separates the message header and the payload. This [DataPayload](./packages/wtd-core/src/DataPayload.ts) provides functions to pack buffers into Transferables. It allows to define/extend "enhanced" payloads for [three.js](https://github.com/mrdoob/three.js). Basically, [wtd-three-ext](./packages/wtd-three-ext) now consists of specific Payload classes and some utility functions. Workers require an execution function and an optional initialization function. Interface [WorkerTaskDirectorWorker](./packages/wtd-core/src/WorkerTaskDirector.ts#L196) and the default implementation [WorkerTaskDirectorDefaultWorker](./packages/wtd-core/src/WorkerTaskDirector.ts#L206) provide simple means to define a worker.
-
-The orginal idea of a "TaskManager" was proposed by in Don McCurdy here [three.js issue 18234](https://github.com/mrdoob/three.js/issues/18234) It evolved from [three.js PR 19650](https://github.com/mrdoob/three.js/pull/19650) into this repository.
-
-With version v2.0.0 the core library [wtd-core](./packages/wtd-core) and the three.js extensions [wtd-three-ext](./packages/wtd-three-ext) were separated into different npm packages [wtd-core](https://www.npmjs.com/package/wtd-core) and [wtd-three-ext](https://www.npmjs.com/package/wtd-three-ext).
+- `wtd-core`:
+  - `WorkerTask`: Defines a non-mandatory (**New with v3**) lifecycle and message protocol (`WorkerTaskMessage`) with optional `Payload` for using and re-using workers. Either use `init` and `execute` funtions to follow a basic lifecycle or send various message either awaiting feedback or not. Use a `WorkerTaskWorker` to connect your ESM worker code with the communication routing. `WorkerTask` ensures aynchronous feedback reaches the caller.
+  - `WorkerTaskManager`: Manages the execution of mutliple `WorkerTask` and multiple instances in parallel. It allows to queue tasks for later execution. This only works when the basic lifecycle is used.
+  - **New with v3**: Helper functions for creating an OffscreenCanvas and delegating events to the worker. It provides a default configuration, but allows to customize all aspects of the configuration to your specific needs. This work was inspired by [three.js optimization manual](https://threejs.org/manual/#en/offscreencanvas)
+- `wtd-three-ext`:
+  - [three.js](https://github.com/mrdoob/three.js) related extension. It allows to define/extend "enhanced" payloads useful in the context of three.js (e.g. exchange Mesh or Material data).
+  - **New with v3**: Extension to the OffscreenCanvas functions. It can trick the code running in the worker to think it has a real canvas allowing to re-use the exact same code. This work was also inspired by [three.js optimization manual](https://threejs.org/manual/#en/offscreencanvas)
 
 ## Examples
 
-There are multiple examples available (listed from simple to advanced):
+There are multiple examples available demonstarting the features described above (listed from simple to advanced):
 
 - **WorkerTask: Hello World**: [html](./packages/examples/helloWorldWorkerTask.html), [ts](./packages/examples/src/helloWorld/HelloWorldWorkerTask.ts), [worker](./packages/examples/src/worker/HelloWorldWorker.ts)
 - **WorkerTaskDirector: Hello World**: [html](./packages/examples/helloWorldWorkerTaskDirector.html), [ts](./packages/examples/src/helloWorld/helloWorldWorkerTaskDirector.ts), [worker](./packages/examples/src/worker/HelloWorldWorker.ts)
@@ -29,32 +29,35 @@ There are multiple examples available (listed from simple to advanced):
 
 ### Usage
 
-This shall give you an idea how you can use module worker with `WorkerTaskDirector` (also see [Hello World Example](./packages/examples/src/helloWorld/helloworld.ts)). It is registered, initialized and execute once:
+This shall give you an idea how you can use module worker with `WorkerTask` (derived from [WorkerTask: Hello World](./packages/examples/src/helloWorld/HelloWorldWorkerTask.ts)):
 
-```javascript
-const workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector();
-const taskName = 'WorkerModule';
-
-// register the module worker
-workerTaskDirector.registerTask(taskName, {
-    module: true,
-    blob: false,
-    url: new URL('./HelloWorldWorker.js', import.meta.url)
+```js
+// let WorkerTask create the worker
+const workerTask = new WorkerTask({
+    taskName,
+    workerId: 1,
+    workerConfig: {
+        $type: 'WorkerConfigParams',
+        url: new URL('./HelloWorldWorker.js', import.meta.url),
+        workerType: 'module',
+    },
+    verbose: true
 });
 
-// init the worker task without any payload (worker init without function invocation on worker)
 try {
-    await workerTaskDirector.initTaskType(taskName)
-    // once the init Promise returns enqueue the execution
-    const execMessage = new WorkerTaskMessage();
+    // cteates and connects the worker callback functions and the WorkerTask
+    workerTask.connectWorker();
 
-    await workerTaskDirector.enqueueWorkerExecutionPlan(taskName, {
-        message: execMessage,
-        // decouple result evaluation ...
-        onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }
+    // execute without init and an empty message
+    const resultExec = await workerTask.executeWorker({
+        message: WorkerTaskMessage.createEmpty()
     });
-    // ... promise result handling
-    alert('Worker execution has been completed after.');
+
+    // once you awaited the resulting WorkerTaskMessage extract the RawPayload
+    const rawPayload = resultExec.payloads?.[0] as RawPayload;
+
+    // log the hello from the HelloWorldWorker
+    console.log(`Worker said: ${rawPayload.message.raw?.hello}`);
 } catch (e) {
     // error handling
     console.error(e);
@@ -65,7 +68,14 @@ try {
 
 There exist three possibilities:
 
-- Checkout the repository and run `npm install`, `npm run build` and then `npm run dev` to spin up the local Vite dev server
+- Checkout the repository and run the following to spin up the local Vite dev server:
+
+```shell
+npm install
+npm run build
+npm run dev
+```
+
 - Press the `Gitpod` button above and start coding and using the examples directly in the browser
 - Checkout the repository and use `docker-compose up -d` to spin up local Vite dev server
 
@@ -75,21 +85,11 @@ If you run Vite locally you require a `nodejs` and `npm`. The Gitpod and local d
 
 In any environment the dev server is reachable on port 8080.
 
-## Features
-
-- Package `wtd-core` has no dependencies. Additional functions for [three.js](https://threejs.org/) have been moved to the new package `wtd-three-ext` (***new in 2.0.0***) which requires three as dependency.
-- `WorkerTaskDirector` supports standard and module workers to be loaded via URL. Standard workers can be loaded from a Blob as well. This is generally not supported for module workers.
-- All worker code construction code and minification problem prevention code has been removed. Standard workers can be created/bundled from module workers with `Vite` if a browser without module worker support is a target.
-- Dependency handling is realized via regular module import
-- `WorkerTaskDirector` has an execution queue allowing to queue more task than can be currently executed.
-- The worker interface is specified by `WorkerTaskDirectorWorker` and is implemented by default by `WorkerTaskDirectorDefaultWorker`. Extending this class defines the easiest way to integrate a worker. (***new in 2.0.0***)
-- The workers that are created for each task can now be configured. This is shown in the [Potentially Infinite Example](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts) (***new in 2.0.0***). It features transfer Mesh and Material (meta-information) bi-driectionally between Main and workers with proper handling of **Transferables**" are treated as such by **.
-
 ## Execution Workflow
 
-The following table describes the currently implemented execution workflow of `WorkerTaskManager`:
+The following table describes the currently implemented execution workflow of `WorkerTaskDirector`:
 
-| WorkerTaskManager (function)  | Message cmd + direction   | Worker (function) | Comment
+| WorkerTaskDirector (function)  | Message cmd + direction   | Worker (function) | Comment
 | ---                           | :---:                     | ---               | ---
 | `registerTask`                |                           |                   |
 | `initTaskType`                | **init ->**               | `init`            | User of `initTaskType` receives resolved promise after execution completion.<br>Sending `init` message is Optional
@@ -105,6 +105,12 @@ Main development takes place on branch [main](https://github.com/kaisalmen/three
 ## Docs
 
 Run `npm run doc` to create the markdown documentation in directory **docs** of each package.
+
+## History
+
+The orginal idea of a "TaskManager" was proposed by in Don McCurdy here [three.js issue 18234](https://github.com/mrdoob/three.js/issues/18234) It evolved from [three.js PR 19650](https://github.com/mrdoob/three.js/pull/19650) into this repository.
+
+With version v2.0.0 the core library [wtd-core](./packages/wtd-core) and the three.js extensions [wtd-three-ext](./packages/wtd-three-ext) were separated into different npm packages [wtd-core](https://www.npmjs.com/package/wtd-core) and [wtd-three-ext](https://www.npmjs.com/package/wtd-three-ext).
 
 Happy coding!
 

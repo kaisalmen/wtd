@@ -1,5 +1,5 @@
 import {
-    DataPayload,
+    RawPayload,
     WorkerTask,
     WorkerTaskMessage
 } from 'wtd-core';
@@ -10,41 +10,33 @@ import {
 class HelloWorldWorkerTaskExample {
 
     async run() {
-        const taskName = 'HelloWorldTaskWorker';
-
-        const workerUrl = new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url);
-        const worker = new Worker(workerUrl, {
-            type: 'module'
-        });
+        const url = new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url);
         const workerTask = new WorkerTask({
-            taskName,
+            taskName: 'HelloWorldWorker',
             workerId: 1,
             workerConfig: {
-                $type: 'WorkerConfigDirect',
-                worker
+                $type: 'WorkerConfigParams',
+                url,
+                workerType: 'module',
             },
             verbose: true
         });
 
         try {
-            workerTask.createWorker();
+            // connects the worker callback functions and the WorkerTask
+            workerTask.connectWorker();
 
             const t0 = performance.now();
-            // once the init Promise is done enqueue the execution
-            const execMessage = WorkerTaskMessage.createEmpty();
+            // execute without init
             const resultExec = await workerTask.executeWorker({
-                message: execMessage
+                message: WorkerTaskMessage.createEmpty()
             });
 
-            const wtm = WorkerTaskMessage.unpack(resultExec, false);
-            if (wtm.payloads?.length === 1) {
-                const dataPayload = wtm.payloads[0] as DataPayload;
-                console.log(`Worker said: ${dataPayload.message?.params?.hello}`);
-            }
-            console.log('Received final command: ' + wtm.cmd);
-
+            const rawPayload = resultExec.payloads?.[0] as RawPayload;
+            const answer = `Worker said: ${rawPayload.message.raw?.hello}`;
             const t1 = performance.now();
-            const msg = `Worker execution has been completed after ${t1 - t0}ms.`;
+
+            const msg = `${answer}\nWorker execution has been completed after ${t1 - t0}ms.`;
             console.log(msg);
             alert(msg);
         } catch (e) {

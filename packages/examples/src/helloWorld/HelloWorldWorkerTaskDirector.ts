@@ -1,5 +1,5 @@
 import {
-    DataPayload,
+    RawPayload,
     WorkerTaskDirector,
     WorkerTaskMessage
 } from 'wtd-core';
@@ -15,7 +15,7 @@ class HelloWorldModuleWorkerExample {
     });
 
     async run() {
-        const taskName = 'WorkerModule';
+        const taskName = 'HelloWorldWorker';
 
         // register the module worker
         this.workerTaskDirector.registerTask({
@@ -39,15 +39,11 @@ class HelloWorldModuleWorkerExample {
                 message: WorkerTaskMessage.createEmpty(),
             });
 
-            const wtm = WorkerTaskMessage.unpack(resultExec, false);
-            if (wtm.payloads?.length === 1) {
-                const dataPayload = wtm.payloads[0] as DataPayload;
-                console.log(`Worker said: ${dataPayload.message?.params?.hello}`);
-            }
-            console.log('Received final command: ' + wtm.cmd);
-
+            const rawPayload = resultExec.payloads?.[0] as RawPayload;
+            const answer = `Worker said: ${rawPayload.message.raw?.hello}`;
             const t1 = performance.now();
-            const msg = `Worker execution has been completed after ${t1 - t0}ms.`;
+
+            const msg = `${answer}\nWorker execution has been completed after ${t1 - t0}ms.`;
             console.log(msg);
             alert(msg);
         } catch (e) {
