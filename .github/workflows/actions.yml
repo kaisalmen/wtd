@@ -33,7 +33,7 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-    - name: Setup
+    - name: Check Environment
       env:
         DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' || github.ref_name == 'main' }}
       run: |
@@ -70,6 +70,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check Environment
+        env:
+          DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' || github.ref_name == 'main' }}
+        run: |
+          echo "DEPLOY_GHP=${DEPLOY_GHP}" >> $GITHUB_ENV
       - name: Deploy to GitHub Pages
         if: ${{ env.DEPLOY_GHP == 'true' }}
         id: deployment
