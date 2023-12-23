@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/three-wtm/blob/main/LICENSE)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/kaisalmen/three-wtm)
 [![wtd](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml/badge.svg)](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml)
+[![Github Pages](https://img.shields.io/badge/github%20pages-121013?style=for-the-badge&logo=github)](https://kaisalmen.github.io/wtd)
 
 Build applications with workers with less boiler plate code.
 
@@ -26,6 +27,8 @@ There are multiple examples available demonstarting the features described above
 - **WorkerTaskDirector: Transferables**: [html](./packages/examples/transferables.html), [ts](./packages/examples/src/transferables/TransferablesTestbed.ts), **Worker**: [1](./packages/examples/src/worker/TransferableWorkerTest1.ts), [2](./packages/examples/src/worker/TransferableWorkerTest2.ts), [3](./packages/examples/src/worker/TransferableWorkerTest3.ts), [4](./packages/examples/src/worker/TransferableWorkerTest4.ts)
 - **WorkerTaskDirector: Three.js**: [html](./packages/examples/threejs.html), [ts](./packages/examples/src/threejs/Threejs.ts), **Worker**: [1](./packages/examples/src/worker/HelloWorldThreeWorker.ts), [2](./packages/examples/src/worker/OBJLoaderWorker.ts)
 - **WorkerTaskDirector: Potentially Infinite Execution**: [html](./packages/examples/potentially_infinite.html), [ts](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts), **Worker**: [1](./packages/examples/src/worker/InfiniteWorkerExternalGeometry.ts), [2](./packages/examples/src/worker/InfiniteWorkerInternalGeometry.ts), [3](https://github.com/kaisalmen/WWOBJLoader/blob/main/packages/objloader2/src/worker/OBJLoader2Worker.ts), [4](./packages/examples/src/infinite/PotentiallyInfiniteExample.ts#L627-L668)
+
+Try out all examples here: <https://kaisalmen.github.io/wtd>
 
 ### Usage
 
