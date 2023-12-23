@@ -29,6 +29,7 @@ export default defineConfig(({ command }) => {
             outDir: path.resolve(__dirname, 'preview'),
             emptyOutDir: true,
         },
+        base: 'https://kaisalmen.github.io/wtd/',
         server: {
             port: 8080,
             host: '0.0.0.0'
