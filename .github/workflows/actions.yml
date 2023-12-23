@@ -35,7 +35,7 @@ jobs:
         node-version: '18'
     - name: Setup
       env:
-        DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' || env.GITHUB_REF_NAME == 'main' }}
+        DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' || github.ref_name == 'main' }}
       run: |
         echo "DEPLOY_GHP=${DEPLOY_GHP}" >> $GITHUB_ENV
     - name: Install
