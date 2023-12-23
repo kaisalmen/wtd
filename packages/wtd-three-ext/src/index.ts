@@ -30,22 +30,30 @@ import {
     packGeometryBuffers,
     reconstructBuffer
 } from './MeshPayload.js';
-export * from './offscreen/WorkerEventProxy.js';
+import {
+    ElementProxyReceiver,
+    noop,
+    proxyStart
+} from './offscreen/WorkerEventProxy.js';
+
 export {
-    MaterialUtils,
-    MaterialCloneInstructionsType,
+    AssociatedBufferAttributeArrayType,
     AssociatedMaterialArrayType,
-    MaterialStore,
+    ElementProxyReceiver,
+    MaterialCloneInstructionsType,
     MaterialsPayload,
     MaterialsPayloadAdditions,
     MaterialsPayloadMessageAdditions,
-    AssociatedBufferAttributeArrayType,
+    MaterialStore,
+    MaterialUtils,
+    MeshPayload,
     MeshPayloadAdditions,
     MeshPayloadMessageAdditions,
-    MeshPayload,
     MeshPayloadHandler,
     addAttributeToBuffers,
     assignAttributeFromTransfered,
+    noop,
     packGeometryBuffers,
+    proxyStart,
     reconstructBuffer
 };

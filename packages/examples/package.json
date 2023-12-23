@@ -24,7 +24,7 @@
     "clean:production": "shx rm -fr preview",
     "copy:assets:production": "shx mkdir -p ./preview/worker/generated && shx cp -f ./src/worker/generated/*.js ./preview/worker/generated && shx cp -f ./models/obj/female02/*.jpg ./preview/assets",
     "build:production": "npm run build && npm run build:worker && npm run build:production:vite",
-    "build:production:vite": "npm run clean:production && vite --config vite.config.production.ts build --debug && npm run copy:assets:production",
+    "build:production:vite": "npm run clean:production && vite --config vite.config.production.ts build && npm run copy:assets:production",
     "preview": "http-server ./preview"
   },
   "dependencies": {

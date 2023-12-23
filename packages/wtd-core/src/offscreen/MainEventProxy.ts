@@ -10,11 +10,11 @@ import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
 import { OffscreenPayload } from './OffscreenPayload.js';
 import { OffscreenWorkerCommandRequest, OffscreenWorkerCommandResponse } from './OffscreenWorker.js';
 
-export const preventDefaultHandler = (event: Event) => {
+export const handlePreventDefault = (event: Event) => {
     event.preventDefault();
 };
 
-export const mouseEventProperties = [
+export const MouseEventProperties = [
     'ctrlKey',
     'metaKey',
     'shiftKey',
@@ -27,26 +27,26 @@ export const mouseEventProperties = [
     'pageY',
 ];
 
-export const mouseEventHandler = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
+export const handleMouseEvent = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
     const offscreenPayload = extractProperties(event, properties);
     workerTask.sentMessage({
         message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
     });
 };
 
-export const wheelEventProperties = [
+export const WheelEventProperties = [
     'deltaX',
     'deltaY',
 ];
 
-export const wheelEventHandler = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
+export const handleWheelEvent = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
     const offscreenPayload = extractProperties(event, properties);
     workerTask.sentMessage({
         message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
     });
 };
 
-export const keydownEventProperties = [
+export const KeydownEventProperties = [
     'ctrlKey',
     'altKey',
     'metaKey',
@@ -55,17 +55,18 @@ export const keydownEventProperties = [
 ];
 
 // The four arrow keys
-export const allowedKeys = [
+export const AllowedKeyProperties = [
     'ArrowLeft',
     'ArrowUp',
     'ArrowRight',
     'ArrowDown',
+    'KeyW',
     'KeyA',
     'KeyS',
     'KeyD'
 ];
 
-export const filteredKeydownEventHandler = (event: Event, workerTask: WorkerTask, properties?: string[], positiveList?: string[]) => {
+export const handleFilteredKeydownEvent = (event: Event, workerTask: WorkerTask, properties?: string[], positiveList?: string[]) => {
     const { code } = event as KeyboardEvent;
     if (positiveList?.includes(code)) {
         const offscreenPayload = extractProperties(event, properties);
@@ -89,7 +90,7 @@ export const extractProperties = (event: Event, properties?: string[]) => {
     });
 };
 
-export const touchEventHandler = (event: Event, workerTask: WorkerTask) => {
+export const handleTouchEvent = (event: Event, workerTask: WorkerTask) => {
     const touches = [];
     const touchEvent = event as TouchEvent;
 
@@ -122,24 +123,24 @@ export type HandlingInstructions = {
 export const buildDefaultEventHandlingInstructions = (): Map<string, HandlingInstructions> => {
     const handlingInstructions: Map<string, HandlingInstructions> = new Map();
     const contextMenuInstruction: HandlingInstructions = {
-        handler: preventDefaultHandler
+        handler: handlePreventDefault
     };
     const mouseInstruction: HandlingInstructions = {
-        handler: mouseEventHandler,
-        properties: mouseEventProperties
+        handler: handleMouseEvent,
+        properties: MouseEventProperties
     };
     const wheelInstruction: HandlingInstructions = {
-        handler: wheelEventHandler,
-        properties: wheelEventProperties,
+        handler: handleWheelEvent,
+        properties: WheelEventProperties,
         passive: true
     };
     const keyboardInstruction: HandlingInstructions = {
-        handler: filteredKeydownEventHandler,
-        properties: keydownEventProperties,
-        positiveList: allowedKeys
+        handler: handleFilteredKeydownEvent,
+        properties: KeydownEventProperties,
+        positiveList: AllowedKeyProperties
     };
     const touchInstruction: HandlingInstructions = {
-        handler: touchEventHandler,
+        handler: handleTouchEvent,
         passive: true
     };
 

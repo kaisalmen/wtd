@@ -2,7 +2,7 @@ import { AssociatedArrayType } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
 import { WorkerTask } from './WorkerTask.js';
 import { WorkerTaskMessage } from './WorkerTaskMessage.js';
-import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './index.js';
+import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTaskWorker.js';
 
 export const fillTransferables = (buffers: IterableIterator<ArrayBufferLike>, transferables: Transferable[], cloneBuffers: boolean) => {
     for (const buffer of buffers) {

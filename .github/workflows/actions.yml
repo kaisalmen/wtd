@@ -1,12 +1,25 @@
 name: Build
 
-on: push
+on:
+    push:
+      branches:
+        - "**"
+      tags-ignore:
+        - "v*.*.*"
+    workflow_dispatch:
+      inputs:
+        ghp:
+          description: 'Deploy to GitHub Page'
+          required: true
+          type: boolean
+          default: false
 
 jobs:
   build:
     name: wtd
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -14,23 +27,44 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
+    - name: Setup
+      env:
+        DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' }}
+      run: |
+        echo "DEPLOY_GHP: ${DEPLOY_GHP}"
     - name: Install
-      shell: bash
       run: |
         npm ci
     - name: Lint
-      shell: bash
       run: |
         npm run lint
     - name: Build
-      shell: bash
       run: |
         npm run build
     - name: Test
-      shell: bash
       run: |
         npm run test
     - name: Build Production
-      shell: bash
       run: |
         npm --prefix packages/examples run build:production
+    - name: Upload examples preview build
+      if: ${{ github.event.inputs.ghp == 'true' }}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./packages/examples/preview/
+        retention-days: 7
+
+  deploy:
+    needs: build
+    permissions:
+        pages: write
+        id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        if: ${{ github.event.inputs.ghp == 'true' }}
+        id: deployment
+        uses: actions/deploy-pages@v4

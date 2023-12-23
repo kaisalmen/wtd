@@ -68,7 +68,12 @@ import {
     WorkerTaskMessage
 } from './WorkerTaskMessage.js';
 
-export * from './utilities.js';
+import {
+    applyProperties,
+    createWorkerBlob,
+    fillTransferables,
+    initChannel
+} from './utilities.js';
 import type {
     OffscreenPayloadAdditions,
     OffscreenPayloadMessage
@@ -76,8 +81,30 @@ import type {
 import {
     OffscreenPayload
 } from './offscreen/OffscreenPayload.js';
-export * from './offscreen/MainEventProxy.js';
-export * from './offscreen/helper.js';
+import type {
+    HandlingInstructions
+} from './offscreen/MainEventProxy.js';
+import {
+    AllowedKeyProperties,
+    KeydownEventProperties,
+    MouseEventProperties,
+    WheelEventProperties,
+    buildDefaultEventHandlingInstructions,
+    extractProperties,
+    handlePreventDefault,
+    handleFilteredKeydownEvent,
+    handleMouseEvent,
+    handleTouchEvent,
+    handleWheelEvent,
+    registerCanvas,
+    registerResizeHandler,
+    sentResize
+} from './offscreen/MainEventProxy.js';
+import {
+    getOffscreenCanvas,
+    initOffscreenCanvas,
+    recalcAspectRatio
+} from './offscreen/helper.js';
 
 export {
     WorkerConfig,
@@ -112,5 +139,29 @@ export {
     OffscreenPayload,
     OffscreenWorker,
     OffscreenWorkerCommandRequest,
-    OffscreenWorkerCommandResponse
+    OffscreenWorkerCommandResponse,
+    AllowedKeyProperties,
+    HandlingInstructions,
+    KeydownEventProperties,
+    MouseEventProperties,
+    WheelEventProperties,
+    buildDefaultEventHandlingInstructions,
+    extractProperties,
+    handleFilteredKeydownEvent,
+    handleMouseEvent,
+    handlePreventDefault,
+    handleTouchEvent,
+    handleWheelEvent,
+    registerCanvas,
+    registerResizeHandler,
+    sentResize,
+    // helper.ts
+    getOffscreenCanvas,
+    initOffscreenCanvas,
+    recalcAspectRatio,
+    // utilities.ts
+    applyProperties,
+    createWorkerBlob,
+    fillTransferables,
+    initChannel
 };
