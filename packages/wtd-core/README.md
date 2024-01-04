@@ -1,47 +1,61 @@
 # Worker Task Director Library (wtd-core)
 
-Worker Task Director Core Library.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/wtd/blob/main/LICENSE)
+[![wtd](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml/badge.svg)](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml)
+[![Github Pages](https://img.shields.io/badge/GitHub-Pages-blue?logo=github)](https://kaisalmen.github.io/wtd)
+[![wtd-core version](https://img.shields.io/npm/v/wtd-core?logo=npm&label=wtd-three-ext)](https://www.npmjs.com/package/wtd-core)
 
-Please refer to the full [README.md](../../README.md) in main [repository](https://github.com/kaisalmen/wtd).
+Build applications with workers with less boiler plate code.
+
+- [Worker Task Director Library (wtd-core)](#worker-task-director-library-wtd-core)
+  - [Examples](#examples)
+  - [Usage](#usage)
+
+## Examples
+
+There are multiple examples available demonstarting the features described above (listed from simpler to more advanced):
+
+- **WorkerTask: Hello World**: [html](https://github.com/kaisalmen/wtd/blob/main/packages/examples/helloWorldWorkerTask.html), [ts](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/helloWorld/HelloWorldWorkerTask.ts), [worker](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/HelloWorldWorker.ts)
+- **WorkerTaskDirector: Hello World**: [html](https://github.com/kaisalmen/wtd/blob/main/packages/examples/helloWorldWorkerTaskDirector.html), [ts](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/helloWorld/helloWorldWorkerTaskDirector.ts), [worker](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/HelloWorldWorker.ts)
+- **WorkerTask: Inter-Worker Communication**: [html](https://github.com/kaisalmen/wtd/blob/main/packages/examples/workerCom.html), [ts](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/com/WorkerCom.ts), **Worker**: [1](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/Com1Worker.ts) and [2](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/Com2Worker.ts)
+
+Try out all examples here: <https://kaisalmen.github.io/wtd>
 
 ## Usage
 
-```javascript
-const workerTaskDirector: WorkerTaskDirector = new WorkerTaskDirector();
-const taskName = 'WorkerModule';
+This shall give you an idea how you can use module worker with `WorkerTask` (derived from [WorkerTask: Hello World](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/helloWorld/HelloWorldWorkerTask.ts)):
 
-// register the module worker
-workerTaskDirector.registerTask(taskName, {
-    module: true,
-    blob: false,
-    url: new URL('./HelloWorldWorker.js', import.meta.url)
+```js
+// let WorkerTask create the worker
+const workerTask = new WorkerTask({
+    taskName,
+    workerId: 1,
+    workerConfig: {
+        $type: 'WorkerConfigParams',
+        url: new URL('./HelloWorldWorker.js', import.meta.url),
+        workerType: 'module',
+    },
+    verbose: true
 });
 
-// init the worker task without any payload (worker init without function invocation on worker)
 try {
-    await workerTaskDirector.initTaskType(taskName)
-    // once the init Promise returns enqueue the execution
-    const execMessage = new WorkerTaskMessage();
+    // cteates and connects the worker callback functions and the WorkerTask
+    workerTask.connectWorker();
 
-    await workerTaskDirector.enqueueWorkerExecutionPlan(taskName, {
-        message: execMessage,
-        // decouple result evaluation ...
-        onComplete: (m: WorkerTaskMessageType) => { console.log('Received final command: ' + m.cmd); }
+    // execute without init and an empty message
+    const resultExec = await workerTask.executeWorker({
+        message: WorkerTaskMessage.createEmpty()
     });
-    // ... promise result handling
-    alert('Worker execution has been completed after.');
+
+    // once you awaited the resulting WorkerTaskMessage extract the RawPayload
+    const rawPayload = resultExec.payloads?.[0] as RawPayload;
+
+    // log the hello from the HelloWorldWorker
+    console.log(`Worker said: ${rawPayload.message.raw?.hello}`);
 } catch (e) {
     // error handling
     console.error(e);
 }
 ```
 
-## Examples
-
-**wtd-core** related examples are found here:
-
-- **Hello World: Module Worker**: [html](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/helloWorld.html), [ts](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/src/helloWorld/HelloWorld.ts), [worker-ts](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/src/worker/HelloWorldWorker.ts)
-- **Hello World: Standard Worker**: [html](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/helloWorldStandard.html), [ts](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/src/helloWorld/HelloWorldStandard.ts), [worker-ts](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/src/worker/HelloWorldWorker.ts)
-- **Hello World: WorkerTask Only**: [html](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/helloWorldWorkerTask.html), [ts](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/src/helloWorld/HelloWorldWorkerTask.ts), [worker-ts](https://github.com/kaisalmen/wtd/blob/HEAD/packages/examples/src/worker/HelloWorldWorker.ts)
-
-More advanced examples utilizing the extension package [wtd-three-ext](https://www.npmjs.com/package/wtd-three-ext) as well are linked there or in the main [README.md](../../README.md).
+Also refer to the full [README.md](https://github.com/kaisalmen/wtd/blob/main/README.md) in main [repository](https://github.com/kaisalmen/wtd).

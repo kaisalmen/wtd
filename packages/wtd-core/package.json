@@ -46,11 +46,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kaisalmen/three-wtm",
-    "directory": "packages/three-wtm"
+    "url": "https://github.com/kaisalmen/wtd",
+    "directory": "packages/wtd"
   },
-  "homepage": "https://github.com/kaisalmen/three-wtm/blob/main/packages/wtd-core/README.md",
-  "bugs": "https://github.com/kaisalmen/three-wtm/issues",
+  "homepage": "https://github.com/kaisalmen/wtd/blob/main/packages/wtd-core/README.md",
+  "bugs": "https://github.com/kaisalmen/wtd/issues",
   "author": {
     "name": "kaisalmen",
     "url": "https://www.kaisalmen.de"

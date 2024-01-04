@@ -1,8 +1,15 @@
 # Changelog
 
-## 2.4.0 - 2023-10-2x
+## 3.0.0 - 2023-12-2x
 
-- Added `RawPayload` and new `WorkerCom` example that demonstrates inter-worker communication.
+- Make the worker lifecylce no longer mandatory if not using `WorkerTaskDirector`.
+- Sent message with or without awaiting them.
+  - `WorkerTask` keeps track of messages that need to be awaited.
+- API clean-up and code improvements
+  - Use configuration objects instead of long number of arguments
+- Added helper functions for creating an OffscreenCanvas and delegating events to the worker.
+- Extracted `Payload` from `DataPayload` and created `RawPayload` for supporting plain messages.
+- Added new example [Inter-Worker Communication](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/com/WorkerCom.ts) that demonstrates communication between workers utilizing message channels.
 
 ## 2.3.0 - 2023-10-21
 

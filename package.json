@@ -11,10 +11,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kaisalmen/three-wtm.git"
+    "url": "git+https://github.com/kaisalmen/wtd.git"
   },
   "bugs": {
-    "url": "https://github.com/kaisalmen/three-wtm/issues"
+    "url": "https://github.com/kaisalmen/wtd/issues"
   },
   "scripts": {
     "clean": "npm run clean --workspaces",
@@ -33,7 +33,7 @@
     "reset:repo": "git clean -f -d -x"
   },
   "keywords": [],
-  "homepage": "https://github.com/kaisalmen/three-wtm#README",
+  "homepage": "https://github.com/kaisalmen/wtd#README",
   "volta": {
     "node": "20.10.0",
     "npm": "10.2.3"
