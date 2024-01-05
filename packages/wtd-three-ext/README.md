@@ -58,4 +58,6 @@ try {
 }
 ```
 
-Also refer to the full [README.md](https://github.com/kaisalmen/wtd/blob/main/README.md) in main [repository](https://github.com/kaisalmen/wtd).
+Further information is found in the main [README](https://github.com/kaisalmen/wtd/blob/main/README.md) of the overall [repository](https://github.com/kaisalmen/wtd).
+
+All changes are noted in the overall [CHANGELOG](https://github.com/kaisalmen/wtd/blob/main/CHANGELOG.md).

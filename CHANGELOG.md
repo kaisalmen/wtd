@@ -1,15 +1,23 @@
 # Changelog
 
-## 3.0.0 - 2023-12-2x
+## 3.0.0 - 2024-01-05
 
 - Make the worker lifecylce no longer mandatory if not using `WorkerTaskDirector`.
 - Sent message with or without awaiting them.
   - `WorkerTask` keeps track of messages that need to be awaited.
-- API clean-up and code improvements
+- API clean-up and code improvements:
+  - `WorkerTask` contains async code improvements and it keeps track of outstanding messages (new)
   - Use configuration objects instead of long number of arguments
+  - Move static functions of classes to independent funtions
+  - Better function and class names
 - Added helper functions for creating an OffscreenCanvas and delegating events to the worker.
 - Extracted `Payload` from `DataPayload` and created `RawPayload` for supporting plain messages.
+- Added offscreen canvas related funcitonality and utilities:
+  - Provide framework independent worker and message payload extensions (`OffscreenWorker` and `OffscreenPayload`) (**wtd-core**)
+  - `MainEventProxy` allows configurable event delegation to a Worker (**wtd-core**)
+  - `ElementProxyReceiver` can be used to simulate a canvas in a Worker (**wtd-three-ext**)
 - Added new example [Inter-Worker Communication](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/com/WorkerCom.ts) that demonstrates communication between workers utilizing message channels.
+
 
 ## 2.3.0 - 2023-10-21
 
