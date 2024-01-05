@@ -60,14 +60,9 @@ type TaskDescription = {
 };
 
 /**
- * TODO: Outdated description!!
+ * The aim of this example is to show all possible ways how to use the {@link WorkerTaskDirector}
  *
- * The aim of this example is to show all possible ways how to use the {@link WorkerTaskDirector}:
- * - Standard Workers with dependency loading
- * - Module Workers with and without additional dependencies
- * - It also allows to use OBJLoader in wrapper (tmOBJLoader.js with and without modules.
- *
- * Via dat.gui it is possible to control various parameters of the example:
+ * Via the UI it is possible to control various parameters of the example:
  * - The quantity of workers created for each task (1-32, default: 4)
  * - The absolute overall count of task executions (10^3-10^7, default: 10^6)
  * - The maximum amount of task executions per loop (=number of promises returned, 1-10000, default: 1000)

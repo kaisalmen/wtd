@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/kaisalmen/wtd/blob/main/LICENSE)
 [![wtd](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml/badge.svg)](https://github.com/kaisalmen/wtd/actions/workflows/actions.yml)
 [![Github Pages](https://img.shields.io/badge/GitHub-Pages-blue?logo=github)](https://kaisalmen.github.io/wtd)
-[![wtd-core version](https://img.shields.io/npm/v/wtd-core?logo=npm&label=wtd-three-ext)](https://www.npmjs.com/package/wtd-core)
+[![wtd-core version](https://img.shields.io/npm/v/wtd-core?logo=npm&label=wtd-core)](https://www.npmjs.com/package/wtd-core)
 
 Build applications with workers with less boiler plate code.
 
