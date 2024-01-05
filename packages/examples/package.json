@@ -29,13 +29,13 @@
   },
   "dependencies": {
     "lil-gui": "~0.19.1",
-    "three": "~0.159.0",
-    "wtd-core": "~3.0.0-next.6",
-    "wtd-three-ext": "~3.0.0-next.6",
+    "three": "~0.160.0",
+    "wtd-core": "~3.0.0",
+    "wtd-three-ext": "~3.0.0",
     "wwobjloader2": "6.2.0-next.5"
   },
   "devDependencies": {
-    "@types/three": "~0.159.0",
+    "@types/three": "~0.160.0",
     "http-server": "~14.1.1"
   },
   "repository": {

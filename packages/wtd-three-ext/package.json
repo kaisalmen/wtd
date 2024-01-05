@@ -1,6 +1,6 @@
 {
   "name": "wtd-three-ext",
-  "version": "3.0.0-next.6",
+  "version": "3.0.0",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -45,11 +45,11 @@
     "npm": "10.2.3"
   },
   "dependencies": {
-    "wtd-core": "~3.0.0-next.6",
-    "three": "~0.159.0"
+    "wtd-core": "~3.0.0",
+    "three": "~0.160.0"
   },
   "devDependencies": {
-    "@types/three": "~0.159.0"
+    "@types/three": "~0.160.0"
   },
   "peerDependencies": {
     "three": ">= 0.137.5 < 1"
