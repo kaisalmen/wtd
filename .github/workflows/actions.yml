@@ -32,7 +32,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '20'
     - name: Check Environment
       env:
         DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' || github.ref_name == 'main' }}
@@ -61,7 +61,7 @@ jobs:
       if: ${{ env.DEPLOY_GHP == 'true' }}
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ./packages/examples/preview/
+        path: ./packages/examples/production/
 
   deploy:
     needs: build

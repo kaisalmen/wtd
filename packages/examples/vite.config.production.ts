@@ -1,9 +1,5 @@
-/* eslint-disable no-undef */
 import { defineConfig } from 'vite';
 import path from 'path';
-
-// Config Hints:
-// https://vitejs.dev/guide/build.html#multi-page-app
 
 export default defineConfig(({ command }) => {
     console.log(`Running: ${command}`);
@@ -26,14 +22,10 @@ export default defineConfig(({ command }) => {
             },
             minify: false,
             assetsInlineLimit: 128,
-            outDir: path.resolve(__dirname, 'preview'),
+            outDir: path.resolve(__dirname, 'production'),
             emptyOutDir: true,
         },
         base: 'https://kaisalmen.github.io/wtd/',
-        server: {
-            port: 8080,
-            host: '0.0.0.0'
-        },
         optimizeDeps: {
             esbuildOptions: {
                 target: 'es2022'
