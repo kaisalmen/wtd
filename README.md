@@ -62,7 +62,7 @@ const workerTask = new WorkerTask({
 });
 
 try {
-    // cteates and connects the worker callback functions and the WorkerTask
+    // creates and connects the worker callback functions and the WorkerTask
     workerTask.connectWorker();
 
     // execute without init and an empty message

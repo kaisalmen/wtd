@@ -18,7 +18,6 @@
   - `ElementProxyReceiver` can be used to simulate a canvas in a Worker (**wtd-three-ext**)
 - Added new example [Inter-Worker Communication](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/com/WorkerCom.ts) that demonstrates communication between workers utilizing message channels.
 
-
 ## 2.3.0 - 2023-10-21
 
 - Added the possiblity to sent intermediate message from main to the worker if the worker is still executing.
