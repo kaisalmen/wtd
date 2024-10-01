@@ -1,5 +1,5 @@
 import { WorkerTask } from '../WorkerTask.js';
-import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
+import { WorkerMessage } from '../WorkerMessage.js';
 import { OffscreenPayload } from './OffscreenPayload.js';
 import { OffscreenWorkerCommandRequest, OffscreenWorkerCommandResponse } from './OffscreenWorker.js';
 
@@ -16,7 +16,7 @@ export const initOffscreenCanvas = async (workerTask: WorkerTask, canvas: HTMLCa
         pixelRatio: window.devicePixelRatio
     });
     await workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(offscreenPayloadRenderer, OffscreenWorkerCommandRequest.INIT_OFFSCREEN_CANVAS),
+        message: WorkerMessage.fromPayload(offscreenPayloadRenderer, OffscreenWorkerCommandRequest.INIT_OFFSCREEN_CANVAS),
         transferables: [offscreenCanvas],
         awaitAnswer: true,
         answer: OffscreenWorkerCommandResponse.INIT_OFFSCREEN_CANVAS_COMPLETE

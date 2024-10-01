@@ -25,7 +25,7 @@ import {
 import {
     WorkerTaskDirector,
     DataPayload,
-    WorkerTaskMessage,
+    WorkerMessage,
     WorkerTaskCommandResponse,
     createWorkerBlob,
 } from 'wtd-core';
@@ -35,7 +35,8 @@ import {
     MaterialsPayload
 } from 'wtd-three-ext';
 import {
-    OBJLoader2
+    OBJLoader2,
+    PreparedMeshType
 } from 'wwobjloader2';
 
 export type CameraDefaults = {
@@ -285,7 +286,7 @@ class PotentiallyInfiniteExample {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask({
                 taskName: taskDescr.name,
-                workerConfig: {
+                endpointConfig: {
                     $type: 'WorkerConfigParams',
                     workerType: taskDescr.workerType,
                     blob: taskDescr.blob,
@@ -293,7 +294,7 @@ class PotentiallyInfiniteExample {
                 },
                 maxParallelExecutions: taskDescr.workerCount
             });
-            const initMessage = WorkerTaskMessage.createNew({
+            const initMessage = WorkerMessage.createNew({
                 name: taskDescr.name
             });
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
@@ -306,7 +307,7 @@ class PotentiallyInfiniteExample {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask({
                 taskName: taskDescr.name,
-                workerConfig: {
+                endpointConfig: {
                     $type: 'WorkerConfigParams',
                     workerType: taskDescr.workerType,
                     blob: taskDescr.blob,
@@ -315,7 +316,7 @@ class PotentiallyInfiniteExample {
                 maxParallelExecutions: taskDescr.workerCount
             });
 
-            const initMessage = WorkerTaskMessage.createNew({
+            const initMessage = WorkerMessage.createNew({
                 name: taskDescr.name
             });
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
@@ -328,7 +329,7 @@ class PotentiallyInfiniteExample {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask({
                 taskName: taskDescr.name,
-                workerConfig: {
+                endpointConfig: {
                     $type: 'WorkerConfigParams',
                     workerType: taskDescr.workerType,
                     blob: taskDescr.blob,
@@ -339,14 +340,14 @@ class PotentiallyInfiniteExample {
 
             const torus = new TorusGeometry(25, 8, 16, 100);
             torus.name = 'torus';
-            const initMessage = WorkerTaskMessage.createNew({
+            const initMessage = WorkerMessage.createNew({
                 name: taskDescr.name
             });
             const meshPayload = new MeshPayload();
             meshPayload.setBufferGeometry(torus, 0);
 
             initMessage.addPayload(meshPayload);
-            const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
+            const transferables = WorkerMessage.pack(initMessage.payloads, false);
             awaiting.push(this.workerTaskDirector.initTaskType(taskDescr.name, {
                 message: initMessage,
                 transferables,
@@ -359,7 +360,7 @@ class PotentiallyInfiniteExample {
             this.tasksToUse.push(taskDescr);
             this.workerTaskDirector.registerTask({
                 taskName: taskDescr.name,
-                workerConfig: {
+                endpointConfig: {
                     $type: 'WorkerConfigParams',
                     workerType: taskDescr.workerType,
                     blob: taskDescr.blob,
@@ -388,7 +389,7 @@ class PotentiallyInfiniteExample {
                 this.materialStore.addMaterialsFromObject(materialCreator.materials, false);
                 const buffer = results[results.length - 1] as string | ArrayBuffer;
 
-                const initMessage = WorkerTaskMessage.createNew({
+                const initMessage = WorkerMessage.createNew({
                     name: 'OBJLoader2WorkerModule'
                 });
                 const dataPayload = new DataPayload();
@@ -398,7 +399,7 @@ class PotentiallyInfiniteExample {
                 dataPayload.message.buffers?.set('modelData', buffer as ArrayBufferLike);
                 initMessage.addPayload(dataPayload);
 
-                const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
+                const transferables = WorkerMessage.pack(initMessage.payloads, false);
                 await this.workerTaskDirector.initTaskType(initMessage.name!, {
                     message: initMessage,
                     transferables,
@@ -442,7 +443,7 @@ class PotentiallyInfiniteExample {
                     modelName: taskDescr.name
                 };
                 const promise = this.workerTaskDirector.enqueueForExecution(taskDescr.name, {
-                    message: WorkerTaskMessage.fromPayload(dataPayload),
+                    message: WorkerMessage.fromPayload(dataPayload),
                     onComplete: data => this.processMessage(taskDescr, data),
                     onIntermediateConfirm: data => this.processMessage(taskDescr, data)
                 });
@@ -480,7 +481,7 @@ class PotentiallyInfiniteExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(taskDescr: TaskDescription, message: WorkerTaskMessage | Error) {
+    private processMessage(taskDescr: TaskDescription, message: WorkerMessage | Error) {
         let material: Material | Material[] | undefined;
         let meshPayload: MeshPayload;
         let materialsPayload: MaterialsPayload;
@@ -490,32 +491,30 @@ class PotentiallyInfiniteExample {
             return;
         }
 
-        const wtm = WorkerTaskMessage.unpack(message, false);
-        switch (wtm.cmd) {
+        const wm = WorkerMessage.unpack(message, false);
+        switch (wm.cmd) {
             case WorkerTaskCommandResponse.INIT_COMPLETE:
-                console.log('Init Completed: ' + wtm.uuid);
+                console.log('Init Completed: ' + wm.uuid);
                 break;
 
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
             case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
                 // were are getting raw vertex buffers here
-                if (wtm.payloads && wtm.payloads?.length > 0) {
-                    if (taskDescr.name === 'OBJLoader2WorkerModule' && wtm.payloads?.length === 1) {
-                        const dataPayloadOBJ = wtm.payloads[0] as DataPayload;
-                        const preparedMesh = dataPayloadOBJ?.message.params?.preparedMesh;
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                        // @ts-ignore
+                if (wm.payloads.length > 0) {
+                    if (taskDescr.name === 'OBJLoader2WorkerModule' && wm.payloads.length === 1) {
+                        const dataPayloadOBJ = wm.payloads[0] as DataPayload;
+                        const preparedMesh = dataPayloadOBJ.message.params?.preparedMesh as PreparedMeshType;
                         mesh = OBJLoader2.buildThreeMesh(preparedMesh, this.materialStore.getMaterials(), false) as Mesh;
                     } else {
-                        meshPayload = wtm.payloads[0] as MeshPayload;
-                        if (meshPayload.message.params?.color) {
-                            const pColor = meshPayload.message.params?.color as { r: number, g: number, b: number };
+                        meshPayload = wm.payloads[0] as MeshPayload;
+                        if (meshPayload.message.params?.color !== undefined) {
+                            const pColor = meshPayload.message.params.color as { r: number, g: number, b: number };
                             const color = new Color(pColor.r, pColor.g, pColor.b);
                             material = new MeshPhongMaterial({ color: color });
                         }
 
-                        if (wtm.payloads.length === 2) {
-                            materialsPayload = wtm.payloads[1] as MaterialsPayload;
+                        if (wm.payloads.length === 2) {
+                            materialsPayload = wm.payloads[1] as MaterialsPayload;
                             const storedMaterials = this.materialStore.getMaterials();
                             material = materialsPayload.processMaterialTransport(storedMaterials, true);
                             if (!material) {
@@ -533,20 +532,20 @@ class PotentiallyInfiniteExample {
                         }
                         mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
                     }
-                    this.addMesh(mesh, wtm.uuid ?? 'unknown');
+                    this.addMesh(mesh, wm.uuid);
                 }
                 else {
-                    if (wtm.cmd !== WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
+                    if (wm.cmd !== WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
                         // This is the end-point for the execution
                         //console.log(`DataTransport: name: ${payload.name} id: ${payload.id} cmd: ${payload.cmd} workerId: ${payload.workerId}`);
-                        console.error('Provided payload.type did not match: ' + wtm.cmd);
+                        console.error('Provided payload.type did not match: ' + wm.cmd);
                     }
                 }
                 this.cleanMeshes();
                 break;
 
             default:
-                console.error(`${wtm.uuid}: Received unknown command: ${wtm.cmd}`);
+                console.error(`${wm.uuid}: Received unknown command: ${wm.cmd}`);
                 break;
         }
     }
@@ -592,8 +591,8 @@ class PotentiallyInfiniteExample {
         let i = 0;
         while (deleteCount < deleteRange && i < this.meshesAdded.length) {
             const meshName = this.meshesAdded[i];
-            toBeRemoved = this.scene.getObjectByName(meshName) as Mesh;
-            if (toBeRemoved) {
+            toBeRemoved = this.scene.getObjectByName(meshName) as Mesh | undefined;
+            if (toBeRemoved !== undefined) {
                 toBeRemoved.geometry.dispose();
                 if (toBeRemoved.material instanceof Material) {
                     if (typeof toBeRemoved.material.dispose === 'function') {
@@ -621,12 +620,12 @@ class PotentiallyInfiniteExample {
 // Simplest way to define a worker, but can't be a module worker
 class SimpleBlobWorker {
 
-    init(message: WorkerTaskMessage) {
+    init(message: WorkerMessage) {
         message.cmd = 'initComplete';
         self.postMessage(message);
     }
 
-    execute(message: WorkerTaskMessage) {
+    execute(message: WorkerMessage) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
@@ -638,8 +637,7 @@ class SimpleBlobWorker {
                 params: {
                     hello: 'say hello'
                 },
-                buffers: new Map(),
-                progress: 0
+                buffers: new Map()
             }
         };
         message.payloads = [dataPayload];
@@ -650,13 +648,14 @@ class SimpleBlobWorker {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     comRouting(message: MessageEvent<any>) {
-        const wtmt = (message as MessageEvent).data as WorkerTaskMessage;
-        if (wtmt) {
-            if (wtmt.cmd === 'init') {
-                this.init(wtmt);
+        const data = (message as MessageEvent).data;
+        if (Object.hasOwn(data, 'cmd')) {
+            const wm = (message as MessageEvent).data as WorkerMessage;
+            if (wm.cmd === 'init') {
+                this.init(wm);
             }
-            else if (wtmt.cmd === 'execute') {
-                this.execute(wtmt);
+            else if (wm.cmd === 'execute') {
+                this.execute(wm);
             }
         }
     }
@@ -874,7 +873,7 @@ app.resetUI();
 window.addEventListener('resize', () => app.resizeDisplayGL(), false);
 app.resizeDisplayGL();
 
-const requestRender = function() {
+const requestRender = () => {
     requestAnimationFrame(requestRender);
     app.render();
 };

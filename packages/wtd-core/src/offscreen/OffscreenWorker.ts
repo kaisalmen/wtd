@@ -1,4 +1,4 @@
-import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
+import { WorkerMessage } from '../WorkerMessage.js';
 
 export enum OffscreenWorkerCommandRequest {
     INIT_OFFSCREEN_CANVAS = 'initOffscreenCanvas',
@@ -14,9 +14,9 @@ export enum OffscreenWorkerCommandResponse {
     RESIZE_COMPLETE = 'resizeComplete'
 }
 
-export type OffscreenWorker = {
-    initOffscreenCanvas(message: WorkerTaskMessage): void;
-    proxyStart?(message: WorkerTaskMessage): void;
-    proxyEvent?(message: WorkerTaskMessage): void;
-    resize?(message: WorkerTaskMessage): void;
+export interface OffscreenWorker {
+    initOffscreenCanvas(message: WorkerMessage): void;
+    proxyStart?(message: WorkerMessage): void;
+    proxyEvent?(message: WorkerMessage): void;
+    resize?(message: WorkerMessage): void;
 }

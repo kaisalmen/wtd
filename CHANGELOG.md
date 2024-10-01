@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.0 - 2024-10-01
+
+- ComChannelEndpoint has been extracted from WorkerTask
+  - Now Worker, MessageChannel or DedicatedWorkerGlobalScope can be channel endpoints. Both ends of the communication channel can use the same implementation to send message and await responses if needed.
+  - Added new example **HelloWorldComChannelEndpoint**
+
 ## 3.0.0 - 2024-01-05
 
 - Make the worker lifecylce no longer mandatory if not using `WorkerTaskDirector`.
@@ -12,7 +18,7 @@
   - Better function and class names
 - Added helper functions for creating an OffscreenCanvas and delegating events to the worker.
 - Extracted `Payload` from `DataPayload` and created `RawPayload` for supporting plain messages.
-- Added offscreen canvas related funcitonality and utilities:
+- Added offscreen canvas related functionality and utilities:
   - Provide framework independent worker and message payload extensions (`OffscreenWorker` and `OffscreenPayload`) (**wtd-core**)
   - `MainEventProxy` allows configurable event delegation to a Worker (**wtd-core**)
   - `ElementProxyReceiver` can be used to simulate a canvas in a Worker (**wtd-three-ext**)

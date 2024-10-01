@@ -1,7 +1,7 @@
 import {
     RawPayload,
     WorkerTaskDirector,
-    WorkerTaskMessage
+    WorkerMessage
 } from 'wtd-core';
 
 /**
@@ -20,7 +20,7 @@ class HelloWorldModuleWorkerExample {
         // register the module worker
         this.workerTaskDirector.registerTask({
             taskName,
-            workerConfig: {
+            endpointConfig: {
                 $type: 'WorkerConfigParams',
                 workerType: 'module',
                 blob: false,
@@ -36,10 +36,10 @@ class HelloWorldModuleWorkerExample {
             // execute worker without init
             const t0 = performance.now();
             const resultExec = await this.workerTaskDirector.enqueueForExecution(taskName, {
-                message: WorkerTaskMessage.createEmpty(),
+                message: WorkerMessage.createEmpty(),
             });
 
-            const rawPayload = resultExec.payloads?.[0] as RawPayload;
+            const rawPayload = resultExec.payloads[0] as RawPayload;
             const answer = `Worker said: ${rawPayload.message.raw?.hello}`;
             const t1 = performance.now();
 

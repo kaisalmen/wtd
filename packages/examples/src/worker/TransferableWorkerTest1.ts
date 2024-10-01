@@ -2,37 +2,37 @@ import {
     comRouting,
     DataPayload,
     WorkerTaskCommandResponse,
-    WorkerTaskMessage,
+    WorkerMessage,
     WorkerTaskWorker
 } from 'wtd-core';
 
 class TransferableWorkerTest1 implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessage) {
-        console.log(`TransferableWorkerTest1#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    init(message: WorkerMessage) {
+        console.log(`TransferableWorkerTest1#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.endpointdId}`);
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+        const initComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
         });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessage) {
-        console.log(`TransferableWorkerTest1#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerMessage) {
+        console.log(`TransferableWorkerTest1#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.endpointdId}`);
 
-        const wtm = WorkerTaskMessage.unpack(message, false);
+        const wm = WorkerMessage.unpack(message, false);
 
         const dataPayload = new DataPayload();
         dataPayload.message.params = {
             data: new Uint32Array(32 * 1024 * 1024)
         };
 
-        const execComplete = WorkerTaskMessage.createFromExisting(wtm, {
+        const execComplete = WorkerMessage.createFromExisting(wm, {
             overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
         });
         execComplete.addPayload(dataPayload);
 
-        const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
+        const transferables = WorkerMessage.pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 

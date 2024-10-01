@@ -1,11 +1,11 @@
 import { Payload } from './Payload.js';
 
-export type RawMessage = {
+export interface RawMessage {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     raw: any;
 }
 
-export type RawPayloadAdditions = Payload & {
+export interface RawPayloadAdditions extends Payload {
     message: RawMessage;
 }
 
@@ -17,7 +17,7 @@ export class RawPayload implements RawPayloadAdditions {
     };
 
     constructor(raw?: unknown) {
-        if (raw) {
+        if (raw !== undefined) {
             this.message.raw = raw;
         }
     }

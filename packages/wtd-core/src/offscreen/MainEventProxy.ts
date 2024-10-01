@@ -6,7 +6,7 @@
 
 import { AssociatedArrayType } from '../Payload.js';
 import { WorkerTask } from '../WorkerTask.js';
-import { WorkerTaskMessage } from '../WorkerTaskMessage.js';
+import { WorkerMessage } from '../WorkerMessage.js';
 import { OffscreenPayload } from './OffscreenPayload.js';
 import { OffscreenWorkerCommandRequest, OffscreenWorkerCommandResponse } from './OffscreenWorker.js';
 
@@ -30,7 +30,7 @@ export const MouseEventProperties = [
 export const handleMouseEvent = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
     const offscreenPayload = extractProperties(event, properties);
     workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+        message: WorkerMessage.fromPayload(offscreenPayload, 'proxyEvent')
     });
 };
 
@@ -42,7 +42,7 @@ export const WheelEventProperties = [
 export const handleWheelEvent = (event: Event, workerTask: WorkerTask, properties?: string[]) => {
     const offscreenPayload = extractProperties(event, properties);
     workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+        message: WorkerMessage.fromPayload(offscreenPayload, 'proxyEvent')
     });
 };
 
@@ -68,10 +68,10 @@ export const AllowedKeyProperties = [
 
 export const handleFilteredKeydownEvent = (event: Event, workerTask: WorkerTask, properties?: string[], positiveList?: string[]) => {
     const { code } = event as KeyboardEvent;
-    if (positiveList?.includes(code)) {
+    if (positiveList !== undefined && positiveList.includes(code)) {
         const offscreenPayload = extractProperties(event, properties);
         workerTask.sentMessage({
-            message: WorkerTaskMessage.fromPayload(offscreenPayload, 'proxyEvent')
+            message: WorkerMessage.fromPayload(offscreenPayload, 'proxyEvent')
         });
     }
 };
@@ -109,7 +109,7 @@ export const handleTouchEvent = (event: Event, workerTask: WorkerTask) => {
         }
     });
     workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(offscreenPayload, OffscreenWorkerCommandRequest.PROXY_EVENT)
+        message: WorkerMessage.fromPayload(offscreenPayload, OffscreenWorkerCommandRequest.PROXY_EVENT)
     });
 };
 
@@ -163,7 +163,7 @@ export const registerCanvas = async (workerTask: WorkerTask, canvas: HTMLCanvasE
     canvas.focus();
 
     await workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(new OffscreenPayload({}), OffscreenWorkerCommandRequest.PROXY_START),
+        message: WorkerMessage.fromPayload(new OffscreenPayload({}), OffscreenWorkerCommandRequest.PROXY_START),
         awaitAnswer: true,
         answer: OffscreenWorkerCommandResponse.PROXY_START_COMPLETE
     });
@@ -188,7 +188,7 @@ export const sentResize = (workerTask: WorkerTask, canvas: HTMLCanvasElement) =>
         pixelRatio: window.devicePixelRatio
     });
     workerTask.sentMessage({
-        message: WorkerTaskMessage.fromPayload(dataPayload, OffscreenWorkerCommandRequest.RESIZE),
+        message: WorkerMessage.fromPayload(dataPayload, OffscreenWorkerCommandRequest.RESIZE),
     });
 };
 

@@ -1,7 +1,7 @@
 import {
     RawPayload,
     WorkerTask,
-    WorkerTaskMessage
+    WorkerMessage
 } from 'wtd-core';
 
 /**
@@ -12,9 +12,9 @@ class HelloWorldWorkerTaskExample {
     async run() {
         const url = new URL(import.meta.env.DEV ? '../worker/HelloWorldWorker.ts' : '../worker/generated/HelloWorldWorker-es.js', import.meta.url);
         const workerTask = new WorkerTask({
-            taskName: 'HelloWorldWorker',
-            workerId: 1,
-            workerConfig: {
+            endpointName: 'HelloWorldWorker',
+            endpointId: 1,
+            endpointConfig: {
                 $type: 'WorkerConfigParams',
                 url,
                 workerType: 'module',
@@ -24,15 +24,15 @@ class HelloWorldWorkerTaskExample {
 
         try {
             // connects the worker callback functions and the WorkerTask
-            workerTask.connectWorker();
+            workerTask.connect();
 
             const t0 = performance.now();
             // execute without init
             const resultExec = await workerTask.executeWorker({
-                message: WorkerTaskMessage.createEmpty()
+                message: WorkerMessage.createEmpty()
             });
 
-            const rawPayload = resultExec.payloads?.[0] as RawPayload;
+            const rawPayload = resultExec.payloads[0] as RawPayload;
             const answer = `Worker said: ${rawPayload.message.raw?.hello}`;
             const t1 = performance.now();
 

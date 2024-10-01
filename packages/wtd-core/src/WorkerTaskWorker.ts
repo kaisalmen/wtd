@@ -1,6 +1,6 @@
 import { Payload } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
-import { WorkerTaskMessage } from './WorkerTaskMessage.js';
+import { WorkerMessage } from './WorkerMessage.js';
 
 export enum WorkerTaskCommandRequest {
     INIT = 'init',
@@ -22,20 +22,20 @@ export enum WorkerTaskCommandResponse {
     INTERCOM_EXECUTE_COMPLETE = 'interComExecuteComplete'
 }
 
-export type WorkerTaskWorker = {
-    init?(message: WorkerTaskMessage): void;
-    initChannel?(message: WorkerTaskMessage): void;
-    intermediate?(message: WorkerTaskMessage): void;
-    execute(message: WorkerTaskMessage): void;
+export interface WorkerTaskWorker {
+    init?(message: WorkerMessage): void;
+    initChannel?(message: WorkerMessage): void;
+    intermediate?(message: WorkerMessage): void;
+    execute?(message: WorkerMessage): void;
 }
 
-export type InterComWorker = {
-    interComInit?(message: WorkerTaskMessage): void;
-    interComInitComplete?(message: WorkerTaskMessage): void;
-    interComIntermediate?(message: WorkerTaskMessage): void;
-    interComIntermediateConfirm?(message: WorkerTaskMessage): void;
-    interComExecute?(message: WorkerTaskMessage): void;
-    interComExecuteComplete?(message: WorkerTaskMessage): void;
+export interface InterComWorker {
+    interComInit?(message: WorkerMessage): void;
+    interComInitComplete?(message: WorkerMessage): void;
+    interComIntermediate?(message: WorkerMessage): void;
+    interComIntermediateConfirm?(message: WorkerMessage): void;
+    interComExecute?(message: WorkerMessage): void;
+    interComExecuteComplete?(message: WorkerMessage): void;
 }
 
 export class InterComPortHandler {
@@ -51,23 +51,7 @@ export class InterComPortHandler {
         port.onmessage = onmessage;
     }
 
-    postMessageOnPort(target: string, message: WorkerTaskMessage, options?: StructuredSerializeOptions) {
+    postMessageOnPort(target: string, message: WorkerMessage, options?: StructuredSerializeOptions) {
         this.ports.get(target)?.postMessage(message, options);
     }
 }
-
-export const comRouting = (workerImpl: WorkerTaskWorker | InterComWorker, message: MessageEvent<unknown>) => {
-    const wtm = (message as MessageEvent).data as WorkerTaskMessage;
-    if (wtm && wtm.cmd) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const obj = (workerImpl as any);
-        const funcName = wtm.cmd ?? 'unknown';
-        if (typeof obj[funcName] === 'function') {
-            obj[funcName](wtm);
-        } else {
-            console.warn(`No function "${funcName}" found on workerImpl.`);
-        }
-    } else {
-        console.error(`Received: unknown message: ${wtm}`);
-    }
-};

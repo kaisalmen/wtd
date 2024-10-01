@@ -1,19 +1,17 @@
 import { AssociatedArrayType } from './Payload.js';
 import { RawPayload } from './RawPayload.js';
 import { WorkerTask } from './WorkerTask.js';
-import { WorkerTaskMessage } from './WorkerTaskMessage.js';
+import { WorkerMessage } from './WorkerMessage.js';
 import { WorkerTaskCommandRequest, WorkerTaskCommandResponse } from './WorkerTaskWorker.js';
 
 export const fillTransferables = (buffers: IterableIterator<ArrayBufferLike>, transferables: Transferable[], cloneBuffers: boolean) => {
     for (const buffer of buffers) {
-        const potentialClone = cloneBuffers ? buffer.slice(0) : buffer;
-
-        const outputBuffer = (potentialClone as Uint8Array).buffer;
-        if (outputBuffer) {
-            transferables.push(outputBuffer);
-        }
-        else {
-            transferables.push(potentialClone);
+        if (cloneBuffers) {
+            transferables.push(buffer.slice(0));
+        } else {
+            if (Object.hasOwn(buffer, 'buffer')) {
+                transferables.push(buffer);
+            }
         }
     }
 };
@@ -35,7 +33,7 @@ export const applyProperties = (objToAlter: any, params?: AssociatedArrayType<un
         if (Object.prototype.hasOwnProperty.call(objToAlter, funcName) && typeof objToAlter[funcName] === 'function') {
             objToAlter[funcName] = v;
         }
-        else if (Object.prototype.hasOwnProperty.call(objToAlter, k) || forceCreation) {
+        else if (Object.prototype.hasOwnProperty.call(objToAlter, k) || forceCreation === true) {
             objToAlter[k] = v;
         }
     }
@@ -54,7 +52,7 @@ export const initChannel = async (workerOne: WorkerTask, workerTwo: WorkerTask) 
         port: channel.port1
     });
     promises.push(workerOne.sentMessage({
-        message: WorkerTaskMessage.fromPayload(payloadOne, WorkerTaskCommandRequest.INIT_CHANNEL),
+        message: WorkerMessage.fromPayload(payloadOne, WorkerTaskCommandRequest.INIT_CHANNEL),
         transferables: [channel.port1],
         awaitAnswer: true,
         answer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
@@ -64,7 +62,7 @@ export const initChannel = async (workerOne: WorkerTask, workerTwo: WorkerTask) 
         port: channel.port2
     });
     promises.push(workerTwo.sentMessage({
-        message: WorkerTaskMessage.fromPayload(payloadTwo, WorkerTaskCommandRequest.INIT_CHANNEL),
+        message: WorkerMessage.fromPayload(payloadTwo, WorkerTaskCommandRequest.INIT_CHANNEL),
         transferables: [channel.port2],
         awaitAnswer: true,
         answer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
@@ -72,3 +70,22 @@ export const initChannel = async (workerOne: WorkerTask, workerTwo: WorkerTask) 
     return Promise.all(promises);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const comRouting = (workerImpl: any, message: MessageEvent<unknown>) => {
+    const data = (message as MessageEvent).data;
+    if (Object.hasOwn(data, 'cmd')) {
+        const wm = (message as MessageEvent).data as WorkerMessage;
+        const funcName = wm.cmd;
+
+        // only invoke if not flagged as amswer
+        if (wm.answer === undefined || wm.answer === false) {
+            if (typeof workerImpl[funcName] === 'function') {
+                workerImpl[funcName](wm);
+            } else {
+                console.warn(`No function "${funcName}" found on workerImpl.`);
+            }
+        }
+    } else {
+        console.error(`Received: unknown message: ${message}`);
+    }
+};

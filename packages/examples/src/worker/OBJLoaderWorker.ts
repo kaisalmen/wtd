@@ -8,7 +8,7 @@ import {
     AssociatedArrayType,
     DataPayload,
     WorkerTaskCommandResponse,
-    WorkerTaskMessage,
+    WorkerMessage,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -26,26 +26,26 @@ class OBJLoaderWorker implements WorkerTaskWorker {
         objectId: 'unknown'
     };
 
-    init(message: WorkerTaskMessage) {
-        console.log(`OBJLoaderWorker#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    init(message: WorkerMessage) {
+        console.log(`OBJLoaderWorker#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.endpointdId}`);
 
-        const wtm = WorkerTaskMessage.unpack(message, false);
-        if (wtm.payloads?.length === 2) {
-            const dataPayload = wtm.payloads[0] as DataPayload;
-            const materialsPayload = wtm.payloads[1] as MaterialsPayload;
+        const wm = WorkerMessage.unpack(message, false);
+        if (wm.payloads.length === 2) {
+            const dataPayload = wm.payloads[0] as DataPayload;
+            const materialsPayload = wm.payloads[1] as MaterialsPayload;
 
             this.localData.buffer = dataPayload.message.buffers?.get('modelData');
             this.localData.materials = materialsPayload.message.materials;
 
-            const initComplete = WorkerTaskMessage.createFromExisting(wtm, {
+            const initComplete = WorkerMessage.createFromExisting(wm, {
                 overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
             });
             self.postMessage(initComplete);
         }
     }
 
-    execute(message: WorkerTaskMessage) {
-        console.log(`OBJLoaderWorker#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerMessage) {
+        console.log(`OBJLoaderWorker#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.endpointdId}`);
 
         this.localData.objLoader = new OBJLoader();
         this.localData.objectId = message.uuid as string;
@@ -69,7 +69,7 @@ class OBJLoaderWorker implements WorkerTaskWorker {
             mesh.name = mesh.name + message.uuid;
 
             // signal intermediate feedback
-            const intermediate = WorkerTaskMessage.createFromExisting(message, {
+            const intermediate = WorkerMessage.createFromExisting(message, {
                 overrideCmd: WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM
             });
 
@@ -84,12 +84,12 @@ class OBJLoaderWorker implements WorkerTaskWorker {
                 intermediate.addPayload(materialPayload);
             }
 
-            const transferables = WorkerTaskMessage.pack(intermediate.payloads, false);
+            const transferables = WorkerMessage.pack(intermediate.payloads, false);
             self.postMessage(intermediate, transferables);
         }
 
         // signal complete
-        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+        const execComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
         });
         self.postMessage(execComplete);

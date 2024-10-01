@@ -3,6 +3,9 @@ import shell from 'shelljs';
 shell.rm('-f', './src/worker/generated/HelloWorldWorker*.js');
 shell.exec('vite -c build/vite.config.HelloWorldWorker.ts build');
 
+shell.rm('-f', './src/worker/generated/HelloWorldComChannelEndpointWorker*.js');
+shell.exec('vite -c build/vite.config.HelloWorldComChannelEndpointWorker.ts build');
+
 shell.rm('-f', './src/worker/generated/Com1Worker*.js');
 shell.exec('vite -c build/vite.config.Com1Worker.ts build');
 

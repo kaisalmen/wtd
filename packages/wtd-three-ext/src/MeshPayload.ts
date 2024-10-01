@@ -73,7 +73,7 @@ export class MeshPayloadHandler implements PayloadHandler {
 
     pack(payload: Payload, transferables: Transferable[], cloneBuffers: boolean) {
         const mp = payload as MeshPayload;
-        if (mp.message.buffers) {
+        if (mp.message.buffers !== undefined) {
             packGeometryBuffers(cloneBuffers, mp.message.bufferGeometry as BufferGeometry, mp.message.buffers);
             fillTransferables(mp.message.buffers.values(), transferables, cloneBuffers);
         }
@@ -83,7 +83,7 @@ export class MeshPayloadHandler implements PayloadHandler {
     unpack(transportObject: Payload, cloneBuffers: boolean) {
         const mp = transportObject as MeshPayload;
         const meshPayload = Object.assign(new MeshPayload(), mp);
-        if (meshPayload.message.bufferGeometry) {
+        if (meshPayload.message.bufferGeometry !== undefined) {
             meshPayload.message.bufferGeometry = reconstructBuffer(cloneBuffers, meshPayload.message.bufferGeometry);
         }
         return meshPayload;
@@ -113,24 +113,21 @@ export const packGeometryBuffers = (cloneBuffers: boolean, bufferGeometry: Buffe
 
 export const addAttributeToBuffers = (name: string, input: BufferAttribute | InterleavedBufferAttribute | null | undefined,
     cloneBuffer: boolean, buffers: Map<string, ArrayBufferLike>): void => {
-    if (input && input !== null) {
+    if (input !== undefined && input !== null) {
         const typedArray = input.array as unknown as ArrayBufferLike;
         buffers.set(name, cloneBuffer ? typedArray.slice(0) : typedArray);
     }
 };
 
-export const reconstructBuffer = (cloneBuffers: boolean, transferredGeometry: BufferGeometry | AssociatedArrayType<unknown>): BufferGeometry => {
+export const reconstructBuffer = (cloneBuffers: boolean, transferredGeometry: BufferGeometry | AssociatedArrayType<unknown> | undefined): BufferGeometry => {
     const bufferGeometry = new BufferGeometry();
 
     // fast-fail: transferredGeometry is either rubbish or already a bufferGeometry
-    if (!transferredGeometry) {
-        return bufferGeometry;
-    }
-    else if (transferredGeometry instanceof BufferGeometry) {
+    if (transferredGeometry instanceof BufferGeometry) {
         return transferredGeometry;
     }
 
-    if (transferredGeometry.attributes) {
+    if (transferredGeometry?.attributes !== undefined) {
         const attr = transferredGeometry.attributes as AssociatedBufferAttributeArrayType;
         assignAttributeFromTransfered(bufferGeometry, attr.position, 'position', cloneBuffers);
         assignAttributeFromTransfered(bufferGeometry, attr.normal, 'normal', cloneBuffers);
@@ -142,29 +139,27 @@ export const reconstructBuffer = (cloneBuffers: boolean, transferredGeometry: Bu
 
     // TODO: morphAttributes
 
-    if (transferredGeometry.index !== null) {
-        const indexAttr = transferredGeometry.index as BufferAttribute;
-        if (indexAttr) {
-            const indexBuffer = cloneBuffers ? indexAttr.array.slice(0) : indexAttr.array;
-            bufferGeometry.setIndex(new BufferAttribute(indexBuffer, indexAttr.itemSize, indexAttr.normalized));
-        }
+    if (transferredGeometry?.index !== null) {
+        const indexAttr = transferredGeometry?.index as BufferAttribute;
+        const indexBuffer = cloneBuffers ? indexAttr.array.slice(0) : indexAttr.array;
+        bufferGeometry.setIndex(new BufferAttribute(indexBuffer, indexAttr.itemSize, indexAttr.normalized));
     }
 
-    const boundingBox = transferredGeometry.boundingBox;
+    const boundingBox = transferredGeometry?.boundingBox;
     if (boundingBox !== null) {
         bufferGeometry.boundingBox = Object.assign(new Box3(), boundingBox);
     }
 
-    const boundingSphere = transferredGeometry.boundingSphere;
+    const boundingSphere = transferredGeometry?.boundingSphere;
     if (boundingSphere !== null) {
         bufferGeometry.boundingSphere = Object.assign(new Sphere(), boundingSphere);
     }
 
-    bufferGeometry.uuid = transferredGeometry.uuid as string;
-    bufferGeometry.name = transferredGeometry.name as string;
-    bufferGeometry.groups = transferredGeometry.groups as Array<{ start: number; count: number; materialIndex?: number | undefined }>;
-    bufferGeometry.drawRange = transferredGeometry.drawRange as { start: number; count: number };
-    bufferGeometry.userData = transferredGeometry.userData as AssociatedArrayType<unknown>;
+    bufferGeometry.uuid = transferredGeometry?.uuid as string;
+    bufferGeometry.name = transferredGeometry?.name as string;
+    bufferGeometry.groups = transferredGeometry?.groups as Array<{ start: number; count: number; materialIndex?: number | undefined }>;
+    bufferGeometry.drawRange = transferredGeometry?.drawRange as { start: number; count: number };
+    bufferGeometry.userData = transferredGeometry?.userData as AssociatedArrayType<unknown>;
     return bufferGeometry;
 };
 

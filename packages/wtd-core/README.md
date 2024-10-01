@@ -15,6 +15,7 @@ Build applications with workers with less boiler plate code.
 
 There are multiple examples available demonstarting the features described above (listed from simpler to more advanced):
 
+- **ComChannelEndpoint: Hello World**: [html](https://github.com/kaisalmen/wtd/blob/main/packages/examples/helloWorldComChannelEndpoint.html), [ts](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/helloWorld/HelloWorldComChannelEndpoint.ts), [worker](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/HelloWorldComChannelEndpointWorker.ts)
 - **WorkerTask: Hello World**: [html](https://github.com/kaisalmen/wtd/blob/main/packages/examples/helloWorldWorkerTask.html), [ts](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/helloWorld/HelloWorldWorkerTask.ts), [worker](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/HelloWorldWorker.ts)
 - **WorkerTaskDirector: Hello World**: [html](https://github.com/kaisalmen/wtd/blob/main/packages/examples/helloWorldWorkerTaskDirector.html), [ts](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/helloWorld/helloWorldWorkerTaskDirector.ts), [worker](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/HelloWorldWorker.ts)
 - **WorkerTask: Inter-Worker Communication**: [html](https://github.com/kaisalmen/wtd/blob/main/packages/examples/workerCom.html), [ts](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/com/WorkerCom.ts), **Worker**: [1](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/Com1Worker.ts) and [2](https://github.com/kaisalmen/wtd/blob/main/packages/examples/src/worker/Com2Worker.ts)
@@ -28,9 +29,9 @@ This shall give you an idea how you can use module worker with `WorkerTask` (der
 ```js
 // let WorkerTask create the worker
 const workerTask = new WorkerTask({
-    taskName,
-    workerId: 1,
-    workerConfig: {
+    endpointName,
+    endpointId: 1,
+    endpointConfig: {
         $type: 'WorkerConfigParams',
         url: new URL('./HelloWorldWorker.js', import.meta.url),
         workerType: 'module',
@@ -40,7 +41,7 @@ const workerTask = new WorkerTask({
 
 try {
     // creates and connects the worker callback functions and the WorkerTask
-    workerTask.connectWorker();
+    workerTask.connect();
 
     // execute without init and an empty message
     const resultExec = await workerTask.executeWorker({

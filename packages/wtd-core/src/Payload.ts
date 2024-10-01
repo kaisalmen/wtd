@@ -1,11 +1,11 @@
 export type AssociatedArrayType<T> = { [key: string]: T }
 
-export type Payload = {
+export interface Payload {
     $type: string;
     message: unknown;
 }
 
-export type PayloadHandler = {
+export interface PayloadHandler {
     pack(payload: Payload, transferable: Transferable[], cloneBuffers: boolean): Transferable[];
     unpack(transportObject: Payload, cloneBuffers: boolean): Payload;
 }

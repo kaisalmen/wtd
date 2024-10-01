@@ -3,6 +3,6 @@
         "editorconfig.editorconfig",
         "dbaeumer.vscode-eslint",
         "davidanson.vscode-markdownlint",
-        "zixuanchen.vitest-explorer"
+        "vitest.explorer"
     ]
 }

@@ -17,14 +17,14 @@
     "serve": "http-server ./production"
   },
   "dependencies": {
-    "lil-gui": "~0.19.1",
-    "three": "~0.160.0",
-    "wtd-core": "~3.0.0",
-    "wtd-three-ext": "~3.0.0",
-    "wwobjloader2": "6.2.0"
+    "lil-gui": "~0.19.2",
+    "three": "~0.169.0",
+    "wtd-core": "~4.0.0",
+    "wtd-three-ext": "~4.0.0",
+    "wwobjloader2": "6.2.1"
   },
   "devDependencies": {
-    "@types/three": "~0.160.0",
+    "@types/three": "~0.169.0",
     "http-server": "~14.1.1"
   },
   "repository": {

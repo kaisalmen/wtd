@@ -132,7 +132,7 @@ export class MaterialsPayloadHandler implements PayloadHandler {
 
     pack(payload: Payload, transferables: Transferable[], cloneBuffers: boolean) {
         const mp = payload as MaterialsPayload;
-        if (mp.message.buffers) {
+        if (mp.message.buffers !== undefined) {
             fillTransferables(mp.message.buffers.values(), transferables, cloneBuffers);
         }
         mp.message.materialsJson = MaterialUtils.getMaterialsJSON(mp.message.materials);

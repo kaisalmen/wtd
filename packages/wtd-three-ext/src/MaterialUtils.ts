@@ -33,17 +33,17 @@ export class MaterialUtils {
             existingMaterial = materialsObject.get(materialName);
             if (existingMaterial) {
                 if (existingMaterial.uuid !== existingMaterial.uuid) {
-                    if (log) console.log('Same material name "' + existingMaterial.name + '" different uuid [' + existingMaterial.uuid + '|' + material.uuid + ']');
+                    if (log === true) console.log('Same material name "' + existingMaterial.name + '" different uuid [' + existingMaterial.uuid + '|' + material.uuid + ']');
                 }
             }
             else {
                 materialsObject.set(materialName, material);
-                if (log) console.info('Material with name "' + materialName + '" was added.');
+                if (log === true) console.info('Material with name "' + materialName + '" was added.');
             }
         }
         else {
             materialsObject.set(materialName, material);
-            if (log) console.info('Material with name "' + materialName + '" was forcefully overridden.');
+            if (log === true) console.info('Material with name "' + materialName + '" was forcefully overridden.');
         }
     }
 
@@ -71,21 +71,19 @@ export class MaterialUtils {
      * @param {boolean} [log]
      */
     static cloneMaterial(materials: Map<string, Material>, materialCloneInstruction: MaterialCloneInstructionsType, log?: boolean): Material | undefined {
-        if (materialCloneInstruction) {
-            let materialNameOrg = materialCloneInstruction.materialNameOrg;
-            materialNameOrg = (materialNameOrg !== undefined && materialNameOrg !== null) ? materialNameOrg : '';
-            const materialOrg = materials.get(materialNameOrg);
-            if (materialOrg) {
-                const material = materialOrg.clone();
-                Object.assign(material, materialCloneInstruction.materialProperties);
-                MaterialUtils.addMaterial(materials, materialCloneInstruction.materialProperties.name, material, true, log);
-                return material;
-            }
-            else {
-                if (log) console.info('Requested material "' + materialNameOrg + '" is not available!');
-            }
+
+        const materialNameOrg = materialCloneInstruction.materialNameOrg;
+        const materialOrg = materials.get(materialNameOrg);
+        if (materialOrg) {
+            const material = materialOrg.clone();
+            Object.assign(material, materialCloneInstruction.materialProperties);
+            MaterialUtils.addMaterial(materials, materialCloneInstruction.materialProperties.name, material, true, log);
+            return material;
         }
-        return undefined;
+        else {
+            if (log === true) console.info('Requested material "' + materialNameOrg + '" is not available!');
+            return undefined;
+        }
     }
 
 }

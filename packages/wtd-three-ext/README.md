@@ -28,9 +28,9 @@ This shall give you an idea how you can use module worker with `WorkerTask` (der
 ```js
 // let WorkerTask create the worker
 const workerTask = new WorkerTask({
-    taskName,
-    workerId: 1,
-    workerConfig: {
+    endpointName,
+    endpointId: 1,
+    endpointConfig: {
         $type: 'WorkerConfigParams',
         url: new URL('./HelloWorldWorker.js', import.meta.url),
         workerType: 'module',
@@ -40,7 +40,7 @@ const workerTask = new WorkerTask({
 
 try {
     // cteates and connects the worker callback functions and the WorkerTask
-    workerTask.connectWorker();
+    workerTask.connect();
 
     // execute without init and an empty message
     const resultExec = await workerTask.executeWorker({
