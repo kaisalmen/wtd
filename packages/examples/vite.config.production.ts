@@ -10,6 +10,7 @@ export default defineConfig(({ command }) => {
                 input: {
                     main: path.resolve(__dirname, 'index.html'),
                     helloWorldWorkerTask: path.resolve(__dirname, 'helloWorldWorkerTask.html'),
+                    helloWorldComChannelEndpoint: path.resolve(__dirname, 'helloWorldComChannelEndpoint.html'),
                     helloWorldWorkerTaskDirector: path.resolve(__dirname, 'helloWorldWorkerTaskDirector.html'),
                     workerCom: path.resolve(__dirname, 'workerCom.html'),
                     transferables: path.resolve(__dirname, 'transferables.html'),
