@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1 - 2024-10-01
+
+- WorkerMessageDef: Rename answer to expectedAnswer
+
 ## 4.0.0 - 2024-10-01
 
 - ComChannelEndpoint has been extracted from WorkerTask

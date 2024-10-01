@@ -25,7 +25,7 @@ export interface WorkerMessageDef {
     message: WorkerMessage;
     transferables?: Transferable[];
     copyTransferables?: boolean;
-    answer?: string;
+    expectedAnswer?: string;
     awaitAnswer?: boolean;
 }
 
@@ -123,12 +123,12 @@ export class ComChannelEndpoint {
                 const transferablesToWorker = this.handleTransferables(def);
 
                 if (def.awaitAnswer === true) {
-                    if (def.answer === undefined) {
+                    if (def.expectedAnswer === undefined) {
                         reject(new Error('No answer name provided. Aborting...'));
                         return;
                     }
                     this.updateAwaitHandlers(message, [{
-                        name: def.answer,
+                        name: def.expectedAnswer,
                         resolve: [resolve],
                         reject: reject,
                         remove: true,

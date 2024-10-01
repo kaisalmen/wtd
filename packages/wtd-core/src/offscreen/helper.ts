@@ -19,7 +19,7 @@ export const initOffscreenCanvas = async (workerTask: WorkerTask, canvas: HTMLCa
         message: WorkerMessage.fromPayload(offscreenPayloadRenderer, OffscreenWorkerCommandRequest.INIT_OFFSCREEN_CANVAS),
         transferables: [offscreenCanvas],
         awaitAnswer: true,
-        answer: OffscreenWorkerCommandResponse.INIT_OFFSCREEN_CANVAS_COMPLETE
+        expectedAnswer: OffscreenWorkerCommandResponse.INIT_OFFSCREEN_CANVAS_COMPLETE
     });
 };
 

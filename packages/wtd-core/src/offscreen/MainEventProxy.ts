@@ -165,7 +165,7 @@ export const registerCanvas = async (workerTask: WorkerTask, canvas: HTMLCanvasE
     await workerTask.sentMessage({
         message: WorkerMessage.fromPayload(new OffscreenPayload({}), OffscreenWorkerCommandRequest.PROXY_START),
         awaitAnswer: true,
-        answer: OffscreenWorkerCommandResponse.PROXY_START_COMPLETE
+        expectedAnswer: OffscreenWorkerCommandResponse.PROXY_START_COMPLETE
     });
 
     for (const [eventName, instruction] of handlingInstructions.entries()) {

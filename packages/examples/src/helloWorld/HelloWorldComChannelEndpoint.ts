@@ -27,7 +27,7 @@ class HelloWorldComChannelEndpointExample {
                     cmd: 'hello_world'
                 }),
                 awaitAnswer: true,
-                answer: 'hello_world_confirm'
+                expectedAnswer: 'hello_world_confirm'
             },);
 
             const rawPayload = result.payloads[0] as RawPayload;

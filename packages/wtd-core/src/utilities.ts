@@ -55,7 +55,7 @@ export const initChannel = async (workerOne: WorkerTask, workerTwo: WorkerTask) 
         message: WorkerMessage.fromPayload(payloadOne, WorkerTaskCommandRequest.INIT_CHANNEL),
         transferables: [channel.port1],
         awaitAnswer: true,
-        answer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
+        expectedAnswer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
     }));
 
     const payloadTwo = new RawPayload({
@@ -65,7 +65,7 @@ export const initChannel = async (workerOne: WorkerTask, workerTwo: WorkerTask) 
         message: WorkerMessage.fromPayload(payloadTwo, WorkerTaskCommandRequest.INIT_CHANNEL),
         transferables: [channel.port2],
         awaitAnswer: true,
-        answer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
+        expectedAnswer: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
     }));
     return Promise.all(promises);
 };
