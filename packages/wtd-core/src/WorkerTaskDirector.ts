@@ -1,22 +1,20 @@
 import {
-    WorkerTaskMessage
-} from './WorkerTaskMessage.js';
+    WorkerMessage
+} from './WorkerMessage.js';
 import type {
-    WorkerConfig,
-    WorkerConfigDirect,
-    WorkerExecutionDef,
-    WorkerMessageDef
+    WorkerExecutionDef
 } from './WorkerTask.js';
 import {
     WorkerTask
 } from './WorkerTask.js';
+import type { WorkerConfig, EndpointConfigDirect, WorkerMessageDef } from './ComChannelEndpoint.js';
 
-type WorkerTaskRuntimeDesc = {
+interface WorkerTaskRuntimeDesc {
     workerTasks: Map<number, WorkerTask>;
     readonly maxParallelExecutions: number;
 }
 
-type WorkerTaskDirectorConfig = {
+interface WorkerTaskDirectorConfig {
     defaultMaxParallelExecutions?: number;
     verbose?: boolean;
 }
@@ -24,18 +22,18 @@ type WorkerTaskDirectorConfig = {
 /**
  * This is only used internally
  */
-type WorkerExecutionPlan = WorkerExecutionDef & {
+interface WorkerExecutionPlan extends WorkerExecutionDef {
     promiseFunctions?: {
-        resolve: (message: WorkerTaskMessage) => void,
+        resolve: (message: WorkerMessage) => void,
         reject: (error?: Error) => void
     };
-};
+}
 
-export type WorkerTaskDirectorTaskDef = {
+export interface WorkerTaskDirectorTaskDef {
     taskName: string;
-    workerConfig: WorkerConfig | WorkerConfigDirect;
+    endpointConfig: WorkerConfig | EndpointConfigDirect;
     maxParallelExecutions?: number
-};
+}
 
 /**
  * Register one to many tasks type to the WorkerTaskDirector. Then init and enqueue a worker based execution by passing
@@ -78,9 +76,9 @@ export class WorkerTaskDirector {
             this.taskTypes.set(taskName, workerTaskRuntimeDesc);
             for (let i = 0; i < maxParallelExecutions; i++) {
                 workerTaskRuntimeDesc.workerTasks.set(i, new WorkerTask({
-                    taskName,
-                    workerId: i,
-                    workerConfig: workerTaskDirectorDef.workerConfig,
+                    endpointName: taskName,
+                    endpointId: i,
+                    endpointConfig: workerTaskDirectorDef.endpointConfig,
                     verbose: this.verbose
                 }));
             }
@@ -101,7 +99,7 @@ export class WorkerTaskDirector {
             this.workerExecutionPlans.set(taskTypeName, []);
             for (const workerTask of workerTaskRuntimeDesc.workerTasks.values()) {
                 // only init worker if a def is provided
-                workerTask.connectWorker();
+                workerTask.connect();
                 if (def) {
                     executions.push(workerTask.initWorker({
                         message: def.message,
@@ -126,14 +124,14 @@ export class WorkerTaskDirector {
      * @param {WorkerExecutionDef} Defines all the information needed to execute the worker task.
      * @return {Promise}
      */
-    async enqueueForExecution(taskTypeName: string, workerExecutionDef: WorkerExecutionDef): Promise<WorkerTaskMessage> {
+    async enqueueForExecution(taskTypeName: string, workerExecutionDef: WorkerExecutionDef): Promise<WorkerMessage> {
         const plan = workerExecutionDef as WorkerExecutionPlan;
         const promise = new Promise((resolve, reject) => {
             plan.promiseFunctions = {
                 resolve: resolve,
                 reject: reject
             };
-        }) as Promise<WorkerTaskMessage>;
+        }) as Promise<WorkerMessage>;
 
         const planForType = this.workerExecutionPlans.get(taskTypeName);
         planForType?.push(plan);

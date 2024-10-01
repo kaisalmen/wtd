@@ -2,20 +2,20 @@ import {
     comRouting,
     RawPayload,
     WorkerTaskCommandResponse,
-    WorkerTaskMessage,
+    WorkerMessage,
     WorkerTaskWorker
 } from 'wtd-core';
 
 export class HelloWorldWorker implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessage) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+    init(message: WorkerMessage) {
+        const initComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
         });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessage) {
+    execute(message: WorkerMessage) {
         // burn some time
         for (let i = 0; i < 25000000; i++) {
             i++;
@@ -25,7 +25,7 @@ export class HelloWorldWorker implements WorkerTaskWorker {
             hello: 'Hello! I just incremented "i" 25 million times.'
         });
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+        const execComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
         });
         execComplete.addPayload(rawPayload);

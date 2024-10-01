@@ -6,7 +6,7 @@ import {
 import {
     comRouting,
     WorkerTaskCommandResponse,
-    WorkerTaskMessage,
+    WorkerMessage,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -17,14 +17,14 @@ import {
 
 class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessage) {
-        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+    init(message: WorkerMessage) {
+        const initComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
         });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessage) {
+    execute(message: WorkerMessage) {
         const bufferGeometry = new TorusKnotGeometry(20, 3, 100, 64);
         bufferGeometry.name = 'tmProto' + message.uuid;
 
@@ -49,13 +49,13 @@ class InfiniteWorkerInternalGeometry implements WorkerTaskWorker {
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 2);
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+        const execComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
         });
         execComplete.addPayload(meshPayload);
         execComplete.addPayload(materialsPayload);
 
-        const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
+        const transferables = WorkerMessage.pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 }

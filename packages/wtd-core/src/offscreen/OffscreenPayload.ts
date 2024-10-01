@@ -1,6 +1,6 @@
 import { AssociatedArrayType, Payload } from 'wtd-core';
 
-export type OffscreenPayloadMessage = {
+export interface OffscreenPayloadMessage {
     drawingSurface?: OffscreenCanvas | HTMLCanvasElement;
     width?: number;
     height?: number;
@@ -10,7 +10,7 @@ export type OffscreenPayloadMessage = {
     event?: AssociatedArrayType<unknown>;
 }
 
-export type OffscreenPayloadAdditions = Payload & {
+export interface OffscreenPayloadAdditions extends Payload {
     message: OffscreenPayloadMessage;
 }
 

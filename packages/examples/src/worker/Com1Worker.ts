@@ -9,7 +9,7 @@ import {
     recalcAspectRatio,
     WorkerTaskCommandRequest,
     WorkerTaskCommandResponse,
-    WorkerTaskMessage,
+    WorkerMessage,
     WorkerTaskWorker
 } from 'wtd-core';
 import { updateText } from './ComWorkerCommon.js';
@@ -21,47 +21,47 @@ export class Com1Worker implements WorkerTaskWorker, InterComWorker, OffscreenWo
     private offScreenCanvas?: OffscreenCanvas;
     private text = 'none';
 
-    initChannel(message: WorkerTaskMessage): void {
+    initChannel(message: WorkerMessage): void {
         // register the default com-routing function for inter-worker communication
-        const payloadPort = message.payloads?.[0];
+        const payloadPort = message.payloads[0];
         this.icph.registerPort('com2', payloadPort, message => comRouting(this, message));
 
-        const initChannelComplete = WorkerTaskMessage.createFromExisting(message, {
+        const initChannelComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.INIT_CHANNEL_COMPLETE
         });
         self.postMessage(initChannelComplete);
     }
 
-    initOffscreenCanvas(message: WorkerTaskMessage): void {
-        const offscreenPayload = message.payloads?.[0] as OffscreenPayload;
+    initOffscreenCanvas(message: WorkerMessage): void {
+        const offscreenPayload = message.payloads[0] as OffscreenPayload;
         this.offScreenCanvas = getOffscreenCanvas(offscreenPayload);
 
-        const initOffscreenCanvasComplete = WorkerTaskMessage.createFromExisting(message, {
+        const initOffscreenCanvasComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: OffscreenWorkerCommandResponse.INIT_OFFSCREEN_CANVAS_COMPLETE
         });
         self.postMessage(initOffscreenCanvasComplete);
     }
 
-    resize(message: WorkerTaskMessage) {
-        const offscreenPayload = message.payloads?.[0] as OffscreenPayload;
+    resize(message: WorkerMessage) {
+        const offscreenPayload = message.payloads[0] as OffscreenPayload;
         recalcAspectRatio(this.offScreenCanvas!, offscreenPayload.message.width ?? 0, offscreenPayload.message.height ?? 1);
         this.updateText(false);
     }
 
-    init(message: WorkerTaskMessage): void {
+    init(message: WorkerMessage): void {
         this.text = 'Worker 1: init';
         this.updateText();
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+        const initComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
         });
         initComplete.addPayload(new RawPayload({ hello: 'Com1Worker initComplete!' }));
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessage) {
+    execute(message: WorkerMessage) {
         // send message with cmd 'interComIntermediate' to Com2Worker
-        const sendWorker2 = WorkerTaskMessage.createFromExisting(message, {
+        const sendWorker2 = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandRequest.INTERCOM_INTERMEDIATE
         });
         const payload = new RawPayload({ hello: 'Hi Worker 2!' });
@@ -70,14 +70,14 @@ export class Com1Worker implements WorkerTaskWorker, InterComWorker, OffscreenWo
         this.icph.postMessageOnPort('com2', sendWorker2);
     }
 
-    interComIntermediate(message: WorkerTaskMessage): void {
-        const rawPayload = message.payloads?.[0] as RawPayload;
+    interComIntermediate(message: WorkerMessage): void {
+        const rawPayload = message.payloads[0] as RawPayload;
         this.text = `Worker 1: Worker 2 said: ${rawPayload.message.raw.hello}`;
         this.updateText();
 
         setTimeout(() => {
             // after receiving the message from Com2Worker, send interComIntermediateConfirm to worker 2
-            const intermediateConfirm = WorkerTaskMessage.createFromExisting(message, {
+            const intermediateConfirm = WorkerMessage.createFromExisting(message, {
                 overrideCmd: WorkerTaskCommandResponse.INTERCOM_INTERMEDIATE_CONFIRM
             });
             const payload = new RawPayload({ confirmed: 'Hi Worker 2. I confirm!' });
@@ -87,13 +87,13 @@ export class Com1Worker implements WorkerTaskWorker, InterComWorker, OffscreenWo
         }, 2000);
     }
 
-    interComIntermediateConfirm(message: WorkerTaskMessage): void {
-        const rawPayload = message.payloads?.[0] as RawPayload;
+    interComIntermediateConfirm(message: WorkerMessage): void {
+        const rawPayload = message.payloads[0] as RawPayload;
         this.text = `Worker 1: Worker 2 confirmed: ${rawPayload.message.raw.confirmed}`;
         this.updateText();
 
         // after receiving the interComIntermediateConfirm from Com2Worker, send execComplete to main
-        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+        const execComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
         });
         const payload = new RawPayload({ finished: 'Hi Main. Worker 1 completed!' });

@@ -18,7 +18,7 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
-    WorkerTaskMessage
+    WorkerMessage
 } from 'wtd-core';
 import {
     MeshPayload,
@@ -199,7 +199,7 @@ class TransferablesTestbed {
 
         this.workerTaskDirector.registerTask({
             taskName: task.name,
-            workerConfig: {
+            endpointConfig: {
                 $type: 'WorkerConfigParams',
                 workerType: 'module',
                 blob: false,
@@ -207,7 +207,7 @@ class TransferablesTestbed {
             }
         });
 
-        const initMessage = WorkerTaskMessage.createNew({
+        const initMessage = WorkerMessage.createNew({
             name: task.name
         });
         if (task.sendGeometry) {
@@ -218,7 +218,7 @@ class TransferablesTestbed {
             meshPayload.setBufferGeometry(torus, 0);
             initMessage.addPayload(meshPayload);
 
-            const transferables = WorkerTaskMessage.pack(initMessage.payloads, false);
+            const transferables = WorkerMessage.pack(initMessage.payloads, false);
             return this.workerTaskDirector.initTaskType(initMessage.name!, {
                 message: initMessage,
                 transferables,
@@ -246,7 +246,7 @@ class TransferablesTestbed {
     }
 
     private async executeWorker(task: ExampleTask) {
-        const execMessage = WorkerTaskMessage.createNew({
+        const execMessage = WorkerMessage.createNew({
             name: task.name
         });
 
@@ -256,7 +256,7 @@ class TransferablesTestbed {
             segments: task.segments
         };
         execMessage.addPayload(dataPayload);
-        const transferables = WorkerTaskMessage.pack(execMessage.payloads, false);
+        const transferables = WorkerMessage.pack(execMessage.payloads, false);
 
         const result = await this.workerTaskDirector.enqueueForExecution(task.name, {
             message: execMessage,
@@ -266,20 +266,20 @@ class TransferablesTestbed {
         this.processMessage(result);
     }
 
-    private processMessage(message: WorkerTaskMessage) {
-        let wtm;
+    private processMessage(message: WorkerMessage) {
+        let wm;
         switch (message.cmd) {
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
-                console.log(`TransferableTestbed#execComplete: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+                console.log(`TransferableTestbed#execComplete: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.endpointdId}`);
 
-                wtm = WorkerTaskMessage.unpack(message, false);
-                if (wtm.payloads?.length === 1) {
+                wm = WorkerMessage.unpack(message, false);
+                if (wm.payloads.length === 1) {
 
-                    const payload = wtm.payloads[0];
+                    const payload = wm.payloads[0];
                     if (payload.$type === 'DataPayload') {
                         const dataPayload = payload as DataPayload;
-                        if (dataPayload.message.params && Object.keys(dataPayload.message.params).length > 0 &&
-                            dataPayload.message.params.geometry) {
+                        if (dataPayload.message.params !== undefined && Object.keys(dataPayload.message.params).length > 0 &&
+                            dataPayload.message.params.geometry !== undefined) {
                             const mesh = new Mesh(
                                 reconstructBuffer(false, dataPayload.message.params.geometry as BufferGeometry),
                                 new MeshPhongMaterial({ color: new Color(0xff0000) })
@@ -294,7 +294,7 @@ class TransferablesTestbed {
 
                     if (payload.$type === 'MeshPayload') {
                         const meshPayload = payload as MeshPayload;
-                        if (meshPayload.message.bufferGeometry) {
+                        if (meshPayload.message.bufferGeometry !== undefined) {
                             const mesh = new Mesh(
                                 meshPayload.message.bufferGeometry as BufferGeometry,
                                 new MeshPhongMaterial({ color: new Color(0xff0000) })
@@ -319,7 +319,7 @@ window.addEventListener('resize', () => app.resizeDisplayGL(), false);
 console.log('Starting initialisation phase...');
 app.resizeDisplayGL();
 
-const requestRender = function() {
+const requestRender = () => {
     requestAnimationFrame(requestRender);
     app.render();
 };

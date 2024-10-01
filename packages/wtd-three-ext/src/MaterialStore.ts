@@ -50,7 +50,7 @@ export class MaterialStore {
      * @param {boolean} forceOverrideExisting boolean Override existing material
      */
     addMaterials(newMaterials: Map<string, Material>, forceOverrideExisting: boolean) {
-        if (newMaterials && newMaterials !== null && newMaterials.size > 0) {
+        if (newMaterials.size > 0) {
             for (const entry of newMaterials.entries()) {
                 MaterialUtils.addMaterial(this.materials, entry[0], entry[1], forceOverrideExisting === true);
             }
@@ -58,7 +58,7 @@ export class MaterialStore {
     }
 
     addMaterialsFromObject(newMaterials: AssociatedMaterialArrayType, forceOverrideExisting: boolean) {
-        if (newMaterials && newMaterials !== null && Object.keys(newMaterials).length > 0) {
+        if (Object.keys(newMaterials).length > 0) {
             for (const [k, v] of Object.entries(newMaterials)) {
                 MaterialUtils.addMaterial(this.materials, k, v, forceOverrideExisting === true);
             }

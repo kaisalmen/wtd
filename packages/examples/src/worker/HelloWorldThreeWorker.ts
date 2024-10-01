@@ -2,7 +2,7 @@ import { SphereGeometry } from 'three';
 import {
     comRouting,
     WorkerTaskCommandResponse,
-    WorkerTaskMessage,
+    WorkerMessage,
     WorkerTaskWorker
 } from 'wtd-core';
 import {
@@ -11,20 +11,20 @@ import {
 
 export class HelloWorlThreedWorker implements WorkerTaskWorker {
 
-    init(message: WorkerTaskMessage) {
-        console.log(`HelloWorldWorker#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    init(message: WorkerMessage) {
+        console.log(`HelloWorldWorker#init: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.endpointdId}`);
 
-        const initComplete = WorkerTaskMessage.createFromExisting(message, {
+        const initComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.INIT_COMPLETE
         });
         self.postMessage(initComplete);
     }
 
-    execute(message: WorkerTaskMessage) {
-        console.log(`HelloWorldWorker#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.workerId}`);
+    execute(message: WorkerMessage) {
+        console.log(`HelloWorldWorker#execute: name: ${message.name} uuid: ${message.uuid} cmd: ${message.cmd} workerId: ${message.endpointdId}`);
 
         const bufferGeometry = new SphereGeometry(40, 64, 64);
-        bufferGeometry.name = message.name ?? 'unknown' + message.uuid ?? 'unknown';
+        bufferGeometry.name = `${message.name}-${message.uuid}`;
         const vertexArray = bufferGeometry.getAttribute('position').array;
         for (let i = 0; i < vertexArray.length; i++) {
             vertexArray[i] = vertexArray[i] * Math.random() * 0.48;
@@ -33,12 +33,12 @@ export class HelloWorlThreedWorker implements WorkerTaskWorker {
         const meshPayload = new MeshPayload();
         meshPayload.setBufferGeometry(bufferGeometry, 0);
 
-        const execComplete = WorkerTaskMessage.createFromExisting(message, {
+        const execComplete = WorkerMessage.createFromExisting(message, {
             overrideCmd: WorkerTaskCommandResponse.EXECUTE_COMPLETE
         });
         execComplete.addPayload(meshPayload);
 
-        const transferables = WorkerTaskMessage.pack(execComplete.payloads, false);
+        const transferables = WorkerMessage.pack(execComplete.payloads, false);
         self.postMessage(execComplete, transferables);
     }
 

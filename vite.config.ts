@@ -1,9 +1,5 @@
-/* eslint-disable no-undef */
 import { defineConfig } from 'vite';
 import path from 'path';
-
-// Config Hints:
-// https://vitejs.dev/guide/build.html#multi-page-app
 
 export default defineConfig(({ command }) => {
     console.log(`Running: ${command}`);
@@ -22,7 +18,7 @@ export default defineConfig(({ command }) => {
             }
         },
         server: {
-            port: 8080,
+            port: 23001,
             host: '0.0.0.0'
         },
     };

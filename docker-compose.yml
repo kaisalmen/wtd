@@ -6,8 +6,8 @@ services:
       dockerfile: Dockerfile
       context: .
     ports:
-      - target: 8080
-        published: 8080
+      - target: 23001
+        published: 23001
         protocol: tcp
         mode: host
     volumes:

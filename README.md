@@ -63,7 +63,7 @@ const workerTask = new WorkerTask({
 
 try {
     // creates and connects the worker callback functions and the WorkerTask
-    workerTask.connectWorker();
+    workerTask.connect();
 
     // execute without init and an empty message
     const resultExec = await workerTask.executeWorker({
@@ -100,7 +100,7 @@ Whatever environment you choose to start [Vite](https://vitejs.dev/) is used to 
 
 If you run Vite locally you require a `nodejs` and `npm`. The Gitpod and local docker environment ensure all prerequisites are fulfilled.
 
-In any environment the dev server is reachable on port 8080.
+In any environment the dev server is reachable on port 23001.
 
 ## WorkerTaskDirector Execution Workflow
 

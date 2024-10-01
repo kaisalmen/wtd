@@ -14,7 +14,8 @@ module.exports = {
     ],
     parserOptions: {
         ecmaVersion: 2020,
-        sourceType: 'module'
+        sourceType: 'module',
+        project: ['./tsconfig.json']
     },
     plugins: [
         '@typescript-eslint'
@@ -64,7 +65,7 @@ module.exports = {
         '@typescript-eslint/no-misused-new': 'error',               // no constructors for interfaces or new for classes
         '@typescript-eslint/no-namespace': 'off',                   // disallow the use of custom TypeScript modules and namespaces
         '@typescript-eslint/no-non-null-assertion': 'off',          // allow ! operator
-        '@typescript-eslint/parameter-properties': 'error',      // no property definitions in class constructors
+        "@typescript-eslint/parameter-properties": "error",         // no property definitions in class constructors
         '@typescript-eslint/no-unused-vars': ['error', {            // disallow Unused Variables
             'argsIgnorePattern': '^_'
         }],
@@ -72,6 +73,8 @@ module.exports = {
         '@typescript-eslint/prefer-for-of': 'error',                // prefer for-of loop over arrays
         '@typescript-eslint/prefer-namespace-keyword': 'error',     // prefer namespace over module in TypeScript
         '@typescript-eslint/triple-slash-reference': 'error',       // ban /// <reference />, prefer imports
-        '@typescript-eslint/type-annotation-spacing': 'error'       // consistent space around colon ':'
+        '@typescript-eslint/type-annotation-spacing': 'error',      // consistent space around colon ':'
+        '@typescript-eslint/strict-boolean-expressions': 'error',   // Disallow certain types in boolean expressions
+        '@typescript-eslint/no-unnecessary-condition': 'error'      // Disallow conditionals where the type is always truthy or always falsy
     }
 }

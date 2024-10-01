@@ -1,12 +1,12 @@
 import { AssociatedArrayType, Payload, PayloadHandler, PayloadRegister } from './Payload.js';
 import { fillTransferables } from './utilities.js';
 
-export type ParameterizedMessage = {
+export interface ParameterizedMessage {
     params?: AssociatedArrayType<unknown>;
     buffers?: Map<string, ArrayBufferLike>;
 }
 
-export type DataPayloadAdditions = Payload & {
+export interface DataPayloadAdditions extends Payload {
     message: ParameterizedMessage;
 }
 
@@ -16,7 +16,6 @@ export class DataPayload implements DataPayloadAdditions {
         buffers: new Map(),
         params: {}
     };
-    progress = 0;
 }
 
 export class DataPayloadHandler implements PayloadHandler {
@@ -24,7 +23,7 @@ export class DataPayloadHandler implements PayloadHandler {
     pack(payload: Payload, transferables: Transferable[], cloneBuffers: boolean): Transferable[] {
         const dp = payload as DataPayload;
         if (dp.message.buffers) {
-            fillTransferables(dp.message.buffers?.values(), transferables, cloneBuffers);
+            fillTransferables(dp.message.buffers.values(), transferables, cloneBuffers);
         }
         return transferables;
     }

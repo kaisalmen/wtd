@@ -40,7 +40,7 @@ const workerTask = new WorkerTask({
 
 try {
     // creates and connects the worker callback functions and the WorkerTask
-    workerTask.connectWorker();
+    workerTask.connect();
 
     // execute without init and an empty message
     const resultExec = await workerTask.executeWorker({

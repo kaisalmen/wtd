@@ -19,7 +19,7 @@ import {
     DataPayload,
     WorkerTaskCommandResponse,
     WorkerTaskDirector,
-    WorkerTaskMessage
+    WorkerMessage
 } from 'wtd-core';
 import {
     MaterialsPayload,
@@ -138,12 +138,12 @@ class WorkerTaskDirectorExample {
     private async initTasks() {
         console.time('Init tasks');
         const awaiting: Array<Promise<string | ArrayBuffer | void | unknown[]>> = [];
-        const helloWorldInitMessage = WorkerTaskMessage.createNew({
+        const helloWorldInitMessage = WorkerMessage.createNew({
             name: 'HelloWorldThreeWorker'
         });
         this.workerTaskDirector.registerTask({
             taskName: helloWorldInitMessage.name!,
-            workerConfig: {
+            endpointConfig: {
                 $type: 'WorkerConfigParams',
                 workerType: 'module',
                 blob: false,
@@ -155,12 +155,12 @@ class WorkerTaskDirectorExample {
             message: helloWorldInitMessage
         }));
 
-        const objLoaderInitMessage = WorkerTaskMessage.createNew({
+        const objLoaderInitMessage = WorkerMessage.createNew({
             name: 'OBJLoaderdWorker'
         });
         this.workerTaskDirector.registerTask({
             taskName: objLoaderInitMessage.name!,
-            workerConfig: {
+            endpointConfig: {
                 $type: 'WorkerConfigParams',
                 workerType: 'module',
                 blob: false,
@@ -169,7 +169,7 @@ class WorkerTaskDirectorExample {
         });
         this.tasksToUse.push(objLoaderInitMessage.name!);
 
-        const loadObj = async function() {
+        const loadObj = async () => {
             const fileLoader = new FileLoader();
             fileLoader.setResponseType('arraybuffer');
 
@@ -191,7 +191,7 @@ class WorkerTaskDirectorExample {
         objLoaderInitMessage.addPayload(objLoaderDataPayload);
         objLoaderInitMessage.addPayload(materialsPayload);
 
-        const transferables = WorkerTaskMessage.pack(objLoaderInitMessage.payloads, false);
+        const transferables = WorkerMessage.pack(objLoaderInitMessage.payloads, false);
         await this.workerTaskDirector.initTaskType(objLoaderInitMessage.name!, {
             message: objLoaderInitMessage,
             transferables,
@@ -212,12 +212,12 @@ class WorkerTaskDirectorExample {
         for (let i = 0; i < 1024; i++) {
             const name = this.tasksToUse[taskToUseIndex];
 
-            const voidPromise = this.workerTaskDirector.enqueueForExecution(name ?? 'unknown', {
-                message: WorkerTaskMessage.createEmpty(),
-                onComplete: (m: WorkerTaskMessage) => {
+            const voidPromise = this.workerTaskDirector.enqueueForExecution(name, {
+                message: WorkerMessage.createEmpty(),
+                onComplete: (m: WorkerMessage) => {
                     this.processMessage(m);
                 },
-                onIntermediateConfirm: (m: WorkerTaskMessage) => {
+                onIntermediateConfirm: (m: WorkerMessage) => {
                     this.processMessage(m);
                 }
             });
@@ -239,40 +239,40 @@ class WorkerTaskDirectorExample {
      * @param {object} payload Message received from worker
      * @private
      */
-    private processMessage(message: WorkerTaskMessage) {
-        const wtm = WorkerTaskMessage.unpack(message, false);
-        switch (wtm.cmd) {
+    private processMessage(message: WorkerMessage) {
+        const wm = WorkerMessage.unpack(message, false);
+        switch (wm.cmd) {
             case WorkerTaskCommandResponse.INTERMEDIATE_CONFIRM:
             case WorkerTaskCommandResponse.EXECUTE_COMPLETE:
-                if (wtm.payloads?.length === 1) {
-                    this.buildMesh(wtm.uuid ?? 'unknown', wtm.payloads[0] as MeshPayload);
+                if (wm.payloads.length === 1) {
+                    this.buildMesh(wm.uuid, wm.payloads[0] as MeshPayload);
                 }
-                else if (wtm.payloads?.length === 2) {
-                    this.buildMesh(wtm.uuid ?? 'unknown', wtm.payloads[0] as MeshPayload, wtm.payloads[1] as MaterialsPayload);
+                else if (wm.payloads.length === 2) {
+                    this.buildMesh(wm.uuid, wm.payloads[0] as MeshPayload, wm.payloads[1] as MaterialsPayload);
                 }
-                if (wtm.cmd === WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
-                    console.log(`execComplete: name: ${wtm.name} uuid: ${wtm.uuid} cmd: ${wtm.cmd} workerId: ${wtm.workerId}`);
+                if (wm.cmd === WorkerTaskCommandResponse.EXECUTE_COMPLETE) {
+                    console.log(`execComplete: name: ${wm.name} uuid: ${wm.uuid} cmd: ${wm.cmd} workerId: ${wm.endpointdId}`);
                 }
                 break;
 
             default:
-                console.error(`${wtm.uuid}: Received unknown command: ${wtm.cmd}`);
+                console.error(`${wm.uuid}: Received unknown command: ${wm.cmd}`);
                 break;
         }
     }
 
     private buildMesh(uuid: string, meshPayload: MeshPayload, materialsPayload?: MaterialsPayload) {
         let material;
-        if (!materialsPayload) {
+        if (materialsPayload !== undefined) {
+            material = materialsPayload.processMaterialTransport(this.materialStore.getMaterials(), true);
+        } else {
             const randArray = new Uint8Array(3);
             window.crypto.getRandomValues(randArray);
             const color = new Color(randArray[0] / 255, randArray[1] / 255, randArray[2] / 255);
             material = new MeshPhongMaterial({ color: color });
         }
-        else {
-            material = materialsPayload.processMaterialTransport(this.materialStore.getMaterials(), true);
-        }
-        if (meshPayload.message.bufferGeometry) {
+
+        if (meshPayload.message.bufferGeometry !== undefined) {
             const mesh = new Mesh(meshPayload.message.bufferGeometry as BufferGeometry, material);
             this.addMesh(mesh, uuid);
         }
@@ -303,7 +303,7 @@ window.addEventListener('resize', () => app.resizeDisplayGL(), false);
 console.log('Starting initialisation phase...');
 app.resizeDisplayGL();
 
-const requestRender = function() {
+const requestRender = () => {
     requestAnimationFrame(requestRender);
     app.render();
 };

@@ -25,57 +25,69 @@ jobs:
     name: wtd
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      deploy_pages: ${{ steps.gen_output.outputs.deploy_gha }}
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+      uses: actions/checkout@v4
+
+    - name: Volta
+      uses: volta-cli/action@v4
+
     - name: Check Environment
       env:
         DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' || github.ref_name == 'main' }}
       run: |
         echo "DEPLOY_GHP=${DEPLOY_GHP}" >> $GITHUB_ENV
+
     - name: Install
       run: |
         npm ci
+
     - name: Lint
       run: |
         npm run lint
+
     - name: Build
       run: |
         npm run build
+
     - name: Test
       run: |
         npm run test
+
     - name: Build Production
       run: |
-        npm --prefix packages/examples run build:production
+        npm run build:production
+
     - name: Setup Pages
       if: ${{ env.DEPLOY_GHP == 'true' }}
       id: pages
-      uses: actions/configure-pages@v4
+      uses: actions/configure-pages@v5
+
     - name: Upload artifact
       if: ${{ env.DEPLOY_GHP == 'true' }}
       uses: actions/upload-pages-artifact@v3
       with:
         path: ./packages/examples/production/
 
+    - name: Generate output
+      id: gen_output
+      run: |
+        deploy_to_gp=${{ env.DEPLOY_GHP }}
+        echo "deploy_gha=${deploy_to_gp}" >> "$GITHUB_OUTPUT"
+
   deploy:
-    needs: build
+    needs: [ build ]
+    if: ${{ needs.build.outputs.deploy_gha == 'true' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check Environment
-        env:
-          DEPLOY_GHP: ${{ false || github.event.inputs.ghp == 'true' || github.ref_name == 'main' }}
-        run: |
-          echo "DEPLOY_GHP=${DEPLOY_GHP}" >> $GITHUB_ENV
       - name: Deploy to GitHub Pages
-        if: ${{ env.DEPLOY_GHP == 'true' }}
+
         id: deployment
         uses: actions/deploy-pages@v4

@@ -1,7 +1,7 @@
 import {
     RawPayload,
     WorkerTask,
-    WorkerTaskMessage,
+    WorkerMessage,
     initChannel,
     initOffscreenCanvas,
     recalcAspectRatio,
@@ -33,9 +33,9 @@ class HelloWorldStandardWorkerExample {
             type: 'module'
         });
         const workerTaskCom1 = new WorkerTask({
-            taskName: 'Com1Worker',
-            workerId: 1,
-            workerConfig: {
+            endpointName: 'Com1Worker',
+            endpointId: 1,
+            endpointConfig: {
                 $type: 'WorkerConfigDirect',
                 worker: com1Worker
             },
@@ -46,17 +46,17 @@ class HelloWorldStandardWorkerExample {
             type: 'module'
         });
         const workerTaskCom2 = new WorkerTask({
-            taskName: 'Com2Worker',
-            workerId: 2,
-            workerConfig: {
+            endpointName: 'Com2Worker',
+            endpointId: 2,
+            endpointConfig: {
                 $type: 'WorkerConfigDirect',
                 worker: com2Worker
             },
             verbose: true
         });
 
-        workerTaskCom1.connectWorker();
-        workerTaskCom2.connectWorker();
+        workerTaskCom1.connect();
+        workerTaskCom2.connect();
 
         try {
             await initChannel(workerTaskCom1, workerTaskCom2);
@@ -71,23 +71,23 @@ class HelloWorldStandardWorkerExample {
 
             updateText({
                 text: 'Main: Init',
-                width: this.canvasMain?.clientWidth ?? 0,
-                height: this.canvasMain?.clientHeight ?? 0,
+                width: this.canvasMain.clientWidth,
+                height: this.canvasMain.clientHeight,
                 canvas: this.canvasMain,
                 log: true
             });
 
             promises = [];
             promises.push(workerTaskCom1.initWorker({
-                message: WorkerTaskMessage.createEmpty()
+                message: WorkerMessage.createEmpty()
             }));
             promises.push(workerTaskCom2.initWorker({
-                message: WorkerTaskMessage.createEmpty()
+                message: WorkerMessage.createEmpty()
             }));
             const results = await Promise.all(promises);
             const logMsg: string[] = [];
-            results.forEach(wtm => {
-                const rawPayload = wtm.payloads?.[0] as RawPayload;
+            results.forEach(wm => {
+                const rawPayload = wm.payloads[0] as RawPayload;
                 logMsg.push(` Worker init feedback: ${rawPayload.message.raw.hello}`);
             });
             console.log(`Init results:${logMsg}`);
@@ -96,16 +96,16 @@ class HelloWorldStandardWorkerExample {
             setTimeout(async () => {
                 promises = [];
                 promises.push(workerTaskCom1.executeWorker({
-                    message: WorkerTaskMessage.createEmpty()
+                    message: WorkerMessage.createEmpty()
                 }));
                 promises.push(workerTaskCom2.executeWorker({
-                    message: WorkerTaskMessage.createEmpty()
+                    message: WorkerMessage.createEmpty()
                 }));
 
                 const results = await Promise.all(promises);
-                results.forEach((message: WorkerTaskMessage) => {
+                results.forEach((message: WorkerMessage) => {
                     console.log('Received final command: ' + message.cmd);
-                    if (message.payloads) {
+                    if (message.payloads.length > 0) {
                         const rawPayload = message.payloads[0] as RawPayload;
                         console.log(`Worker said onComplete: ${rawPayload.message.raw.finished} `);
                     }
@@ -115,8 +115,8 @@ class HelloWorldStandardWorkerExample {
                 const text = `Main: Worker execution has been completed after ${t1 - t0} ms.`;
                 updateText({
                     text,
-                    width: this.canvasMain?.clientWidth ?? 0,
-                    height: this.canvasMain?.clientHeight ?? 0,
+                    width: this.canvasMain.clientWidth,
+                    height: this.canvasMain.clientHeight,
                     canvas: this.canvasMain,
                     log: true
                 });
