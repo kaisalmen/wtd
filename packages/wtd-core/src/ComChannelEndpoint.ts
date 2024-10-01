@@ -9,8 +9,8 @@ export interface WorkerConfig {
 }
 
 export interface EndpointConfigDirect {
-    $type: 'WorkerConfigDirect';
-    worker: Worker | MessagePort | DedicatedWorkerGlobalScope;
+    $type: 'DirectImplConfig';
+    impl: Worker | MessagePort | DedicatedWorkerGlobalScope;
 }
 
 export interface AwaitHandler {
@@ -47,7 +47,7 @@ export class ComChannelEndpoint {
     protected endpointConfig: WorkerConfig | EndpointConfigDirect;
     protected verbose = false;
 
-    protected worker?: Worker | MessagePort | DedicatedWorkerGlobalScope;
+    protected impl?: Worker | MessagePort | DedicatedWorkerGlobalScope;
     protected executionCounter = 0;
     protected awaitAnswers = new Map<string, AwaitHandler[]>();
 
@@ -58,47 +58,47 @@ export class ComChannelEndpoint {
         this.endpointName = config.endpointName;
     }
 
-    getWorker() {
-        return this.worker;
+    getImpl() {
+        return this.impl;
     }
 
     connect(comRoutingHandler?: ComRouter) {
-        if (this.worker) {
+        if (this.impl) {
             throw new Error('Worker already created. Aborting...');
         }
-        if (this.endpointConfig.$type === 'WorkerConfigDirect') {
-            this.worker = this.endpointConfig.worker;
+        if (this.endpointConfig.$type === 'DirectImplConfig') {
+            this.impl = this.endpointConfig.impl;
         } else {
             if (this.endpointConfig.url !== undefined) {
                 if (this.endpointConfig.blob === true) {
-                    this.worker = new Worker(this.endpointConfig.url);
+                    this.impl = new Worker(this.endpointConfig.url);
                 }
                 else {
-                    this.worker = new Worker((this.endpointConfig.url as URL).href, {
+                    this.impl = new Worker((this.endpointConfig.url as URL).href, {
                         type: this.endpointConfig.workerType
                     });
                 }
             }
         }
 
-        if (!this.worker) {
+        if (!this.impl) {
             throw new Error('No valid worker configuration was supplied. Aborting...');
         }
 
-        this.worker.onmessage = (async (message) => {
+        this.impl.onmessage = (async (message) => {
             if (comRoutingHandler !== undefined) {
                 comRoutingHandler.setComChannelEndpoint(this);
                 comRouting(comRoutingHandler, message);
             }
             this.processAwaitHandlerRemoval(message);
         });
-        this.worker.onmessageerror = (async (msg) => {
+        this.impl.onmessageerror = (async (msg) => {
             console.log(`Received errornuous message: ${msg}`);
             Promise.reject(msg);
         });
 
-        if (Object.hasOwn(this.worker ?? {}, 'onerror')) {
-            (this.worker as Worker).onerror = (async (message) => {
+        if (Object.hasOwn(this.impl ?? {}, 'onerror')) {
+            (this.impl as Worker).onerror = (async (message) => {
                 console.log(`Execution Aborted: ${message.error}`);
                 Promise.reject(message);
             });
@@ -109,7 +109,7 @@ export class ComChannelEndpoint {
      * This is only possible if the worker is available.
      */
     sentMessage(def: WorkerMessageDef): Promise<WorkerMessage> {
-        if (this.worker === undefined) {
+        if (this.impl === undefined) {
             return Promise.reject(new Error('No worker is available. Aborting...'));
         }
 
@@ -135,7 +135,7 @@ export class ComChannelEndpoint {
                         log: this.verbose
                     }]);
                 }
-                this.worker?.postMessage(message, transferablesToWorker);
+                this.impl?.postMessage(message, transferablesToWorker);
 
                 if (def.awaitAnswer === false) {
                     resolve(WorkerMessage.createEmpty());
@@ -210,7 +210,7 @@ export class ComChannelEndpoint {
     }
 
     protected checkWorker(reject: (error: Error) => void) {
-        if (!this.worker) {
+        if (!this.impl) {
             reject(new Error('No worker is available. Aborting...'));
             return false;
         }
@@ -218,11 +218,13 @@ export class ComChannelEndpoint {
     }
 
     dispose() {
-        if (this.worker !== undefined) {
-            if (Object.hasOwn(this.worker, 'terminate')) {
-                (this.worker as Worker).terminate();
+        if (this.impl !== undefined) {
+            if (Object.hasOwn(this.impl, 'terminate')) {
+                (this.impl as Worker).terminate();
+            } else if (Object.hasOwn(this.impl, 'start')) {
+                (this.impl as MessagePort).close();
             } else {
-                (this.worker as MessagePort).close();
+                (this.impl as DedicatedWorkerGlobalScope).close();
             }
         }
     }

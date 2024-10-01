@@ -29,8 +29,8 @@ export class WorkerTask extends ComChannelEndpoint {
     connect() {
         super.connect();
 
-        if (this.worker !== undefined && Object.hasOwn(this.worker ?? {}, 'onerror')) {
-            (this.worker as Worker).onerror = (async (answer) => {
+        if (this.impl !== undefined && Object.hasOwn(this.impl ?? {}, 'onerror')) {
+            (this.impl as Worker).onerror = (async (answer) => {
                 console.log(`Execution Aborted: ${answer.error}`);
                 Promise.reject(answer);
                 this.markExecuting(false);
@@ -40,7 +40,7 @@ export class WorkerTask extends ComChannelEndpoint {
 
     async initWorker(def: WorkerMessageDef): Promise<WorkerMessage> {
         return new Promise((resolve, reject) => {
-            if (!this.worker) {
+            if (!this.impl) {
                 reject(new Error('No worker is available. Aborting...'));
                 this.markExecuting(false);
             } else {
@@ -59,14 +59,14 @@ export class WorkerTask extends ComChannelEndpoint {
                     remove: true,
                     log: this.verbose,
                 }]);
-                this.worker.postMessage(message, transferablesToWorker);
+                this.impl.postMessage(message, transferablesToWorker);
             }
         });
     }
 
     async executeWorker(def: WorkerExecutionDef): Promise<WorkerMessage> {
         return new Promise((resolve, reject) => {
-            if (!this.worker) {
+            if (!this.impl) {
                 reject(new Error('No worker is available. Aborting...'));
                 this.markExecuting(false);
             } else {
@@ -100,7 +100,7 @@ export class WorkerTask extends ComChannelEndpoint {
                     });
                 }
                 this.updateAwaitHandlers(message, awaitHandlers);
-                this.worker.postMessage(message, transferablesToWorker);
+                this.impl.postMessage(message, transferablesToWorker);
             }
         });
     }

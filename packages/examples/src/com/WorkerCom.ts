@@ -36,8 +36,8 @@ class HelloWorldStandardWorkerExample {
             endpointName: 'Com1Worker',
             endpointId: 1,
             endpointConfig: {
-                $type: 'WorkerConfigDirect',
-                worker: com1Worker
+                $type: 'DirectImplConfig',
+                impl: com1Worker
             },
             verbose: true
         });
@@ -49,8 +49,8 @@ class HelloWorldStandardWorkerExample {
             endpointName: 'Com2Worker',
             endpointId: 2,
             endpointConfig: {
-                $type: 'WorkerConfigDirect',
-                worker: com2Worker
+                $type: 'DirectImplConfig',
+                impl: com2Worker
             },
             verbose: true
         });

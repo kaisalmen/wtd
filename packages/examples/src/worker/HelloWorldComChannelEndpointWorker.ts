@@ -33,8 +33,8 @@ class ExampleComRouterWorker implements ComRouter {
 new ComChannelEndpoint({
     endpointId: 2000,
     endpointConfig: {
-        $type: 'WorkerConfigDirect',
-        worker: self
+        $type: 'DirectImplConfig',
+        impl: self
     },
     verbose: true,
     endpointName: 'HelloWorldComChannelEndpointWorker'
