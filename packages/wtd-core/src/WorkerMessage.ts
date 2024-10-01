@@ -46,6 +46,7 @@ export class WorkerMessage {
     static createFromExisting(message: WorkerMessage, options?: {
         overrideCmd?: WorkerCommand,
         overrideUuid?: string,
+        overridePayloads?: Payload | Payload[],
         answer?: boolean
     }) {
         const wm = WorkerMessage.createNew(message);
@@ -59,6 +60,8 @@ export class WorkerMessage {
         if (options?.answer !== undefined) {
             wm.answer = options.answer;
         }
+        wm.addPayload(options?.overridePayloads);
+
         return wm;
     }
 

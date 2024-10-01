@@ -16,9 +16,9 @@ class InfiniteWorkerExternalGeometry implements WorkerTaskWorker {
     private bufferGeometry?: BufferGeometry = undefined;
 
     init(message: WorkerMessage) {
-        const wtm = WorkerMessage.unpack(message, false);
-        if (wtm.payloads.length > 0) {
-            this.bufferGeometry = (wtm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
+        const wm = WorkerMessage.unpack(message, false);
+        if (wm.payloads.length > 0) {
+            this.bufferGeometry = (wm.payloads[0] as MeshPayload).message.bufferGeometry as BufferGeometry;
         }
 
         const initComplete = WorkerMessage.createFromExisting(message, {

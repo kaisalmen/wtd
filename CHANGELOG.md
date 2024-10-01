@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.0 - 2024-10-01
+
+- ComChannelEndpoint has been extracted from WorkerTask
+  - Now Worker, MessageChannel or DedicatedWorkerGlobalScope can be channel endpoints. Both ends of the communication channel can use the same implementation to send message and await responses if needed.
+  - Added new example **HelloWorldComChannelEndpoint**
+
 ## 3.0.0 - 2024-01-05
 
 - Make the worker lifecylce no longer mandatory if not using `WorkerTaskDirector`.

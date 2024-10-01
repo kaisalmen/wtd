@@ -144,6 +144,11 @@ export class ComChannelEndpoint {
         });
     }
 
+    sentAnswer(def: WorkerMessageDef): Promise<WorkerMessage> {
+        def.message.answer = true;
+        return this.sentMessage(def);
+    }
+
     protected updateAwaitHandlers(wm: WorkerMessage, awaitHandlers: AwaitHandler[]) {
         wm.endpointdId = this.endpointId;
         wm.uuid = this.buildUuid();
